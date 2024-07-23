@@ -4,6 +4,7 @@ import SplitType from 'split-type';
 
 import { footerSpacer } from './components/footer';
 import { horizontalScroll } from './components/horizontal-scroll';
+import { mouseTrackImage } from './components/mouse-track-img';
 import { testimonialCards } from './components/testimonials';
 import { textAnimation } from './components/text';
 import { SCRIPTS_LOADED_EVENT } from './constants';
@@ -18,6 +19,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   horizontalScroll();
   textAnimation();
   testimonialCards();
+  mouseTrackImage();
 });
 
 const CURRENT_YEAR = document.getElementById('current-year');
