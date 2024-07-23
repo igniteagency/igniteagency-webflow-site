@@ -1,5 +1,3 @@
-const SCRUB_TEXT = document.querySelectorAll('[data-scrub]');
-
 export function textAnimation() {
   document.querySelectorAll('[gsap-letter-stagger]').forEach((elem: Element) => {
     let typeSplit = new window.SplitType(elem, {
@@ -24,34 +22,30 @@ export function textAnimation() {
   });
 
   document.querySelectorAll('[gsap-line-stagger]').forEach((elem) => {
-    if (elem instanceof HTMLElement) {
-      let lineSplit = new window.SplitType(elem, {
-        types: 'lines',
-        tagName: 'span',
-      });
+    let lineSplit = new window.SplitType(elem, {
+      types: 'lines',
+      tagName: 'span',
+    });
 
-      const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.3');
-      const trigger = (elem as HTMLElement).getAttribute('data-trigger-start') || 'center';
+    const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.3');
 
-      lineSplit.lines?.forEach((line) => {
-        if (line instanceof HTMLElement) {
-          window.gsap.from(line, {
-            y: '100%',
-            opacity: 0,
-            duration: duration,
-            ease: 'expo.out',
-            scrollTrigger: {
-              trigger: line,
-              start: 'top 80%',
-              end: `top ${trigger}`,
-              toggleActions: 'play none none none',
-            },
-          });
-        }
+    lineSplit.lines.forEach((line) => {
+      window.gsap.from(line, {
+        y: '100%',
+        opacity: 0,
+        duration: duration,
+        ease: 'expo.out',
+        scrollTrigger: {
+          trigger: line,
+          start: 'top 80%', // Start animation when line enters the bottom of the viewport
+          end: 'top center', // End animation when line reaches the center of the viewport
+          toggleActions: 'play none none none',
+        },
       });
-    }
+    });
   });
 
+  const SCRUB_TEXT = document.querySelectorAll('[data-scrub]');
   SCRUB_TEXT.forEach((char) => {
     const text = new window.SplitType(char, { types: ['chars', 'words'] });
     window.gsap.from(text.chars, {

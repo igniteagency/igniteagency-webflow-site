@@ -1,8 +1,8 @@
-// Select all testimonial CARDS
-const CARDS: Element[] = window.gsap.utils.toArray('.testimonials_card');
-const COMPONENT: Element | null = document.querySelector('.testimonials_COMPONENT');
-
 export function testimonialCards() {
+  // Select all testimonial CARDS
+  const CARDS: Element[] = window.gsap.utils.toArray('.testimonials_card');
+  const COMPONENT: Element | null = document.querySelector('.testimonials_COMPONENT');
+
   if (COMPONENT) {
     // Calculate the total scroll distance needed
     const totalScrollHeight: number = (CARDS.length + 1) * window.innerHeight;
