@@ -3,27 +3,30 @@ export function mouseTrackImage() {
     const image = block.querySelector('[data-hover-move]');
 
     if (image) {
-      block.addEventListener('mousemove', (e) => {
-        const rect = block.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        console.log(`Mouse move - X: ${x}, Y: ${y}`);
-
+      block.addEventListener('mouseenter', () => {
         window.gsap.to(image, {
-          x: x,
-          y: y,
+          scale: 1,
           duration: 0.3,
           ease: 'power3.out',
         });
       });
 
       block.addEventListener('mouseleave', () => {
-        console.log('Mouse leave');
+        window.gsap.to(image, {
+          scale: 0,
+          duration: 0.3,
+          ease: 'power3.out',
+        });
+      });
+
+      block.addEventListener('mousemove', (e) => {
+        const rect = block.getBoundingClientRect();
+        const x = e.clientX - rect.right + rect.width / 2;
+        const y = e.clientY - rect.bottom + rect.height / 2;
 
         window.gsap.to(image, {
-          x: 0,
-          y: 0,
+          x: x,
+          y: y,
           duration: 0.3,
           ease: 'power3.out',
         });
