@@ -1,0 +1,1 @@
+"use strict";(()=>{function r(){let o=document.querySelector(".horizontal-scroll"),e=window.gsap.utils.toArray(".horizontal-scroll > section");o&&e.length&&(window.gsap.to(e,{xPercent:-100*(e.length-1),ease:"none",scrollTrigger:{trigger:".horizontal-scroll",pin:!0,scrub:!0,end:()=>"+="+o.offsetWidth}}),window.gsap.delayedCall(1,()=>{window.ScrollTrigger.refresh()}))}})();
