@@ -28,6 +28,7 @@ export function textAnimation() {
     });
 
     const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.3');
+    const trigger = (elem as HTMLElement).getAttribute('data-trigger-start') || '80%';
 
     lineSplit.lines.forEach((line) => {
       window.gsap.from(line, {
@@ -37,8 +38,7 @@ export function textAnimation() {
         ease: 'expo.out',
         scrollTrigger: {
           trigger: line,
-          start: 'top 80%', // Start animation when line enters the bottom of the viewport
-          end: 'top center', // End animation when line reaches the center of the viewport
+          start: `top ${trigger}`, // Start animation when line enters the bottom of the viewport
           toggleActions: 'play none none none',
         },
       });
