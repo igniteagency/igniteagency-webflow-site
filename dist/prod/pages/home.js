@@ -1,1 +1,1 @@
-"use strict";(()=>{})();
+"use strict";(()=>{var t=document.querySelector(".section_home-tabs"),n=e=>{let o=window.innerWidth,s=window.innerHeight,r=e.clientX/o,c=e.clientY/s,i=-30+r*60,d=10-c*20;document.documentElement.style.setProperty("--book-rotationY",`${i}deg`),document.documentElement.style.setProperty("--book-rotationX",`${d}deg`)},m=e=>{e.forEach(o=>{o.isIntersecting?document.addEventListener("mousemove",n):document.removeEventListener("mousemove",n)})},l=new IntersectionObserver(m,{threshold:.1});t&&l.observe(t);})();
