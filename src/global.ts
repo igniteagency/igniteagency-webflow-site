@@ -2,6 +2,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
 
+import { cursorMove } from './components/cursor';
 import { footerSpacer } from './components/footer';
 import { horizontalScroll } from './components/horizontal-scroll';
 import { mouseTrackImage } from './components/mouse-track-img';
@@ -20,6 +21,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   textAnimation();
   testimonialCards();
   mouseTrackImage();
+  cursorMove();
 });
 
 const CURRENT_YEAR = document.getElementById('current-year');
