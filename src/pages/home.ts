@@ -33,3 +33,41 @@ const observer = new IntersectionObserver(observerCallback, {
 if (bookMoveTarget) {
   observer.observe(bookMoveTarget);
 }
+
+///Intro scrub section
+
+// Create a named timeline for the scroll-based animation
+let scrubIntroTimeline = gsap.timeline({
+  scrollTrigger: {
+    trigger: '.scrub-intro_content', // The element to pin
+    start: 'top top', // Pinning starts when the top of the element reaches the top of the viewport
+    end: '+=3000', // Adjust this value to control when pinning ends
+    pin: true, // Enable pinning of the element
+    scrub: 1, // Smooth scrubbing, synchronized with the scrollbar
+    onEnter: () => console.log('ScrollTrigger has been entered.'), // Log when ScrollTrigger is entered
+    onLeave: () => console.log('ScrollTrigger has been left.'), // Log when ScrollTrigger is left
+    onUpdate: (self) => console.log(`Progress: ${self.progress}`), // Log the progress of the ScrollTrigger
+  },
+});
+
+console.log('Scrub Intro Timeline has been created.');
+
+// Animate the opacity of each paragraph on scroll
+document.querySelectorAll('.scrub-intro_paragraph-wrapper').forEach((paragraph, i) => {
+  console.log(`Setting up animation for paragraph ${i + 1}`);
+
+  scrubIntroTimeline
+    .fromTo(
+      paragraph,
+      { opacity: 0 }, // Start with opacity 0
+      { opacity: 1, duration: 1 }, // Animate to opacity 1
+      '+=0.5' // Delay between each paragraph fade-in
+    )
+    .to(
+      paragraph,
+      { opacity: 0, duration: 1 }, // Fade out to opacity 0
+      '+=0.5' // Delay before the next fade-out starts
+    );
+
+  console.log(`Animation for paragraph ${i + 1} has been set.`);
+});
