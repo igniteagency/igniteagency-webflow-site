@@ -44,38 +44,70 @@ if (bookMoveTarget) {
 }
 ///Intro scrub section
 
-// Create a named timeline for the scroll-based animation
-let scrubIntroTimeline = gsap.timeline({
-  scrollTrigger: {
-    trigger: '.scrub-intro_content', // The element to pin
-    start: 'top top', // Pinning starts when the top of the element reaches the top of the viewport
-    end: '+=3000', // Adjust this value to control when pinning ends
-    pin: true, // Enable pinning of the element
-    scrub: 1, // Smooth scrubbing, synchronized with the scrollbar
-    onEnter: () => console.log('ScrollTrigger has been entered.'), // Log when ScrollTrigger is entered
-    onLeave: () => console.log('ScrollTrigger has been left.'), // Log when ScrollTrigger is left
-    onUpdate: (self) => console.log(`Progress: ${self.progress}`), // Log the progress of the ScrollTrigger
-  },
+const scrollContainer = document.querySelector('.scrub-intro_scroll-container');
+const paragraphWrappers = document.querySelectorAll('.scrub-intro_paragraph-wrapper');
+const numParagraphs = paragraphWrappers.length;
+
+// Set initial opacity and scale for all paragraph wrappers
+gsap.set(paragraphWrappers, {
+  opacity: 0,
+  scale: 1,
 });
 
-console.log('Scrub Intro Timeline has been created.');
+// ScrollTrigger setup
+ScrollTrigger.create({
+  trigger: scrollContainer,
+  start: 'top top',
+  end: 'bottom bottom',
+  scrub: true,
+  onUpdate: (self) => {
+    const progress = self.progress * numParagraphs; // Map scroll progress to paragraph index
+    const activeIndex = Math.floor(progress); // Determine which paragraph is active
+    const localProgress = progress - activeIndex; // Progress within the current section (0 to 1)
 
-// Animate the opacity of each paragraph on scroll
-document.querySelectorAll('.scrub-intro_paragraph-wrapper').forEach((paragraph, i) => {
-  console.log(`Setting up animation for paragraph ${i + 1}`);
+    paragraphWrappers.forEach((wrapper, index) => {
+      if (index === activeIndex) {
+        // Animate current paragraph based on localProgress
+        gsap.to(wrapper, {
+          opacity: gsap.utils.clamp(0, 1, localProgress * 2), // Fade in (0 to 1)
+          scale: gsap.utils.interpolate(0.5, 1, localProgress * 2), // Scale from 0.5 to 1
+          overwrite: true,
+        });
 
-  scrubIntroTimeline
-    .fromTo(
-      paragraph,
-      { opacity: 0 }, // Start with opacity 0
-      { opacity: 1, duration: 1 }, // Animate to opacity 1
-      '+=0.5' // Delay between each paragraph fade-in
-    )
-    .to(
-      paragraph,
-      { opacity: 0, duration: 1 }, // Fade out to opacity 0
-      '+=0.5' // Delay before the next fade-out starts
-    );
+        // Animate text within the paragraph
+        const text = wrapper.querySelector('p');
+        if (!text.split) {
+          text.split = new SplitType(text, { types: ['chars', 'words'] });
+        }
 
-  console.log(`Animation for paragraph ${i + 1} has been set.`);
+        const chars = text.split.chars;
+        gsap.fromTo(
+          chars,
+          {
+            opacity: 0.2,
+          },
+          {
+            opacity: 1,
+            stagger: 0.05,
+            duration: 0.3,
+            ease: 'power2.out',
+          }
+        );
+      } else if (index < activeIndex) {
+        // Previous paragraphs: Fully fade out and scale down
+        gsap.to(wrapper, {
+          opacity: 0,
+          scale: 0.5,
+          overwrite: true,
+        });
+      } else {
+        // Upcoming paragraphs: Set to initial state
+        gsap.set(wrapper, {
+          opacity: 0,
+          scale: 1,
+          overwrite: true,
+        });
+      }
+    });
+  },
 });
