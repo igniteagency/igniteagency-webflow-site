@@ -49,7 +49,7 @@ const paragraphWrappers = document.querySelectorAll('.scrub-intro_paragraph-wrap
 const numParagraphs = paragraphWrappers.length;
 
 // Set initial opacity and scale for all paragraph wrappers
-gsap.set(paragraphWrappers, {
+window.gsap.set(paragraphWrappers, {
   opacity: 0,
   scale: 1,
 });
@@ -68,9 +68,9 @@ ScrollTrigger.create({
     paragraphWrappers.forEach((wrapper, index) => {
       if (index === activeIndex) {
         // Animate current paragraph based on localProgress
-        gsap.to(wrapper, {
-          opacity: gsap.utils.clamp(0, 1, localProgress * 2), // Fade in (0 to 1)
-          scale: gsap.utils.interpolate(0.5, 1, localProgress * 2), // Scale from 0.5 to 1
+        window.gsap.to(wrapper, {
+          opacity: window.gsap.utils.clamp(0, 1, localProgress * 2), // Fade in (0 to 1)
+          scale: window.gsap.utils.interpolate(0.5, 1, localProgress * 2), // Scale from 0.5 to 1
           overwrite: true,
         });
 
@@ -81,7 +81,7 @@ ScrollTrigger.create({
         }
 
         const chars = text.split.chars;
-        gsap.fromTo(
+        window.gsap.fromTo(
           chars,
           {
             opacity: 0.2,
@@ -95,14 +95,14 @@ ScrollTrigger.create({
         );
       } else if (index < activeIndex) {
         // Previous paragraphs: Fully fade out and scale down
-        gsap.to(wrapper, {
+        window.gsap.to(wrapper, {
           opacity: 0,
           scale: 0.5,
           overwrite: true,
         });
       } else {
         // Upcoming paragraphs: Set to initial state
-        gsap.set(wrapper, {
+        window.gsap.set(wrapper, {
           opacity: 0,
           scale: 1,
           overwrite: true,
