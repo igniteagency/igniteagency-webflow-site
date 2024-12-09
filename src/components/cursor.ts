@@ -1,5 +1,4 @@
 const TIP_LINKS = document.querySelectorAll('[data-cursor]');
-const HOVER_LINKS = document.querySelectorAll('a');
 const CURSOR = document.querySelectorAll('.cursor');
 
 export function cursorMove() {
@@ -17,33 +16,12 @@ export function cursorMove() {
     let text = link.getAttribute('data-cursor');
 
     link.addEventListener('mouseenter', () => {
-      gsap.to('.cursor p', {
-        scrambleText: {
-          text: text,
-          chars: 'lowercase',
-          speed: 2,
-        },
-        duration: 0.8,
-      });
-    });
-  });
-
-  // Add hover effect for links
-  HOVER_LINKS.forEach((link) => {
-    link.addEventListener('mouseenter', () => {
-      window.gsap.to(CURSOR, {
-        scale: 1.5,
-        duration: 0.2,
-        ease: 'power2.out',
-      });
-    });
-
-    link.addEventListener('mouseleave', () => {
-      window.gsap.to(CURSOR, {
-        scale: 1,
-        duration: 0.2,
-        ease: 'power2.out',
-      });
+      if (text !== null) {
+        gsap.to('.cursor p', {
+          text: text, // Utilises TextPlugin for text changes
+          duration: 0.8, // Smooth transition to the new text
+        });
+      }
     });
   });
 }
