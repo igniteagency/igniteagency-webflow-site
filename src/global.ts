@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { TextPlugin } from 'gsap/TextPlugin';
 import SplitType from 'split-type';
 
 import { cursorMove } from './components/cursor';
@@ -12,7 +13,7 @@ import { SCRIPTS_LOADED_EVENT } from './constants';
 
 window.gsap = gsap;
 window.ScrollTrigger = ScrollTrigger;
-window.gsap.registerPlugin(ScrollTrigger);
+window.gsap.registerPlugin(ScrollTrigger, TextPlugin); // Register TextPlugin
 window.SplitType = SplitType;
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
