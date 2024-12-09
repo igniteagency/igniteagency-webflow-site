@@ -18,6 +18,7 @@ declare global {
     DEBUG: (...args: any[]) => void;
     gsap: GSAP;
     ScrollTrigger: typeof ScrollTrigger;
+    TextPlugin: typeof TextPlugin;
     SplitType: typeof SplitType;
   }
 

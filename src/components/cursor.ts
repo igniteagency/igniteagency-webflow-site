@@ -16,12 +16,12 @@ export function cursorMove() {
     let text = link.getAttribute('data-cursor');
 
     link.addEventListener('mouseenter', () => {
-      gsap.to('.cursor p', {
-        text: text,
-        chars: 'lowercase',
-        speed: 2,
-        duration: 0.8,
-      });
+      if (text !== null) {
+        gsap.to('.cursor p', {
+          text: text, // Utilises TextPlugin for text changes
+          duration: 0.8, // Smooth transition to the new text
+        });
+      }
     });
   });
 }
