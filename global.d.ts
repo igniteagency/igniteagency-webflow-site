@@ -19,6 +19,7 @@ declare global {
     gsap: GSAP;
     ScrollTrigger: typeof ScrollTrigger;
     TextPlugin: typeof TextPlugin;
+    CustomEase: typeof CustomEase;
     SplitType: typeof SplitType;
   }
 
