@@ -24,7 +24,7 @@ function updateProgressLine() {
     height: height,
     duration: 0.5,
     ease: 'power2.out',
-    scrub: true,
+    //scrub: true,
   });
 }
 
