@@ -1,28 +1,34 @@
+import CustomEase from 'gsap/CustomEase';
+
 export function menuAnimation() {
   CustomEase.create('main', '0.65, 0.01, 0.05, 0.99');
 
-  gsap.defaults({
+  window.gsap.defaults({
     ease: 'main',
     duration: 0.7,
   });
 
   function initMenu() {
-    let navWrap = document.querySelector('.nav');
+    const navWrap = document.querySelector('.nav') as HTMLElement;
+
     let state = navWrap.getAttribute('data-nav');
-    let overlay = navWrap.querySelector('.overlay');
-    let menu = navWrap.querySelector('.menu');
-    let bgPanels = navWrap.querySelectorAll('.bg-panel');
-    let menuToggles = document.querySelectorAll('[data-menu-toggle]');
-    let menuLinks = navWrap.querySelectorAll(
+
+    const menu = navWrap.querySelector('.menu');
+    const overlay = navWrap.querySelector('.overlay');
+    const bgPanels = navWrap.querySelectorAll('.bg-panel');
+
+    const menuToggles = document.querySelectorAll('[data-menu-toggle]');
+
+    const menuLinks = navWrap.querySelectorAll(
       '.menu-link, .menu-extras_list-item > .button_component'
     );
-    let fadeTargets = navWrap.querySelectorAll('[data-menu-fade]');
-    let menuButton = document.querySelector('.menu-button');
-    let menuButtonTexts = menuButton.querySelectorAll('p');
-    let menuButtonIcon = menuButton.querySelector('.menu-button-icon');
-    let bolt = navWrap.querySelectorAll('.menu-bolt');
+    const fadeTargets = navWrap.querySelectorAll('[data-menu-fade]');
+    const menuButton = document.querySelector('.menu-button') as HTMLElement;
+    const menuButtonTexts = menuButton.querySelectorAll('p');
+    const menuButtonIcon = menuButton.querySelector('.menu-button-icon');
+    const bolt = navWrap.querySelectorAll('.menu-bolt');
 
-    let tl = gsap.timeline();
+    const tl = window.gsap.timeline();
 
     const openNav = () => {
       navWrap.setAttribute('data-nav', 'open');
@@ -80,7 +86,5 @@ export function menuAnimation() {
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    initMenu();
-  });
+  initMenu();
 }
