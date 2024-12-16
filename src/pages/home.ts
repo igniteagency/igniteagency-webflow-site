@@ -1,8 +1,9 @@
 import JSConfetti from 'js-confetti';
 import Matter from 'matter-js';
+import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 import Swiper from 'swiper';
 
-window.Webflow?.push(() => {
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   animateBook();
   featuredWorkSlider();
   showerConfetti();
