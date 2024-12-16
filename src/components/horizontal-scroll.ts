@@ -11,7 +11,8 @@ export function horizontalScroll() {
     window.ScrollTrigger.create({
       trigger: '.horizontal-scroll',
       start: 'top top',
-      end: () => '+=' + (totalVerticalScroll + window.innerHeight),
+      //end: () => '+=' + (totalVerticalScroll + window.innerHeight),
+      end: () => '+=' + (totalVerticalScroll - window.innerHeight),
       pin: true,
       anticipatePin: 1,
     });
