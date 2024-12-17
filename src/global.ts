@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TextPlugin } from 'gsap/TextPlugin';
 import SplitType from 'split-type';
 
+import { animatedDetailsAccordions } from './components/accordions';
 import { cursorMove } from './components/cursor';
 import { footerSpacer } from './components/footer';
 import { horizontalScroll } from './components/horizontal-scroll';
@@ -27,6 +28,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   mouseTrackImage();
   cursorMove();
   menuAnimation();
+  animatedDetailsAccordions();
 });
 
 const CURRENT_YEAR = document.getElementById('current-year');
