@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { CustomEase } from 'gsap/CustomEase';
+import { Draggable } from 'gsap/Draggable';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TextPlugin } from 'gsap/TextPlugin';
 import SplitType from 'split-type';
@@ -17,7 +18,8 @@ import { SCRIPTS_LOADED_EVENT } from './constants';
 window.gsap = gsap;
 window.ScrollTrigger = ScrollTrigger;
 window.CustomEase = CustomEase;
-window.gsap.registerPlugin(ScrollTrigger, TextPlugin, CustomEase); // Register TextPlugin
+window.Draggable = Draggable;
+window.gsap.registerPlugin(ScrollTrigger, TextPlugin, CustomEase, Draggable);
 window.SplitType = SplitType;
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
