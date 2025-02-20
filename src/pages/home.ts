@@ -8,6 +8,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   featuredWorkSlider();
   showerConfetti();
   rainEmojis();
+  initDraggableElements();
 });
 
 function animateBook() {
@@ -20,7 +21,7 @@ function animateBook() {
     const mouseX = event.clientX / width;
     const mouseY = event.clientY / height;
 
-    const rotationY = -30 + mouseX * 60; // Range mapped from -30deg to +30deg
+    const rotationY = -60 + mouseX * 60; // Range mapped from -30deg to +30deg
     const rotationX = 10 - mouseY * 20; // Range mapped from +10deg to -10deg
 
     // Select only the .book-container inside .w--tab-active
@@ -85,14 +86,14 @@ function showerConfetti() {
   const canvas = document.querySelector<HTMLCanvasElement>('#canvas-target');
   const jsConfetti = new JSConfetti({ canvas });
 
-  const showConfetti = () => {
+  const showConfetti = (event: MouseEvent) => {
     jsConfetti.addConfetti({
       emojis: ['😎', '⚡️', '🎉', '🌈', '👀', '🦄'],
       emojiSize: 100,
       confettiNumber: 50,
     });
   };
-  //
+
   // Attach the event listener to the canvas
   canvas?.addEventListener('click', showConfetti);
 }
@@ -105,15 +106,22 @@ function rainEmojis() {
     return;
   }
 
-  // Size and duration variables
-  const objectSize = 700; // Size of the objects
-  const rainDuration = 10000; // Duration of the rain in milliseconds
-  const rainIntervalMin = 50; // Minimum interval between drops in milliseconds
-  const rainIntervalMax = 300; // Maximum interval between drops in milliseconds
-
-  // Scaling variables
-  const imageScale = 1.7; // Adjust the image scale relative to the object size
-  const colliderScale = 0.2; // Adjust the collider scale relative to the object size
+  // Configuration
+  const config = {
+    // Base size as percentage of viewport height or width
+    objectSizeHeightBased: window.innerHeight * 0.1, // 12% of viewport height
+    // objectSizeWidthBased: window.innerWidth * 0.06, // 6% of viewport width
+    // Use either objectSizeHeightBased or objectSizeWidthBased below
+    get objectSize() {
+      return this.objectSizeHeightBased; // Change to objectSizeWidthBased to test width-based scaling
+    },
+    colliderScale: 0.8,
+    rainDuration: 10000,
+    rainIntervalMin: 50,
+    rainIntervalMax: 300,
+    wallMargin: 100,
+    mouseColliderSize: 40,
+  };
 
   // Array of image URLs for textures
   const textures = [
@@ -128,9 +136,7 @@ function rainEmojis() {
     Runner = Matter.Runner,
     Bodies = Matter.Bodies,
     Composite = Matter.Composite,
-    Body = Matter.Body,
-    Mouse = Matter.Mouse,
-    MouseConstraint = Matter.MouseConstraint;
+    Body = Matter.Body;
 
   // create an engine
   let engine = Engine.create();
@@ -148,19 +154,17 @@ function rainEmojis() {
   });
 
   const createObject = () => {
-    // Randomize the x position across the full width of the canvas
-    let xPos = Math.random() * window.innerWidth;
+    const xPos = config.wallMargin + Math.random() * (window.innerWidth - 2 * config.wallMargin);
+    const randomTexture = textures[Math.floor(Math.random() * textures.length)];
 
-    // Randomly select a texture from the array
-    let randomTexture = textures[Math.floor(Math.random() * textures.length)];
-
-    // Create the body
-    let box = Bodies.circle(xPos, 0, (objectSize / 2) * colliderScale, {
+    const box = Bodies.circle(xPos, -100, (config.objectSize / 2) * config.colliderScale, {
+      restitution: 0.6,
+      friction: 0.1,
       render: {
         sprite: {
           texture: randomTexture,
-          xScale: imageScale, // Scale the texture
-          yScale: imageScale, // Scale the texture
+          xScale: config.objectSize / 100,
+          yScale: config.objectSize / 100,
         },
       },
     });
@@ -168,25 +172,100 @@ function rainEmojis() {
     Composite.add(engine.world, box);
   };
 
-  // create ground and walls
+  // create ground and walls with invisibility
   let ground = Bodies.rectangle(window.innerWidth / 2, window.innerHeight, window.innerWidth, 60, {
     isStatic: true,
+    render: {
+      fillStyle: 'transparent',
+      visible: false,
+    },
   });
 
-  let leftWall = Bodies.rectangle(0, window.innerHeight / 2, 60, window.innerHeight, {
-    isStatic: true,
-  });
-
-  let rightWall = Bodies.rectangle(
-    window.innerWidth,
+  let leftWall = Bodies.rectangle(
+    config.wallMargin / 2,
     window.innerHeight / 2,
     60,
     window.innerHeight,
-    { isStatic: true }
+    {
+      isStatic: true,
+      render: {
+        fillStyle: 'transparent',
+        visible: false,
+      },
+    }
   );
 
-  // add all of the bodies to the world
-  Composite.add(engine.world, [ground, leftWall, rightWall]);
+  let rightWall = Bodies.rectangle(
+    window.innerWidth - config.wallMargin / 2,
+    window.innerHeight / 2,
+    60,
+    window.innerHeight,
+    {
+      isStatic: true,
+      render: {
+        fillStyle: 'transparent',
+        visible: false,
+      },
+    }
+  );
+
+  // Create mouse collider body
+  let mouseCollider = Bodies.circle(0, 0, config.mouseColliderSize, {
+    isStatic: true,
+    friction: 0.1,
+    restitution: 0.6,
+    render: {
+      fillStyle: 'rgba(255, 0, 0, 0.3)',
+      visible: true,
+    },
+  });
+
+  function updateMousePosition(e) {
+    const rect = matterCanvas.getBoundingClientRect();
+    const scaleX = matterCanvas.width / rect.width;
+    const scaleY = matterCanvas.height / rect.height;
+
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
+
+    Body.setPosition(mouseCollider, {
+      x: mouseX,
+      y: mouseY,
+    });
+  }
+
+  document.addEventListener('mousemove', updateMousePosition);
+
+  document.addEventListener('mouseleave', () => {
+    Body.setPosition(mouseCollider, {
+      x: -100,
+      y: -100,
+    });
+  });
+
+  // Add window resize handler for responsive sizing
+  window.addEventListener('resize', () => {
+    // Update canvas size
+    render.canvas.width = window.innerWidth;
+    render.canvas.height = window.innerHeight;
+
+    // Update object sizes
+    config.objectSizeHeightBased = window.innerHeight * 0.12;
+    config.objectSizeWidthBased = window.innerWidth * 0.06;
+
+    // Update ground and walls
+    Body.setPosition(ground, {
+      x: window.innerWidth / 2,
+      y: window.innerHeight,
+    });
+    Body.setPosition(rightWall, {
+      x: window.innerWidth - config.wallMargin / 2,
+      y: window.innerHeight / 2,
+    });
+  });
+
+  // Add all bodies to the world
+  Composite.add(engine.world, [ground, leftWall, rightWall, mouseCollider]);
 
   // run the renderer
   Render.run(render);
@@ -199,7 +278,7 @@ function rainEmojis() {
 
   // Function to start the rain effect
   const startRain = () => {
-    const endTime = Date.now() + rainDuration;
+    const endTime = Date.now() + config.rainDuration;
 
     const rainLoop = () => {
       if (Date.now() > endTime) return;
@@ -207,41 +286,69 @@ function rainEmojis() {
       createObject();
 
       // Schedule the next object creation at a random interval
-      const nextInterval = Math.random() * (rainIntervalMax - rainIntervalMin) + rainIntervalMin;
+      const nextInterval =
+        Math.random() * (config.rainIntervalMax - config.rainIntervalMin) + config.rainIntervalMin;
       setTimeout(rainLoop, nextInterval);
     };
 
     rainLoop(); // Start the loop
   };
 
-  // Use Intersection Observer to trigger the rain effect when the canvas enters the viewport
+  // Use Intersection Observer to trigger the rain effect
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           startRain();
-          observer.disconnect(); // Stop observing once the rain has started
+          observer.disconnect();
         }
       });
     },
     {
-      threshold: 0.1, // Trigger when 10% of the canvas is visible
+      threshold: 0.1,
     }
   );
 
-  // Start observing the canvas
   observer.observe(matterCanvas);
+}
 
-  // Check for mouse control
-  let mouse = Mouse.create(render.canvas);
-  let mouseConstraint = MouseConstraint.create(engine, {
-    mouse: mouse,
-    constraint: {
-      stiffness: 0.2,
-      render: {
-        visible: false,
+function initDraggableElements() {
+  const container = document.querySelector('#drag-container');
+  const draggableElements = document.querySelectorAll('[data-cursor="drag me"]');
+  const cursor = document.querySelectorAll('.cursor');
+  const xTo = window.gsap.quickTo(cursor, 'x', { duration: 0.2, ease: 'power3' });
+  const yTo = window.gsap.quickTo(cursor, 'y', { duration: 0.2, ease: 'power3' });
+
+  if (!container || !draggableElements.length) {
+    console.warn('Draggable elements or container not found');
+    return;
+  }
+
+  draggableElements.forEach((element) => {
+    window.Draggable.create(element, {
+      type: 'x,y',
+      bounds: container,
+      inertia: true,
+      dragResistance: 0.2,
+      edgeResistance: 0.65,
+      zIndexBoost: false,
+      onDragStart: function (e) {
+        window.gsap.to(this.target, { scale: 1.05, duration: 0.2 });
+        xTo(e.clientX);
+        yTo(e.clientY);
       },
-    },
+      onDrag: function (e) {
+        xTo(e.clientX);
+        yTo(e.clientY);
+      },
+      onDragEnd: function (e) {
+        window.gsap.to(this.target, { scale: 1, duration: 0.3 });
+        // Set final position after a small delay to ensure smooth transition
+        setTimeout(() => {
+          xTo(e.clientX);
+          yTo(e.clientY);
+        }, 50);
+      },
+    });
   });
-  Composite.add(engine.world, mouseConstraint);
 }
