@@ -11,6 +11,7 @@ import { footerSpacer } from './components/footer';
 import { horizontalScroll } from './components/horizontal-scroll';
 import { menuAnimation } from './components/menu';
 import { mouseTrackImage } from './components/mouse-track-img';
+import { navHideShow } from './components/nav';
 import { testimonialCards } from './components/testimonials';
 import { textAnimation } from './components/text';
 import { SCRIPTS_LOADED_EVENT } from './constants';
@@ -31,6 +32,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   cursorMove();
   menuAnimation();
   animatedDetailsAccordions();
+  navHideShow();
 });
 
 const CURRENT_YEAR = document.getElementById('current-year');
