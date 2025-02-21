@@ -167,7 +167,7 @@ function rainEmojis() {
     friction: 0.1,
     restitution: 0.6,
     render: {
-      fillStyle: 'rgba(255, 0, 0, 0.3)',
+      fillStyle: 'rgba(255, 0, 0, 0)',
       visible: true,
     },
   });
