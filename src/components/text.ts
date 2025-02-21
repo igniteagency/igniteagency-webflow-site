@@ -6,13 +6,13 @@ export function textAnimation() {
     });
 
     const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '1');
-    const stagger = parseFloat((elem as HTMLElement).getAttribute('data-stagger') || '0.05');
+    const stagger = parseFloat((elem as HTMLElement).getAttribute('data-stagger') || '0.03');
     const trigger = (elem as HTMLElement).getAttribute('data-trigger-start') || 'center';
 
     window.gsap.from(typeSplit.chars, {
       y: '100%',
       duration: duration,
-      ease: 'expo.out',
+      ease: 'expo.inOut',
       stagger: stagger,
       scrollTrigger: {
         trigger: elem,
@@ -61,4 +61,67 @@ export function textAnimation() {
       duration: 1,
     });
   });
+
+  // Handle hover letter stagger animations
+  document
+    .querySelectorAll('[gsap-hover-stagger], [gsap-hover-stagger-trigger]')
+    .forEach((elem: Element) => {
+      // For trigger elements, set up animations for all stagger elements within
+      if (elem.hasAttribute('gsap-hover-stagger-trigger')) {
+        const staggerElements = elem.querySelectorAll('[gsap-hover-stagger]');
+
+        if (staggerElements.length === 0) return;
+
+        const animations = Array.from(staggerElements).map((staggerElem) => {
+          const split = new window.SplitType(staggerElem, {
+            types: 'chars',
+            tagName: 'span',
+          });
+
+          const duration = parseFloat(
+            (staggerElem as HTMLElement).getAttribute('data-duration') || '0.8'
+          );
+          const stagger = parseFloat(
+            (staggerElem as HTMLElement).getAttribute('data-stagger') || '0.01'
+          );
+
+          const tl = window.gsap.timeline({ paused: true });
+          tl.to(split.chars, {
+            yPercent: -100,
+            duration: duration,
+            ease: 'expo.inOut',
+            stagger: stagger,
+          });
+
+          return tl;
+        });
+
+        elem.addEventListener('mouseenter', () => animations.forEach((tl) => tl.play()));
+        elem.addEventListener('mouseleave', () => animations.forEach((tl) => tl.reverse()));
+      }
+      // For direct stagger elements without a parent trigger
+      else if (
+        elem.hasAttribute('gsap-hover-stagger') &&
+        !elem.closest('[gsap-hover-stagger-trigger]')
+      ) {
+        const split = new window.SplitType(elem, {
+          types: 'chars',
+          tagName: 'span',
+        });
+
+        const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.8');
+        const stagger = parseFloat((elem as HTMLElement).getAttribute('data-stagger') || '0.01');
+
+        const tl = window.gsap.timeline({ paused: true });
+        tl.to(split.chars, {
+          yPercent: -100,
+          duration: duration,
+          ease: 'expo.inOut',
+          stagger: stagger,
+        });
+
+        elem.addEventListener('mouseenter', () => tl.play());
+        elem.addEventListener('mouseleave', () => tl.reverse());
+      }
+    });
 }

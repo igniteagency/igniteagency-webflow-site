@@ -8,8 +8,8 @@ export function animateBook() {
     const mouseX = event.clientX / width;
     const mouseY = event.clientY / height;
 
-    const rotationY = -60 + mouseX * 60; // Range mapped from -30deg to +30deg
-    const rotationX = 10 - mouseY * 20; // Range mapped from +10deg to -10deg
+    const rotationY = -30 + mouseX * 30; // Range mapped from -30deg to +30deg
+    const rotationX = 10 - mouseY * 10; // Range mapped from +10deg to -10deg
 
     // Select only the .book-container inside .w--tab-active
     const activeBookContainers = document.querySelectorAll<HTMLElement>(

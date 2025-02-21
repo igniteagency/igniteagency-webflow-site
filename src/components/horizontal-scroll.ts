@@ -27,11 +27,11 @@ export function horizontalScroll() {
       scrollTrigger: {
         trigger: '.horizontal-scroll',
         scrub: true,
-        snap: {
-          snapTo: snapPoints,
-          duration: { min: 0.2, max: 0.5 },
-          ease: 'power1.inOut',
-        },
+        // snap: {
+        //   snapTo: snapPoints,
+        //   duration: { min: 0.2, max: 0.5 },
+        //   ease: 'power1.inOut',
+        // },
         start: 'top bottom',
         end: () => '+=' + (totalVerticalScroll + window.innerHeight),
       },
