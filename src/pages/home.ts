@@ -4,11 +4,43 @@ import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 import Swiper from 'swiper';
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  setHorizontalScrollWrapperHeight();
   featuredWorkSlider();
   showerConfetti();
   rainEmojis();
   initDraggableElements();
 });
+
+function setHorizontalScrollWrapperHeight() {
+  const WRAPPER_SECTION_SELECTOR = '.section_reveal-wrapper';
+  const wrapperSectionEl = document.querySelector(WRAPPER_SECTION_SELECTOR);
+  if (!wrapperSectionEl) {
+    console.warn(`Horizontal scroll section reveal wrapper not found: ${WRAPPER_SECTION_SELECTOR}`);
+    return;
+  }
+
+  const childrenElList = wrapperSectionEl.children;
+
+  // Create a function to calculate the height
+  const calculateHeight = () => {
+    return Array.from(childrenElList).reduce((acc, child) => {
+      console.log((child as HTMLElement).offsetHeight);
+      return acc + (child as HTMLElement).offsetHeight;
+    }, 0);
+  };
+
+  // Set initial height
+  window.gsap.set(wrapperSectionEl, {
+    height: calculateHeight(),
+  });
+
+  // Create a resize observer to update height when window resizes
+  window.ScrollTrigger.addEventListener('refresh', () => {
+    window.gsap.set(wrapperSectionEl, {
+      height: calculateHeight(),
+    });
+  });
+}
 
 function featuredWorkSlider() {
   new Swiper('.featured-work_slider', {
