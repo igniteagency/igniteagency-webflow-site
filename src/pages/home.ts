@@ -21,24 +21,22 @@ function setHorizontalScrollWrapperHeight() {
 
   const childrenElList = wrapperSectionEl.children;
 
-  // Create a function to calculate the height
-  const calculateHeight = () => {
-    return Array.from(childrenElList).reduce((acc, child) => {
-      console.log((child as HTMLElement).offsetHeight);
-      return acc + (child as HTMLElement).offsetHeight;
-    }, 0);
-  };
+  function setHeight() {
+    window.gsap.set(wrapperSectionEl, {
+      height: () => {
+        return Array.from(childrenElList).reduce((acc, child) => {
+          return acc + (child as HTMLElement).offsetHeight;
+        }, 0);
+      },
+    });
+  }
 
   // Set initial height
-  window.gsap.set(wrapperSectionEl, {
-    height: calculateHeight(),
-  });
+  setHeight();
 
   // Create a resize observer to update height when window resizes
   window.ScrollTrigger.addEventListener('refresh', () => {
-    window.gsap.set(wrapperSectionEl, {
-      height: calculateHeight(),
-    });
+    setHeight();
   });
 }
 
