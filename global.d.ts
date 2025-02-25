@@ -1,4 +1,5 @@
 import type { Webflow } from '@finsweet/ts-utils';
+import type SplitType from 'split-type';
 
 export type SCRIPTS_ENV = 'dev' | 'prod';
 

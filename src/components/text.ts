@@ -1,36 +1,58 @@
+import type SplitType from 'split-type';
+
+const DURATION_ATTR = 'data-duration';
+const STAGGER_ATTR = 'data-stagger';
+const TRIGGER_ATTR = 'data-trigger-start';
+
+const ATTR_SELECTORS = {
+  LETTER_STAGGER: '[gsap-letter-stagger]',
+  LINE_STAGGER: '[gsap-line-stagger]',
+  SCRUB_TEXT: '[data-scrub]',
+  HOVER_STAGGER_TRIGGER: '[gsap-hover-stagger-trigger]',
+  HOVER_STAGGER: '[gsap-hover-stagger]',
+};
+
 export function textAnimation() {
-  document.querySelectorAll('[gsap-letter-stagger]').forEach((elem: Element) => {
-    let typeSplit = new window.SplitType(elem, {
-      types: 'words, lines, chars',
+  // Store all SplitType instances for later refresh
+  const splitInstances: SplitType[] = [];
+
+  // Handle letter stagger animations
+  document.querySelectorAll(ATTR_SELECTORS.LETTER_STAGGER).forEach((el) => {
+    let typeSplit = new window.SplitType(el, {
+      types: 'words,lines,chars',
       tagName: 'span',
     });
 
-    const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '1');
-    const stagger = parseFloat((elem as HTMLElement).getAttribute('data-stagger') || '0.03');
-    const trigger = (elem as HTMLElement).getAttribute('data-trigger-start') || 'center';
+    splitInstances.push(typeSplit);
+
+    const stagger = getStaggerAttrValue(el, 0.03);
+    const trigger = getTriggerAttrValue(el, 'center');
 
     window.gsap.from(typeSplit.chars, {
       y: '100%',
-      duration: duration,
+      duration: getDurationAttrValue(el, 1),
       ease: 'expo.inOut',
       stagger: stagger,
       scrollTrigger: {
-        trigger: elem,
+        trigger: el,
         start: `top ${trigger}`,
       },
     });
   });
 
-  document.querySelectorAll('[gsap-line-stagger]').forEach((elem) => {
-    let lineSplit = new window.SplitType(elem, {
+  // Handle line stagger animations
+  document.querySelectorAll(ATTR_SELECTORS.LINE_STAGGER).forEach((el) => {
+    let lineSplit = new window.SplitType(el, {
       types: 'lines',
       tagName: 'span',
     });
 
-    const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.3');
-    const trigger = (elem as HTMLElement).getAttribute('data-trigger-start') || '80%';
+    splitInstances.push(lineSplit);
 
-    lineSplit.lines.forEach((line) => {
+    const duration = getDurationAttrValue(el, 0.3);
+    const trigger = getTriggerAttrValue(el, '80%');
+
+    lineSplit.lines?.forEach((line) => {
       window.gsap.from(line, {
         y: '100%',
         opacity: 0,
@@ -45,9 +67,11 @@ export function textAnimation() {
     });
   });
 
-  const SCRUB_TEXT = document.querySelectorAll('[data-scrub]');
-  SCRUB_TEXT.forEach((char) => {
+  // Handle scrub text animations
+  document.querySelectorAll(ATTR_SELECTORS.SCRUB_TEXT).forEach((char) => {
     const text = new window.SplitType(char, { types: ['chars', 'words'] });
+    splitInstances.push(text);
+
     window.gsap.from(text.chars, {
       scrollTrigger: {
         trigger: char,
@@ -64,26 +88,24 @@ export function textAnimation() {
 
   // Handle hover letter stagger animations
   document
-    .querySelectorAll('[gsap-hover-stagger], [gsap-hover-stagger-trigger]')
-    .forEach((elem: Element) => {
+    .querySelectorAll(`${ATTR_SELECTORS.HOVER_STAGGER}, ${ATTR_SELECTORS.HOVER_STAGGER_TRIGGER}`)
+    .forEach((el) => {
       // For trigger elements, set up animations for all stagger elements within
-      if (elem.hasAttribute('gsap-hover-stagger-trigger')) {
-        const staggerElements = elem.querySelectorAll('[gsap-hover-stagger]');
+      if (el.hasAttribute(ATTR_SELECTORS.HOVER_STAGGER_TRIGGER)) {
+        const staggerElements = el.querySelectorAll(ATTR_SELECTORS.HOVER_STAGGER);
 
         if (staggerElements.length === 0) return;
 
-        const animations = Array.from(staggerElements).map((staggerElem) => {
-          const split = new window.SplitType(staggerElem, {
+        const animations = Array.from(staggerElements).map((staggerEl) => {
+          const split = new window.SplitType(staggerEl, {
             types: 'chars',
             tagName: 'span',
           });
 
-          const duration = parseFloat(
-            (staggerElem as HTMLElement).getAttribute('data-duration') || '0.8'
-          );
-          const stagger = parseFloat(
-            (staggerElem as HTMLElement).getAttribute('data-stagger') || '0.01'
-          );
+          splitInstances.push(split);
+
+          const duration = getDurationAttrValue(staggerEl, 0.8);
+          const stagger = getStaggerAttrValue(staggerEl, 0.01);
 
           const tl = window.gsap.timeline({ paused: true });
           tl.to(split.chars, {
@@ -96,21 +118,23 @@ export function textAnimation() {
           return tl;
         });
 
-        elem.addEventListener('mouseenter', () => animations.forEach((tl) => tl.play()));
-        elem.addEventListener('mouseleave', () => animations.forEach((tl) => tl.reverse()));
+        el.addEventListener('mouseenter', () => animations.forEach((tl) => tl.play()));
+        el.addEventListener('mouseleave', () => animations.forEach((tl) => tl.reverse()));
       }
       // For direct stagger elements without a parent trigger
       else if (
-        elem.hasAttribute('gsap-hover-stagger') &&
-        !elem.closest('[gsap-hover-stagger-trigger]')
+        el.hasAttribute('gsap-hover-stagger') &&
+        !el.closest(ATTR_SELECTORS.HOVER_STAGGER_TRIGGER)
       ) {
-        const split = new window.SplitType(elem, {
+        const split = new window.SplitType(el, {
           types: 'chars',
           tagName: 'span',
         });
 
-        const duration = parseFloat((elem as HTMLElement).getAttribute('data-duration') || '0.8');
-        const stagger = parseFloat((elem as HTMLElement).getAttribute('data-stagger') || '0.01');
+        splitInstances.push(split);
+
+        const duration = getDurationAttrValue(el, 0.8);
+        const stagger = getStaggerAttrValue(el, 0.01);
 
         const tl = window.gsap.timeline({ paused: true });
         tl.to(split.chars, {
@@ -120,8 +144,34 @@ export function textAnimation() {
           stagger: stagger,
         });
 
-        elem.addEventListener('mouseenter', () => tl.play());
-        elem.addEventListener('mouseleave', () => tl.reverse());
+        el.addEventListener('mouseenter', () => tl.play());
+        el.addEventListener('mouseleave', () => tl.reverse());
       }
     });
+
+  // Simple resize handler for responsive text splitting
+  let resizeTimer: number;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      // Refresh all split instances
+      splitInstances.forEach((instance) => instance.revert());
+      splitInstances.forEach((instance) => instance.split());
+    }, 200);
+  });
+}
+
+function getDurationAttrValue(el: HTMLElement, defaultValue: number) {
+  const duration = parseFloat(el.getAttribute(DURATION_ATTR) || defaultValue.toString());
+  return duration;
+}
+
+function getStaggerAttrValue(el: HTMLElement, defaultValue: number) {
+  const stagger = parseFloat(el.getAttribute(STAGGER_ATTR) || defaultValue.toString());
+  return stagger;
+}
+
+function getTriggerAttrValue(el: HTMLElement, defaultValue: string) {
+  const trigger = el.getAttribute(TRIGGER_ATTR) || defaultValue;
+  return trigger;
 }
