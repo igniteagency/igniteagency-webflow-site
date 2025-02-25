@@ -8,7 +8,6 @@ export function horizontalScroll() {
 
   if (wrapper && sections.length) {
     const numSections = sections.length;
-    const totalHorizontalMovement = window.innerWidth * (numSections - 1);
     const totalVerticalScroll = window.innerHeight * numSections;
 
     // First ScrollTrigger: Pin the wrapper during the horizontal scroll
@@ -18,6 +17,7 @@ export function horizontalScroll() {
       end: () => '+=' + totalVerticalScroll,
       pin: true,
       anticipatePin: 1,
+      invalidateOnRefresh: true,
     });
 
     // Calculate snap points based on normalized progress
@@ -25,7 +25,7 @@ export function horizontalScroll() {
 
     // Second ScrollTrigger: Animate the horizontal scrolling of the sections
     window.gsap.to(wrapper, {
-      x: -totalHorizontalMovement,
+      x: () => -1 * window.innerWidth * (numSections - 1),
       ease: 'none',
       scrollTrigger: {
         trigger: `${HORIZONTAL_SCROLL_SELECTOR}`,
@@ -37,6 +37,7 @@ export function horizontalScroll() {
         // },
         start: 'top top',
         end: () => '+=' + totalVerticalScroll,
+        invalidateOnRefresh: true,
       },
     });
 
