@@ -38,8 +38,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   animateBook();
 });
 
-const CURRENT_YEAR = document.getElementById('current-year');
+const currentYearElements = document.querySelectorAll('[data-current-year]');
 
-if (CURRENT_YEAR) {
-  CURRENT_YEAR.textContent = new Date().getFullYear().toString();
-}
+currentYearElements.forEach((element) => {
+  element.textContent = new Date().getFullYear().toString();
+});
