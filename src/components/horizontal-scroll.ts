@@ -8,13 +8,14 @@ export function horizontalScroll() {
 
   if (wrapper && sections.length) {
     const numSections = sections.length;
-    const totalVerticalScroll = window.innerHeight * numSections;
+
+    const totalVerticalScroll = () => window.innerHeight * numSections;
 
     // First ScrollTrigger: Pin the wrapper during the horizontal scroll
     window.ScrollTrigger.create({
       trigger: `${HORIZONTAL_SCROLL_SELECTOR}`,
       start: 'top top',
-      end: () => '+=' + totalVerticalScroll,
+      end: () => '+=' + totalVerticalScroll(),
       pin: true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
@@ -36,7 +37,7 @@ export function horizontalScroll() {
         //   ease: 'power1.inOut',
         // },
         start: 'top top',
-        end: () => '+=' + totalVerticalScroll,
+        end: () => '+=' + totalVerticalScroll(),
         invalidateOnRefresh: true,
       },
     });
