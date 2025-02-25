@@ -150,14 +150,10 @@ export function textAnimation() {
     });
 
   // Simple resize handler for responsive text splitting
-  let resizeTimer: number;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      // Refresh all split instances
-      splitInstances.forEach((instance) => instance.revert());
-      splitInstances.forEach((instance) => instance.split());
-    }, 200);
+  window.ScrollTrigger.addEventListener('refreshInit', () => {
+    // Refresh all split instances
+    splitInstances.forEach((instance) => instance.revert());
+    splitInstances.forEach((instance) => instance.split());
   });
 }
 
