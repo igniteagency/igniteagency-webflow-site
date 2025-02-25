@@ -1,18 +1,21 @@
+import { HORIZONTAL_SCROLL_SELECTOR } from '$src/constants';
+
 export function horizontalScroll() {
-  const wrapper = document.querySelector('.horizontal-scroll') as HTMLElement | null;
-  const sections = window.gsap.utils.toArray('.horizontal-scroll > section') as HTMLElement[];
+  const wrapper = document.querySelector(`${HORIZONTAL_SCROLL_SELECTOR}`) as HTMLElement | null;
+  const sections = window.gsap.utils.toArray(
+    `${HORIZONTAL_SCROLL_SELECTOR} > section`
+  ) as HTMLElement[];
 
   if (wrapper && sections.length) {
     const numSections = sections.length;
     const totalHorizontalMovement = window.innerWidth * (numSections - 1);
-    const totalVerticalScroll = window.innerHeight * (numSections - 1);
+    const totalVerticalScroll = window.innerHeight * numSections;
 
     // First ScrollTrigger: Pin the wrapper during the horizontal scroll
     window.ScrollTrigger.create({
-      trigger: '.horizontal-scroll',
+      trigger: `${HORIZONTAL_SCROLL_SELECTOR}`,
       start: 'top top',
-      //end: () => '+=' + (totalVerticalScroll + window.innerHeight),
-      end: () => '+=' + (totalVerticalScroll - window.innerHeight),
+      end: () => '+=' + totalVerticalScroll,
       pin: true,
       anticipatePin: 1,
     });
@@ -25,15 +28,15 @@ export function horizontalScroll() {
       x: -totalHorizontalMovement,
       ease: 'none',
       scrollTrigger: {
-        trigger: '.horizontal-scroll',
+        trigger: `${HORIZONTAL_SCROLL_SELECTOR}`,
         scrub: true,
         // snap: {
         //   snapTo: snapPoints,
         //   duration: { min: 0.2, max: 0.5 },
         //   ease: 'power1.inOut',
         // },
-        start: 'top bottom',
-        end: () => '+=' + (totalVerticalScroll + window.innerHeight),
+        start: 'top top',
+        end: () => '+=' + totalVerticalScroll,
       },
     });
 
