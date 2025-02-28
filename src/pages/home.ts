@@ -36,7 +36,9 @@ function setHorizontalScrollWrapperHeight() {
 
   // Create a resize observer to update height when window resizes
   window.ScrollTrigger.addEventListener('refresh', () => {
-    setHeight();
+    window.gsap.delayedCall(0.05, () => {
+      setHeight();
+    });
   });
 }
 
