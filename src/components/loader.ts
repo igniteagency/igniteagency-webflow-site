@@ -270,7 +270,7 @@ export function loaderAnimation() {
   // Start the animation
   loaderTimeline.play();
 
-  console.log('Loader animation initialized and started');
+  console.debug('Loader animation initialized and started');
 
   return loaderTimeline; // Return the timeline in case it needs to be controlled externally
 }

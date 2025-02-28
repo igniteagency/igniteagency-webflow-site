@@ -12,7 +12,7 @@ window.setScriptsENV = (env) => {
 
   localStorage.setItem(ENV_LOCALSTORAGE_ID, env);
   window.SCRIPTS_ENV = env;
-  console.log(`Environment successfully set to ${env}`);
+  console.debug(`Environment successfully set to ${env}`);
 };
 
 function getENV(): SCRIPTS_ENV {

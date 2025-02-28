@@ -47,7 +47,7 @@ if (!production) {
     port: 3000,
   });
 
-  console.log(`Serving at http://localhost:${port}`);
+  console.debug(`Serving at http://localhost:${port}`);
 } else {
   esbuild.build(buildSettings).catch(() => process.exit(1));
 }

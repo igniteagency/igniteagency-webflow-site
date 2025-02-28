@@ -22,7 +22,7 @@ window.addEventListener('DOMContentLoaded', addJS);
  * Sets an object `window.isLocal` and adds all the set scripts using the `window.JS_SCRIPTS` Set
  */
 function addJS() {
-  console.log(`Current mode: ${window.SCRIPTS_ENV}`);
+  console.debug(`Current mode: ${window.SCRIPTS_ENV}`);
 
   if (window.SCRIPTS_ENV === 'dev') {
     fetchLocalScripts();
