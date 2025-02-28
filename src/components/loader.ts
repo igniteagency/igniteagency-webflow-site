@@ -145,12 +145,12 @@ export function loaderAnimation() {
     boltTimeline.to(allBoltGroups, {
       scale: 1, // Scale back to normal
       rotation: 0, // Return to upright position
-      duration: 1,
-      ease: 'power3.inOut',
+      duration: 1.2,
+      ease: 'power4.inOut',
       transformOrigin: 'center center', // Ensure consistent transform origin during animation
       svgOrigin: 'center center', // SVG-specific origin setting
       stagger: {
-        amount: 0.5, // Total amount of stagger time
+        amount: 1, // Total amount of stagger time
         from: 'start', // Start from the first element
         ease: 'power2.in',
       },
@@ -172,6 +172,12 @@ export function loaderAnimation() {
       if (clonePath) allBoltPaths.push(clonePath);
     });
 
+    // Get the computed value of the brand color from an existing element
+    const cursorBackground = document.querySelector('.cursor_background');
+    const brandRedColor = cursorBackground
+      ? getComputedStyle(cursorBackground).backgroundColor
+      : '#ff0000';
+
     // Fill all bolts with black simultaneously
     boltTimeline.to(
       allBoltPaths,
@@ -182,6 +188,66 @@ export function loaderAnimation() {
         ease: 'power2.inOut',
       },
       '+=0.1' // Small delay after the flash effect
+    );
+
+    // Scale up all bolts and transition to red
+    boltTimeline.to(
+      allBoltGroups,
+      {
+        scale: 1.2, // Scale up slightly
+        duration: 0.4,
+      },
+      '+=0.2' // Small delay after turning black
+    );
+
+    boltTimeline.to(
+      allBoltPaths,
+      {
+        fill: brandRedColor, // Use the computed color value for smooth transition
+        stroke: brandRedColor,
+        duration: 0.4,
+      },
+      '<' // Start at the same time as the scale up
+    );
+
+    // Reposition clones to stack vertically
+    // Use exactly 3 clones for top and 3 for bottom
+    const clonesForTop = duplicates.slice(0, 3); // First 3 clones for top
+    const clonesForBottom = duplicates.slice(3, 6); // Next 3 clones for bottom
+
+    // Hide all other clones that won't be used in the stacking
+    if (duplicates.length > 6) {
+      gsap.set(duplicates.slice(6), { opacity: 0 });
+    }
+
+    // Stack the first 3 clones above the original
+    boltTimeline.to(
+      clonesForTop,
+      {
+        yPercent: (index) => -63 * (index + 1), // -63, -126, -189
+        xPercent: (index) => -79 * (index + 1), // -79, -158, -237
+        duration: 0.8,
+        stagger: {
+          amount: 0.3,
+          from: 'end', // Start from the furthest one
+        },
+      },
+      '+=0.2' // Small delay after turning red
+    );
+
+    // Stack the next 3 clones below the original
+    boltTimeline.to(
+      clonesForBottom,
+      {
+        yPercent: (index) => 63 * (index + 1), // 63, 126, 189
+        xPercent: (index) => 79 * (index + 1), // 79, 158, 237
+        duration: 0.8,
+        stagger: {
+          amount: 0.3,
+          from: 'start', // Start from the closest one
+        },
+      },
+      '<' // Start at the same time as the upper stack
     );
 
     // Add the bolt timeline to the main timeline
