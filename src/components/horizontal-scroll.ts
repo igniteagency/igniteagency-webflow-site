@@ -22,7 +22,7 @@ export function horizontalScroll() {
     });
 
     // Calculate snap points based on normalized progress
-    const snapPoints = sections.map((s, i) => i / (numSections - 1));
+    //const snapPoints = sections.map((s, i) => i / (numSections - 1));
 
     // Second ScrollTrigger: Animate the horizontal scrolling of the sections
     window.gsap.to(wrapper, {
