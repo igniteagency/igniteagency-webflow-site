@@ -117,7 +117,7 @@ export function loaderAnimation() {
     .to(
       '.loader_number-wrapper',
       {
-        right: '2rem',
+        right: '3rem',
         duration: 2.0,
       },
       '<'
@@ -130,7 +130,7 @@ export function loaderAnimation() {
         duration: 0.8,
         ease: 'power2.inOut',
       },
-      '+=0.3' // Small delay after reaching 100
+      '+=0.1' // Small delay after reaching 100
     );
 
   // Add the number timeline to the main timeline
@@ -150,7 +150,7 @@ export function loaderAnimation() {
       transformOrigin: 'center center', // Ensure consistent transform origin during animation
       svgOrigin: 'center center', // SVG-specific origin setting
       stagger: {
-        amount: 1, // Total amount of stagger time
+        amount: 0.3, // Total amount of stagger time
         from: 'start', // Start from the first element
         ease: 'power2.in',
       },
@@ -179,16 +179,16 @@ export function loaderAnimation() {
       : '#ff0000';
 
     // Fill all bolts with black simultaneously
-    boltTimeline.to(
-      allBoltPaths,
-      {
-        fill: 'black',
-        stroke: 'black',
-        duration: 0.4,
-        ease: 'power2.inOut',
-      },
-      '+=0.1' // Small delay after the flash effect
-    );
+    // boltTimeline.to(
+    //   allBoltPaths,
+    //   {
+    //     fill: 'black',
+    //     stroke: 'black',
+    //     duration: 0.4,
+    //     ease: 'power2.inOut',
+    //   },
+    //   '+=0.1' // Small delay after the flash effect
+    // );
 
     // Scale up all bolts and transition to red
     boltTimeline.to(
@@ -197,7 +197,7 @@ export function loaderAnimation() {
         scale: 1.2, // Scale up slightly
         duration: 0.4,
       },
-      '+=0.2' // Small delay after turning black
+      '-=0.2' // Small delay after turning black
     );
 
     boltTimeline.to(
@@ -211,44 +211,208 @@ export function loaderAnimation() {
     );
 
     // Reposition clones to stack vertically
-    // Use exactly 3 clones for top and 3 for bottom
-    const clonesForTop = duplicates.slice(0, 3); // First 3 clones for top
-    const clonesForBottom = duplicates.slice(3, 6); // Next 3 clones for bottom
+    // Use exactly 4 clones for top and 4 for bottom, but keep all clones visible until now
+    const clonesForTop = duplicates.slice(0, 4); // First 4 clones for top
+    const clonesForBottom = duplicates.slice(4, 8); // Next 4 clones for bottom
 
-    // Hide all other clones that won't be used in the stacking
-    if (duplicates.length > 6) {
-      gsap.set(duplicates.slice(6), { opacity: 0 });
+    // Hide all other clones that won't be used in the stacking, but only after the red transition
+    if (duplicates.length > 8) {
+      boltTimeline.to(
+        duplicates.slice(8),
+        {
+          opacity: 0,
+          duration: 0.2,
+        },
+        '>' // Small delay after turning red
+      );
     }
 
-    // Stack the first 3 clones above the original
+    // Stack the first 4 clones above the original
     boltTimeline.to(
       clonesForTop,
       {
-        yPercent: (index) => -63 * (index + 1), // -63, -126, -189
-        xPercent: (index) => -79 * (index + 1), // -79, -158, -237
+        yPercent: (index) => -63 * (index + 1), // -63, -126, -189, -252
+        xPercent: (index) => -79 * (index + 1), // -79, -158, -237, -316
         duration: 0.8,
+        ease: 'power4.out',
         stagger: {
-          amount: 0.3,
+          amount: 0.1,
           from: 'end', // Start from the furthest one
         },
       },
-      '+=0.2' // Small delay after turning red
+      '>' // Small delay after turning red
     );
 
-    // Stack the next 3 clones below the original
+    // Stack the next 4 clones below the original
     boltTimeline.to(
       clonesForBottom,
       {
-        yPercent: (index) => 63 * (index + 1), // 63, 126, 189
-        xPercent: (index) => 79 * (index + 1), // 79, 158, 237
+        yPercent: (index) => 63 * (index + 1), // 63, 126, 189, 252
+        xPercent: (index) => 79 * (index + 1), // 79, 158, 237, 316
         duration: 0.8,
+        ease: 'power4.out',
         stagger: {
-          amount: 0.3,
+          amount: 0.1,
           from: 'start', // Start from the closest one
         },
       },
       '<' // Start at the same time as the upper stack
     );
+
+    // Path animation for all visible bolts (original + 8 clones)
+    // Function to create path animation for each SVG path
+    function createPathExpandAnimation(pathElement: Element, maxOffset = 10, duration = 1.2) {
+      // Get the original path data
+      const originalPathData = pathElement.getAttribute('d');
+      if (!originalPathData) return null;
+
+      // Parse the path data to extract points
+      // This is a simplified approach - in a real implementation, you'd need a more robust path parser
+      const pathCommands = originalPathData.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
+      const originalPoints: { command: string; x: number; y: number; isAbsolute: boolean }[] = [];
+
+      // Parse each command in the path
+      pathCommands.forEach((cmd) => {
+        const command = cmd.charAt(0);
+        const isAbsolute = command === command.toUpperCase();
+        const values = cmd
+          .substring(1)
+          .trim()
+          .split(/[\s,]+/)
+          .map(parseFloat);
+
+        // Handle different command types (M, L, H, V, Z, etc.)
+        switch (command.toUpperCase()) {
+          case 'M': // Move to
+          case 'L': // Line to
+            for (let i = 0; i < values.length; i += 2) {
+              originalPoints.push({
+                command: command,
+                x: values[i],
+                y: values[i + 1],
+                isAbsolute,
+              });
+            }
+            break;
+          case 'H': // Horizontal line
+            values.forEach((x) => {
+              originalPoints.push({
+                command: command,
+                x,
+                y: 0, // Y doesn't change for H command
+                isAbsolute,
+              });
+            });
+            break;
+          case 'V': // Vertical line
+            values.forEach((y) => {
+              originalPoints.push({
+                command: command,
+                x: 0, // X doesn't change for V command
+                y,
+                isAbsolute,
+              });
+            });
+            break;
+          case 'Z': // Close path
+            originalPoints.push({
+              command: command,
+              x: 0,
+              y: 0,
+              isAbsolute: true,
+            });
+            break;
+          // Add more cases for other SVG path commands as needed
+        }
+      });
+
+      // Create animation state object
+      const state = { offset: 0 };
+
+      // Create update function for this specific path
+      const update = () => {
+        const offset = state.offset;
+
+        // Apply offsets to create the animation effect
+        // For the first half of points, move left/up
+        // For the second half, move right/down
+        const midpoint = Math.floor(originalPoints.length / 2);
+
+        let newPathData = '';
+
+        originalPoints.forEach((point, index) => {
+          // Determine direction of offset based on point position
+          const direction = index < midpoint ? -1 : 1;
+          const xOffset = direction * offset;
+
+          // Apply offset based on command type
+          let newX = point.x;
+          let newY = point.y;
+
+          if (point.command.toUpperCase() !== 'Z') {
+            if (point.command.toUpperCase() !== 'V') {
+              newX = point.x + xOffset;
+            }
+          }
+
+          // Build the new path data
+          if (point.command.toUpperCase() === 'M') {
+            newPathData += `M${newX} ${newY}`;
+          } else if (point.command.toUpperCase() === 'L') {
+            newPathData += `L${newX} ${newY}`;
+          } else if (point.command.toUpperCase() === 'H') {
+            newPathData += `H${newX}`;
+          } else if (point.command.toUpperCase() === 'V') {
+            newPathData += `V${newY}`;
+          } else if (point.command.toUpperCase() === 'Z') {
+            newPathData += 'Z';
+          }
+        });
+
+        // Update the path element with new data
+        pathElement.setAttribute('d', newPathData);
+      };
+
+      // Create a timeline for this path animation
+      const pathTl = gsap.timeline();
+
+      // Add animation to the timeline
+      pathTl.to(state, {
+        offset: maxOffset,
+        duration: duration,
+        ease: 'power4.inOut',
+        onUpdate: update,
+      });
+
+      return pathTl;
+    }
+
+    // Get all visible bolt paths (original + 8 clones)
+    const visibleBoltPaths = [originalPath];
+    [...clonesForTop, ...clonesForBottom].forEach((clone) => {
+      const clonePath = clone.querySelector('.loader_center-bolt-path');
+      if (clonePath) visibleBoltPaths.push(clonePath);
+    });
+
+    // Create a master timeline for all path animations
+    const pathAnimationTimeline = gsap.timeline();
+
+    // Calculate expansion amount based on half the screen width
+    const screenWidth = window.innerWidth;
+    const expansionAmount = screenWidth / 3;
+
+    // Add path animations with no stagger
+    visibleBoltPaths.forEach((path, index) => {
+      if (path) {
+        const pathTl = createPathExpandAnimation(path, expansionAmount, 1);
+        if (pathTl) {
+          pathAnimationTimeline.add(pathTl, 0);
+        }
+      }
+    });
+
+    // Add the path animation timeline to the bolt timeline
+    boltTimeline.add(pathAnimationTimeline, '>'); // Small delay after stacking
 
     // Add the bolt timeline to the main timeline
     loaderTimeline.add(boltTimeline, '-=1'); // Start 0.5s earlier than before
@@ -258,14 +422,15 @@ export function loaderAnimation() {
   loaderTimeline.to(
     '.loader',
     {
-      duration: 0.8,
+      duration: 0.5,
       ease: 'power2.inOut',
+      yPercent: -100,
       onComplete: () => {
-        //document.querySelector('.loader').style.display = 'none';
+        document.querySelector('.loader').style.display = 'none';
       },
     },
-    '+=0.3'
-  ); // Small pause after number disappears
+    '-=0.2'
+  );
 
   // Start the animation
   loaderTimeline.play();
