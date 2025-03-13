@@ -7,9 +7,31 @@ export function footerSpacer() {
   if (source && target) {
     target.style.height = source.offsetHeight + 'px';
   }
+}
 
-  //
-  ////
-  ///
-  ///
+export function footerNextPageAnimation() {
+  // Select the footer next page wrapper
+  const nextPageWrapper = document.querySelector('.footer_next-page_wrapper');
+  // Select the trigger element
+  const triggerElement = document.querySelector('.section_supercharged');
+
+  if (!nextPageWrapper || !triggerElement) return;
+
+  // Select all direct children of the wrapper
+  const children = nextPageWrapper.children;
+
+  if (!children.length) return;
+
+  // Create the ScrollTrigger animation
+  window.gsap.from(children, {
+    yPercent: 100,
+    duration: 1.4,
+    ease: 'expo.inOut',
+    stagger: 0.1, // Stagger each child by 0.1 seconds
+    scrollTrigger: {
+      trigger: triggerElement,
+      start: 'bottom 70%', // Start animation when the bottom of the trigger element is 80% from the top of the viewport (20% from bottom)
+      //once: true, // Only trigger the animation once
+    },
+  });
 }

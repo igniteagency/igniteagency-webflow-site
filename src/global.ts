@@ -8,7 +8,7 @@ import SplitType from 'split-type';
 import { animatedDetailsAccordions } from '$components/accordions';
 import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
-import { footerSpacer } from '$components/footer';
+import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
 import { loaderAnimation } from '$components/loader';
 import { menuAnimation } from '$components/menu';
@@ -16,6 +16,7 @@ import { mouseTrackImage } from '$components/mouse-track-img';
 import { navHideShow } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
 import { textAnimation } from '$components/text';
+
 import { SCRIPTS_LOADED_EVENT } from './constants';
 
 window.gsap = gsap;
@@ -27,6 +28,7 @@ window.SplitType = SplitType;
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   footerSpacer();
+  footerNextPageAnimation();
   horizontalScroll();
   textAnimation();
   testimonialCards();
