@@ -13,55 +13,158 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 });
 
 function introScrubText() {
-  // Select all paragraph wrappers
+  // Select all paragraph wrappers and the scroll container
   const paragraphWrappers = document.querySelectorAll('.scrub-intro_paragraph-wrapper');
+  const scrollContainer = document.querySelector('.scrub-intro_scroll-container');
+  const imageWrapper = document.querySelector('.scrub-intro_image-wrapper');
 
-  gsap.to('.scrub-intro_image-wrapper', {
-    scrollTrigger: {
-      trigger: '.scrub-intro_scroll-container', // The container that triggers the animation
-      start: 'top 20%', // Start when the top of the trigger is 20% from the top of the viewport
-      end: 'top top', // End when the top of the trigger hits the top of the viewport
-      scrub: true, // Smooth scrubbing
-    },
-    scale: 0.8, // Target scale
-    opacity: 0.5, // Target opacity
-  });
+  if (!scrollContainer) {
+    console.warn('Scroll container not found for intro scrub text');
+    return;
+  }
 
-  gsap.to;
+  // Handle image animation
+  if (imageWrapper) {
+    gsap.to(imageWrapper, {
+      scrollTrigger: {
+        trigger: scrollContainer,
+        start: 'top 20%',
+        end: 'top top',
+        scrub: true,
+      },
+      scale: 0.8,
+      opacity: 0.5,
+    });
+  }
+
+  // Initialize SplitType for all paragraphs
+  const splitTexts: any[] = [];
+  let totalChars = 0;
+  let minCharsPerParagraph = 40; // Minimum character count for very short paragraphs
+
+  // First pass: split text and count characters
   paragraphWrappers.forEach((wrapper) => {
     const paragraph = wrapper.querySelector('.scrub-intro_paragraph');
+    if (!paragraph) return;
 
     // Split the paragraph text into characters
-    new window.SplitType(paragraph, { types: ['words', 'chars'] });
+    const split = new window.SplitType(paragraph, { types: ['words', 'chars'] });
 
-    // Set up ScrollTrigger for each wrapper
-    gsap
-      .timeline({
-        scrollTrigger: {
-          trigger: wrapper, // Trigger is the wrapper
-          start: 'top top', // Start when the wrapper hits the top of the viewport
-          end: 'bottom bottom', // End when the wrapper scrolls out of view
-          scrub: true, // Tie animations to scroll progress
-        },
-      })
-      // Animate paragraph opacity (fade in and fade out)
-      .fromTo(paragraph, { opacity: 0 }, { opacity: 1, duration: 4, ease: 'power2.inOut' })
-      // Animate text scrub effect (letter-by-letter opacity)
-      .fromTo(
-        paragraph.querySelectorAll('.char'),
-        { opacity: 0.2 }, // Letters start slightly visible
+    // Count characters for this paragraph
+    const chars = paragraph.querySelectorAll('.char');
+    // Apply minimum character count for very short paragraphs
+    const effectiveCharCount = Math.max(chars.length, minCharsPerParagraph);
+
+    splitTexts.push({
+      split,
+      paragraph,
+      wrapper,
+      charCount: chars.length,
+      effectiveCharCount, // Store the effective count for timeline calculations
+    });
+
+    totalChars += effectiveCharCount;
+
+    // Set initial state
+    gsap.set(chars, { opacity: 0.3 });
+    gsap.set(wrapper, { opacity: 0 });
+  });
+
+  // Set scroll container height based on total character count
+  // This is the main control for animation speed - adjust this multiplier to change overall speed
+  if (totalChars > 0) {
+    // Base height on character count - this makes longer paragraphs take more scroll distance
+    const SCROLL_MULTIPLIER = 30; // Lower = faster animation
+    const containerHeight = totalChars * SCROLL_MULTIPLIER;
+    (scrollContainer as HTMLElement).style.height = `${containerHeight}px`;
+  }
+
+  // Create main timeline for sequencing the paragraphs
+  const mainTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: scrollContainer,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.5, // Small amount of smoothing
+    },
+  });
+
+  // Distribute the timeline across the full scroll
+  let progress = 0;
+
+  // Create animations for each paragraph
+  splitTexts.forEach(({ split, paragraph, wrapper, charCount, effectiveCharCount }, index) => {
+    const chars = paragraph.querySelectorAll('.char');
+    const isLastParagraph = index === splitTexts.length - 1;
+
+    // Calculate how much of the timeline this paragraph should occupy
+    // based on its effective character count relative to total
+    const progressPortion = effectiveCharCount / totalChars;
+
+    // Create a timeline for this paragraph
+    const paragraphTimeline = gsap.timeline();
+
+    // Fixed proportions for each animation phase
+    const FADE_IN_PROPORTION = 0.05; // 5% of paragraph time
+    const CHAR_ANIMATION_PROPORTION = 0.1; // 10% of paragraph time
+    const HOLD_PROPORTION = 0.7; // 70% of paragraph time
+    const FADE_OUT_PROPORTION = 0.15; // 15% of paragraph time
+
+    // Fixed stagger value - small enough to be quick but visible
+    const CHAR_STAGGER = 0.003;
+
+    paragraphTimeline
+      // Fade in the wrapper
+      .to(
+        wrapper,
         {
-          opacity: 1, // Animate to fully visible
-          stagger: {
-            each: 0.1, // Spread animation across letters
-            ease: 'none', // Smooth, linear easing tied to scroll
-          },
-          duration: 1, // Actual timing is tied to scroll
+          opacity: 1,
+          duration: progressPortion * FADE_IN_PROPORTION,
+          ease: 'power1.in',
         },
-        '<' // Start text scrub immediately after fade-in
+        0
       )
-      // Fade out the paragraph opacity
-      .to(paragraph, { opacity: 0, duration: 4, ease: 'power2.inOut' });
+      // Animate characters
+      .to(
+        chars,
+        {
+          opacity: 1,
+          duration: progressPortion * CHAR_ANIMATION_PROPORTION,
+          stagger: {
+            each: CHAR_STAGGER,
+            from: 'start',
+          },
+          ease: 'none', // Linear ease for consistent character reveal
+        },
+        0 // Start at the same time as wrapper fade-in
+      )
+      // Hold at full visibility
+      .to(
+        {},
+        {
+          duration: progressPortion * HOLD_PROPORTION,
+        },
+        progressPortion * (FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION) // Start after character animation
+      );
+
+    // Only add fade-out for paragraphs that aren't the last one
+    if (!isLastParagraph) {
+      paragraphTimeline.to(
+        wrapper,
+        {
+          opacity: 0,
+          duration: progressPortion * FADE_OUT_PROPORTION,
+          ease: 'power1.out',
+        },
+        progressPortion * (FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION + HOLD_PROPORTION) // Start after hold period
+      );
+    }
+
+    // Add this paragraph's timeline to the main timeline
+    mainTimeline.add(paragraphTimeline, progress);
+
+    // Update progress for next paragraph
+    progress += progressPortion;
   });
 }
 
@@ -122,7 +225,8 @@ function featuredWorkSlider() {
 
 function showerConfetti() {
   const canvas = document.querySelector<HTMLCanvasElement>('#canvas-target');
-  const jsConfetti = new JSConfetti({ canvas });
+  // Use non-null assertion since JSConfetti can handle null canvas
+  const jsConfetti = new JSConfetti({ canvas: canvas || undefined });
 
   const showConfetti = (event: MouseEvent) => {
     jsConfetti.addConfetti({
@@ -137,7 +241,7 @@ function showerConfetti() {
 }
 
 function rainEmojis() {
-  const matterCanvas = document.querySelector('#matter-canvas-target');
+  const matterCanvas = document.querySelector<HTMLCanvasElement>('#matter-canvas-target');
 
   if (!matterCanvas) {
     console.warn('Matter canvas not found for emoji rain');
@@ -147,8 +251,8 @@ function rainEmojis() {
   // Configuration
   const config = {
     // Base size as percentage of viewport height or width
-    objectSizeHeightBased: window.innerHeight * 0.1, // 12% of viewport height
-    // objectSizeWidthBased: window.innerWidth * 0.06, // 6% of viewport width
+    objectSizeHeightBased: window.innerHeight * 0.1, // 10% of viewport height
+    objectSizeWidthBased: window.innerWidth * 0.06, // 6% of viewport width
     // Use either objectSizeHeightBased or objectSizeWidthBased below
     get objectSize() {
       return this.objectSizeHeightBased; // Change to objectSizeWidthBased to test width-based scaling
@@ -258,7 +362,9 @@ function rainEmojis() {
     },
   });
 
-  function updateMousePosition(e) {
+  function updateMousePosition(e: MouseEvent) {
+    if (!matterCanvas) return;
+
     const rect = matterCanvas.getBoundingClientRect();
     const scaleX = matterCanvas.width / rect.width;
     const scaleY = matterCanvas.height / rect.height;
