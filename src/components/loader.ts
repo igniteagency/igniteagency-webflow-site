@@ -1,4 +1,19 @@
 export function loaderAnimation() {
+  // Check if loader has already been shown in this session
+  const loaderShown = sessionStorage.getItem('loaderShown');
+
+  // Get the loader element
+  const loaderElement = document.querySelector('.loader');
+
+  // If loader has been shown before in this session, hide it immediately and return
+  if (loaderShown === 'true' && loaderElement) {
+    loaderElement.style.display = 'none';
+    return;
+  }
+
+  // Mark that the loader has been shown for this session
+  sessionStorage.setItem('loaderShown', 'true');
+
   // GSAP Loader Animation Sequence
   // Main timeline
   const loaderTimeline = gsap.timeline({
@@ -426,7 +441,10 @@ export function loaderAnimation() {
       ease: 'power2.inOut',
       yPercent: -100,
       onComplete: () => {
-        document.querySelector('.loader').style.display = 'none';
+        const loader = document.querySelector('.loader');
+        if (loader) {
+          loader.style.display = 'none';
+        }
       },
     },
     '-=0.2'
