@@ -25,13 +25,13 @@ export function footerNextPageAnimation() {
   // Create the ScrollTrigger animation
   window.gsap.from(children, {
     yPercent: 100,
-    duration: 1.4,
+    duration: 1,
     ease: 'expo.inOut',
     stagger: 0.1, // Stagger each child by 0.1 seconds
     scrollTrigger: {
       trigger: triggerElement,
-      start: 'bottom 70%', // Start animation when the bottom of the trigger element is 80% from the top of the viewport (20% from bottom)
-      //once: true, // Only trigger the animation once
+      start: 'bottom 95%', // Start animation when the bottom of the trigger element is 80% from the top of the viewport (20% from bottom)
+      toggleActions: 'play reverse restart reverse', // play on enter, reverse on leave, restart on enter again, reverse on leave again
     },
   });
 }
