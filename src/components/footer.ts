@@ -135,6 +135,14 @@ export function footerNextPageAnimation() {
           '--scroll-progress-percent',
           `${animationProgress * 100}%`
         );
+
+        // Find the background element if it exists and apply the transform directly
+        const backgroundElement = nextPageWrapper.querySelector('.footer_next-page_background');
+        if (backgroundElement) {
+          // Calculate the transform value based on progress (assuming --spacing--2 is 2rem)
+          const transformValue = animationProgress * -2; // Negative for upward movement
+          backgroundElement.style.transform = `translateY(${transformValue}rem)`;
+        }
       };
 
       // Create a GSAP timeline for progress animation (optional)
