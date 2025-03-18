@@ -43,7 +43,7 @@ function introScrubText() {
   let minCharsPerParagraph = 40; // Minimum character count for very short paragraphs
 
   // First pass: split text and count characters
-  paragraphWrappers.forEach((wrapper) => {
+  paragraphWrappers.forEach((wrapper, idx) => {
     const paragraph = wrapper.querySelector('.scrub-intro_paragraph');
     if (!paragraph) return;
 
@@ -67,7 +67,9 @@ function introScrubText() {
 
     // Set initial state
     gsap.set(chars, { opacity: 0.3 });
-    gsap.set(wrapper, { opacity: 0 });
+
+    // Set initial opacity - first paragraph visible, others hidden
+    gsap.set(wrapper, { opacity: idx === 0 ? 1 : 0 });
   });
 
   // Set scroll container height based on total character count
@@ -96,6 +98,7 @@ function introScrubText() {
   splitTexts.forEach(({ split, paragraph, wrapper, charCount, effectiveCharCount }, index) => {
     const chars = paragraph.querySelectorAll('.char');
     const isLastParagraph = index === splitTexts.length - 1;
+    const isFirstParagraph = index === 0;
 
     // Calculate how much of the timeline this paragraph should occupy
     // based on its effective character count relative to total
@@ -113,9 +116,9 @@ function introScrubText() {
     // Fixed stagger value - small enough to be quick but visible
     const CHAR_STAGGER = 0.003;
 
-    paragraphTimeline
-      // Fade in the wrapper
-      .to(
+    // For the first paragraph, skip the fade-in since it's already visible
+    if (!isFirstParagraph) {
+      paragraphTimeline.to(
         wrapper,
         {
           opacity: 1,
@@ -123,29 +126,35 @@ function introScrubText() {
           ease: 'power1.in',
         },
         0
-      )
-      // Animate characters
-      .to(
-        chars,
-        {
-          opacity: 1,
-          duration: progressPortion * CHAR_ANIMATION_PROPORTION,
-          stagger: {
-            each: CHAR_STAGGER,
-            from: 'start',
-          },
-          ease: 'none', // Linear ease for consistent character reveal
-        },
-        0 // Start at the same time as wrapper fade-in
-      )
-      // Hold at full visibility
-      .to(
-        {},
-        {
-          duration: progressPortion * HOLD_PROPORTION,
-        },
-        progressPortion * (FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION) // Start after character animation
       );
+    }
+
+    // Animate characters
+    paragraphTimeline.to(
+      chars,
+      {
+        opacity: 1,
+        duration: progressPortion * CHAR_ANIMATION_PROPORTION,
+        stagger: {
+          each: CHAR_STAGGER,
+          from: 'start',
+        },
+        ease: 'none', // Linear ease for consistent character reveal
+      },
+      isFirstParagraph ? 0 : progressPortion * FADE_IN_PROPORTION // For first paragraph, start right away
+    );
+
+    // Hold at full visibility
+    paragraphTimeline.to(
+      {},
+      {
+        duration: progressPortion * HOLD_PROPORTION,
+      },
+      progressPortion *
+        (isFirstParagraph
+          ? CHAR_ANIMATION_PROPORTION
+          : FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION) // Adjust start time for first paragraph
+    );
 
     // Only add fade-out for paragraphs that aren't the last one
     if (!isLastParagraph) {
@@ -156,7 +165,10 @@ function introScrubText() {
           duration: progressPortion * FADE_OUT_PROPORTION,
           ease: 'power1.out',
         },
-        progressPortion * (FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION + HOLD_PROPORTION) // Start after hold period
+        progressPortion *
+          (isFirstParagraph
+            ? CHAR_ANIMATION_PROPORTION + HOLD_PROPORTION
+            : FADE_IN_PROPORTION + CHAR_ANIMATION_PROPORTION + HOLD_PROPORTION) // Adjust start time for first paragraph
       );
     }
 
