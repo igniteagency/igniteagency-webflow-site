@@ -1,180 +1,342 @@
-import JSConfetti from 'js-confetti';
+import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 
-// Define our global functions immediately so they're available even if DOMContentLoaded doesn't fire
-// These will be properly initialized later
-(window as any).triggerReviewsConfetti = () => {
-  console.log('Global confetti function called, but not yet initialized');
-};
+// Wait for all scripts to be loaded before initializing
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  initHeartsAnimation();
+});
 
-(window as any).stopReviewsConfetti = () => {
-  console.log('Stop function called, but not yet initialized');
-};
+// Function to initialize custom floating hearts animation
+function initHeartsAnimation() {
+  // Create or use existing canvases - one behind content, one in front
+  const createHeartCanvases = () => {
+    // Background canvas (behind testimonial cards) - lower z-index
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.id = 'reviews-hearts-bg-canvas';
+    bgCanvas.style.position = 'fixed';
+    bgCanvas.style.top = '0';
+    bgCanvas.style.left = '0';
+    bgCanvas.style.width = '100%';
+    bgCanvas.style.height = '100%';
+    bgCanvas.style.pointerEvents = 'none';
+    bgCanvas.style.zIndex = '1'; // Lower z-index, behind cards
 
-// Function to initialize confetti that can be called directly
-function initReviewsConfetti() {
-  console.log('Reviews confetti initialization function called');
+    // Foreground canvas (in front of testimonial cards) - higher z-index
+    const fgCanvas = document.createElement('canvas');
+    fgCanvas.id = 'reviews-hearts-fg-canvas';
+    fgCanvas.style.position = 'fixed';
+    fgCanvas.style.top = '0';
+    fgCanvas.style.left = '0';
+    fgCanvas.style.width = '100%';
+    fgCanvas.style.height = '100%';
+    fgCanvas.style.pointerEvents = 'none';
+    fgCanvas.style.zIndex = '1000'; // Higher z-index, in front of cards
 
-  // Create confetti instance with dedicated canvas
-  const createConfettiCanvas = () => {
-    console.log('Creating new confetti canvas');
-    const confettiCanvas = document.createElement('canvas');
-    confettiCanvas.id = 'reviews-confetti-canvas';
-    confettiCanvas.style.position = 'fixed';
-    confettiCanvas.style.top = '0';
-    confettiCanvas.style.left = '0';
-    confettiCanvas.style.width = '100%';
-    confettiCanvas.style.height = '100%';
-    confettiCanvas.style.pointerEvents = 'none';
-    confettiCanvas.style.zIndex = '1000';
-    document.body.appendChild(confettiCanvas);
-    return confettiCanvas;
+    document.body.appendChild(bgCanvas);
+    document.body.appendChild(fgCanvas);
+
+    return { bgCanvas, fgCanvas };
   };
 
-  // Try to find the existing canvas first
-  const existingCanvas = document.querySelector<HTMLCanvasElement>('#reviews-confetti-canvas');
-  console.log('Existing canvas found:', !!existingCanvas);
+  // Get existing canvases or create new ones
+  const bgCanvas = document.querySelector<HTMLCanvasElement>('#reviews-hearts-bg-canvas');
+  const fgCanvas = document.querySelector<HTMLCanvasElement>('#reviews-hearts-fg-canvas');
 
-  // Use existing or create new
-  const canvas = existingCanvas || createConfettiCanvas();
+  const { bgCanvas: backgroundCanvas, fgCanvas: foregroundCanvas } =
+    bgCanvas && fgCanvas ? { bgCanvas, fgCanvas } : createHeartCanvases();
 
-  // Ensure canvas dimensions are set correctly
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  // Set dimensions for both canvases
+  backgroundCanvas.width = window.innerWidth;
+  backgroundCanvas.height = window.innerHeight;
+  foregroundCanvas.width = window.innerWidth;
+  foregroundCanvas.height = window.innerHeight;
 
-  try {
-    // Create the confetti instance
-    const jsConfetti = new JSConfetti({ canvas });
-    console.log('JSConfetti instance created successfully');
+  // Get contexts for both canvases
+  const bgCtx = backgroundCanvas.getContext('2d')!;
+  const fgCtx = foregroundCanvas.getContext('2d')!;
 
-    // Create an immediate burst to test if the canvas works
-    jsConfetti.addConfetti({
-      confettiColors: ['#ff0000', '#00ff00', '#0000ff'],
-      confettiNumber: 100,
-    });
+  // Client-requested heart emojis
+  const heartEmojis = ['💗', '💖', '💞', '💕', '❤️', '💓', '🩷', '❤️‍🔥', '❣️', '💜'];
 
-    console.log('Initial test confetti triggered');
-
-    // Configure the continuous confetti effect with increased amounts
-    const startContinuousConfetti = () => {
-      console.log('Starting continuous confetti');
-
-      // Different sizes for the parallax effect
-      const smallConfetti = () => {
-        // Small confetti (slow)
-        jsConfetti.addConfetti({
-          emojis: ['✨', '⭐', '💫'],
-          emojiSize: 30,
-          confettiNumber: 8,
-          confettiRadius: 4,
-        });
-      };
-
-      const mediumConfetti = () => {
-        // Medium confetti (medium speed)
-        jsConfetti.addConfetti({
-          emojis: ['🎊', '✨'],
-          emojiSize: 50,
-          confettiNumber: 5,
-          confettiRadius: 5,
-          confettiColors: [
-            '#FFC700', // yellow
-            '#C04CFD', // purple
-            '#FF69B4', // pink
-          ],
-        });
-      };
-
-      const largeConfetti = () => {
-        // Large confetti (fast)
-        jsConfetti.addConfetti({
-          emojis: ['🎉', '🔥'],
-          emojiSize: 80,
-          confettiNumber: 3,
-        });
-      };
-
-      // More frequent intervals for better visibility
-      const intervals = [
-        setInterval(smallConfetti, 500),
-        setInterval(mediumConfetti, 800),
-        setInterval(largeConfetti, 1500),
-      ];
-
-      return intervals;
-    };
-
-    // Add window resize handler to ensure canvas is always right size
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-
-    // Start the confetti effect with a slight delay to ensure DOM is ready
-    let confettiIntervals: number[] = [];
-
-    // Then start continuous mode immediately (no delay)
-    confettiIntervals = startContinuousConfetti();
-
-    // Handle visibility changes to be more performant
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        // Stop the animation when the page is not visible
-        confettiIntervals.forEach((interval) => clearInterval(interval));
-        console.log('Page hidden, confetti paused');
-      } else {
-        // Restart when the page becomes visible again
-        const newIntervals = startContinuousConfetti();
-        confettiIntervals.length = 0; // Clear array
-        confettiIntervals.push(...newIntervals); // Add new intervals
-        console.log('Page visible, confetti resumed');
-      }
-    });
-
-    // Override the global functions with the real implementations
-    (window as any).triggerReviewsConfetti = () => {
-      console.log('Manual confetti trigger');
-      jsConfetti.addConfetti({
-        confettiNumber: 300,
-        confettiColors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
-      });
-      return 'Confetti triggered!'; // Return a value to confirm it worked
-    };
-
-    (window as any).stopReviewsConfetti = () => {
-      confettiIntervals.forEach((interval) => clearInterval(interval));
-      console.log('Confetti stopped');
-      return 'Confetti stopped!'; // Return a value to confirm it worked
-    };
-
-    console.log('Confetti global functions initialized');
-    return true; // Return success
-  } catch (error) {
-    console.error('Error initializing confetti:', error);
-    return false; // Return failure
+  // Heart layer types
+  enum Layer {
+    BACKGROUND, // Behind testimonials
+    FOREGROUND, // In front of testimonials
   }
+
+  // Class for individual floating heart
+  class FloatingHeart {
+    x: number;
+    y: number;
+    size: number;
+    speedY: number;
+    emoji: string;
+    opacity: number;
+    initialOpacity: number;
+    initialX: number;
+    layer: Layer; // Whether this heart is in background or foreground
+
+    constructor(forcedLayer?: Layer) {
+      // Start from a random position well below the screen
+      this.initialX = Math.random() * window.innerWidth;
+      this.x = this.initialX;
+      this.y = window.innerHeight + Math.random() * 100 + 50; // 50-150px below the visible canvas
+
+      // Determine size category and layer
+      const sizeCategory = Math.random();
+
+      // Assign layer and size based on forcedLayer parameter or randomly
+      if (forcedLayer !== undefined) {
+        this.layer = forcedLayer;
+
+        if (this.layer === Layer.BACKGROUND) {
+          // Background hearts are smaller
+          if (Math.random() < 0.7) {
+            this.size = 30; // Small
+          } else {
+            this.size = 45; // Medium-small
+          }
+        } else {
+          // Foreground hearts are larger
+          if (Math.random() < 0.7) {
+            this.size = 60; // Medium-large
+          } else {
+            this.size = 80; // Large
+          }
+        }
+      } else {
+        // Auto-assign layer based on size
+        if (sizeCategory < 0.5) {
+          // Small heart (50% chance) - BACKGROUND
+          this.size = 30;
+          this.layer = Layer.BACKGROUND;
+        } else if (sizeCategory < 0.8) {
+          // Medium heart (30% chance) - BACKGROUND
+          this.size = 45;
+          this.layer = Layer.BACKGROUND;
+        } else if (sizeCategory < 0.95) {
+          // Large-medium heart (15% chance) - FOREGROUND
+          this.size = 60;
+          this.layer = Layer.FOREGROUND;
+        } else {
+          // Large heart (5% chance) - FOREGROUND
+          this.size = 80;
+          this.layer = Layer.FOREGROUND;
+        }
+      }
+
+      // Set speed based on size (increased by ~30% for faster animation)
+      if (this.size === 30) {
+        this.speedY = 1.4; // Slowest rise (was 0.9)
+        this.initialOpacity = 0.5; // Most transparent
+      } else if (this.size === 45) {
+        this.speedY = 2.3; // Slow-medium rise (was 1.5)
+        this.initialOpacity = 0.7; // Medium transparent
+      } else if (this.size === 60) {
+        this.speedY = 3.8; // Medium-fast rise (was 2.5)
+        this.initialOpacity = 0.85; // Less transparent
+      } else {
+        this.speedY = 5.2; // Fast rise (was 3.5)
+        this.initialOpacity = 1.0; // Fully opaque
+      }
+
+      // Choose a random emoji
+      this.emoji = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+
+      // Set initial opacity
+      this.opacity = this.initialOpacity;
+    }
+
+    update() {
+      // Move upward
+      this.y -= this.speedY;
+
+      // Fade out earlier (40% of screen height instead of 50%) and more quickly
+      if (this.y < window.innerHeight * 0.4) {
+        // Make fade happen more quickly by using a non-linear fade curve
+        // Square the fade position to make opacity drop more quickly
+        const fadePosition = 1 - (window.innerHeight * 0.4 - this.y) / (window.innerHeight * 0.4);
+        const quickerFade = fadePosition * fadePosition; // Square it for faster fade
+        this.opacity = this.initialOpacity * Math.max(0, quickerFade);
+      }
+
+      // Remove hearts more quickly when they're very faint (0.1 threshold instead of 0.05)
+      return this.y > -this.size && this.opacity > 0.1;
+    }
+
+    draw() {
+      // Don't draw hearts that are very faint
+      if (this.opacity <= 0.1) return;
+
+      // Get the appropriate context based on layer
+      const ctx = this.layer === Layer.BACKGROUND ? bgCtx : fgCtx;
+
+      ctx.save();
+      ctx.globalAlpha = this.opacity;
+      ctx.font = `${this.size}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.emoji, this.x, this.y);
+      ctx.restore();
+    }
+  }
+
+  // Arrays to store hearts for each layer
+  const backgroundHearts: FloatingHeart[] = [];
+  const foregroundHearts: FloatingHeart[] = [];
+
+  // Animation function with timestamp for stable frame rate
+  let lastTime = 0;
+  let animationFrameId: number;
+
+  function animate(timestamp: number) {
+    const elapsed = timestamp - lastTime;
+    if (elapsed > 16) {
+      // Target ~60fps
+      lastTime = timestamp;
+
+      // Clear both canvases
+      bgCtx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+      fgCtx.clearRect(0, 0, foregroundCanvas.width, foregroundCanvas.height);
+
+      // Update and draw background hearts
+      for (let i = backgroundHearts.length - 1; i >= 0; i--) {
+        const heart = backgroundHearts[i];
+        if (heart.update()) {
+          heart.draw();
+        } else {
+          backgroundHearts.splice(i, 1);
+        }
+      }
+
+      // Update and draw foreground hearts
+      for (let i = foregroundHearts.length - 1; i >= 0; i--) {
+        const heart = foregroundHearts[i];
+        if (heart.update()) {
+          heart.draw();
+        } else {
+          foregroundHearts.splice(i, 1);
+        }
+      }
+    }
+
+    // Continue animation loop
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  // Scroll detection variables
+  let isScrolling = false;
+  let scrollTimeout: number;
+  let heartCreationInterval: number;
+
+  // Function to start producing hearts
+  function startHeartCreation() {
+    if (!heartCreationInterval) {
+      // Create an initial burst of hearts when scrolling starts
+      for (let i = 0; i < 15; i++) {
+        createHeart();
+      }
+
+      // Create hearts much more frequently (50ms instead of 200ms)
+      heartCreationInterval = window.setInterval(createHeart, 50);
+
+      // Start animation if not already running
+      if (!animationFrameId) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+  }
+
+  // Function to stop producing hearts
+  function stopHeartCreation() {
+    if (heartCreationInterval) {
+      window.clearInterval(heartCreationInterval);
+      heartCreationInterval = 0;
+    }
+
+    // We don't stop the animation frame immediately to let existing hearts
+    // continue floating up and out of view naturally
+  }
+
+  // Create new hearts at regular intervals
+  function createHeart() {
+    // 80% chance for background hearts, 20% chance for foreground hearts
+    if (Math.random() < 0.8) {
+      backgroundHearts.push(new FloatingHeart(Layer.BACKGROUND));
+    } else {
+      foregroundHearts.push(new FloatingHeart(Layer.FOREGROUND));
+    }
+  }
+
+  // Handle scroll events
+  window.addEventListener(
+    'scroll',
+    () => {
+      // Start producing hearts when scrolling begins
+      if (!isScrolling) {
+        isScrolling = true;
+        startHeartCreation();
+      }
+
+      // Clear previous timeout
+      clearTimeout(scrollTimeout);
+
+      // Set a new timeout to detect when scrolling stops
+      scrollTimeout = window.setTimeout(() => {
+        isScrolling = false;
+        stopHeartCreation();
+      }, 500); // Stop creating hearts 500ms after scrolling stops
+    },
+    { passive: true }
+  );
+
+  // Start animation loop (without creating hearts initially)
+  animationFrameId = requestAnimationFrame(animate);
+
+  // Handle window resize - update both canvases
+  window.addEventListener('resize', () => {
+    backgroundCanvas.width = window.innerWidth;
+    backgroundCanvas.height = window.innerHeight;
+    foregroundCanvas.width = window.innerWidth;
+    foregroundCanvas.height = window.innerHeight;
+  });
+
+  // Pause/resume for performance when tab not visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (heartCreationInterval) {
+        clearInterval(heartCreationInterval);
+        heartCreationInterval = 0;
+      }
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0;
+      }
+    } else if (isScrolling) {
+      // Only restart if we were scrolling when the tab became hidden
+      startHeartCreation();
+      if (!animationFrameId) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+  });
+
+  // Control functions
+  (window as any).stopHeartsAnimation = () => {
+    stopHeartCreation();
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
+    return true;
+  };
+
+  (window as any).startHeartsAnimation = () => {
+    // Force hearts to appear regardless of scrolling state
+    startHeartCreation();
+    return true;
+  };
 }
 
-// Try to initialize immediately for script tag inclusion
-const initResult = initReviewsConfetti();
-console.log('Immediate init result:', initResult);
-
-// Also try on DOM content loaded (standard approach)
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM content loaded, initializing confetti');
-  if (!initResult) {
-    // Try again if the immediate init failed
-    initReviewsConfetti();
-  }
-});
-
-// Also try on window load (fallback approach)
-window.addEventListener('load', () => {
-  console.log('Window loaded, ensuring confetti is initialized');
-  if (!initResult) {
-    // Try again if the immediate init failed
-    initReviewsConfetti();
-  }
-});
-
-// Export everything
-export { JSConfetti, initReviewsConfetti };
+// Export for potential use in other files
+export { initHeartsAnimation };
