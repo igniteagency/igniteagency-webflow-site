@@ -150,22 +150,26 @@ function initHeartsAnimation() {
       // Move upward
       this.y -= this.speedY;
 
-      // Fade out earlier (40% of screen height instead of 50%) and more quickly
-      if (this.y < window.innerHeight * 0.4) {
-        // Make fade happen more quickly by using a non-linear fade curve
-        // Square the fade position to make opacity drop more quickly
-        const fadePosition = 1 - (window.innerHeight * 0.4 - this.y) / (window.innerHeight * 0.4);
-        const quickerFade = fadePosition * fadePosition; // Square it for faster fade
-        this.opacity = this.initialOpacity * Math.max(0, quickerFade);
+      // Fade out much earlier - starting at just 10% from the bottom of the screen
+      // Calculate relative position from bottom: 0.9 = 90% of screen height from the top, or 10% from bottom
+      if (this.y < window.innerHeight * 0.9) {
+        // Calculate how far into the fade zone we are (from 0.9 to 0 relative height)
+        const fadePosition = 1 - (window.innerHeight * 0.9 - this.y) / (window.innerHeight * 0.9);
+
+        // Use a much more aggressive fade curve (fifth power) for extremely fast fadeout
+        // This makes opacity drop much more rapidly at the beginning of the fade
+        const fasterFade = Math.pow(fadePosition, 5);
+
+        this.opacity = this.initialOpacity * Math.max(0, fasterFade);
       }
 
-      // Remove hearts more quickly when they're very faint (0.1 threshold instead of 0.05)
-      return this.y > -this.size && this.opacity > 0.1;
+      // Keep hearts alive until they're nearly invisible
+      return this.y > -this.size && this.opacity > 0.01;
     }
 
     draw() {
-      // Don't draw hearts that are very faint
-      if (this.opacity <= 0.1) return;
+      // Don't draw nearly invisible hearts (matching the threshold in update)
+      if (this.opacity <= 0.01) return;
 
       // Get the appropriate context based on layer
       const ctx = this.layer === Layer.BACKGROUND ? bgCtx : fgCtx;
