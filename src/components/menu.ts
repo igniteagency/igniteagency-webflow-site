@@ -28,13 +28,24 @@ export function menuAnimation() {
     const menuButtonIcon = menuButton.querySelector('.menu-button-icon');
     const bolt = navWrap.querySelectorAll('.menu-bolt');
 
+    // All focusable elements within the menu
+    const focusableElements = navWrap.querySelectorAll(
+      'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+    );
+
     const tl = window.gsap.timeline();
 
     const openNav = () => {
       navWrap.setAttribute('data-nav', 'open');
 
+      // Restore accessibility
+      navWrap.setAttribute('aria-hidden', 'false');
+      focusableElements.forEach((el) => {
+        (el as HTMLElement).setAttribute('tabindex', '0');
+      });
+
       tl.clear()
-        .set(navWrap, { display: 'block' })
+        .set(navWrap, { visibility: 'visible', opacity: 1 })
         .set(menu, { xPercent: 0 }, '<')
         .fromTo(menuButtonTexts, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
         .fromTo(menuButtonIcon, { rotate: 0 }, { rotate: 315 }, '<')
@@ -58,13 +69,27 @@ export function menuAnimation() {
     const closeNav = () => {
       navWrap.setAttribute('data-nav', 'closed');
 
+      // Make menu inaccessible to keyboard and screen readers
+      navWrap.setAttribute('aria-hidden', 'true');
+      focusableElements.forEach((el) => {
+        (el as HTMLElement).setAttribute('tabindex', '-1');
+      });
+
       tl.clear()
         .to(overlay, { autoAlpha: 0 })
         .to(menu, { xPercent: 120 }, '<')
         .to(menuButtonTexts, { yPercent: 0 }, '<')
         .to(menuButtonIcon, { rotate: 0 }, '<')
-        .set(navWrap, { display: 'none' });
+        .set(navWrap, { visibility: 'hidden', opacity: 0 });
     };
+
+    // Set initial state for accessibility
+    if (state !== 'open') {
+      navWrap.setAttribute('aria-hidden', 'true');
+      focusableElements.forEach((el) => {
+        (el as HTMLElement).setAttribute('tabindex', '-1');
+      });
+    }
 
     // Toggle menu open / close depending on its current state
     menuToggles.forEach((toggle) => {
@@ -72,8 +97,15 @@ export function menuAnimation() {
         state = navWrap.getAttribute('data-nav');
         if (state === 'open') {
           closeNav();
+          // Return focus to the toggle button
+          (toggle as HTMLElement).focus();
         } else {
           openNav();
+          // Focus the first focusable element in the menu (or another appropriate element)
+          const firstFocusable = focusableElements[0] as HTMLElement;
+          if (firstFocusable) {
+            firstFocusable.focus();
+          }
         }
       });
     });
@@ -82,6 +114,11 @@ export function menuAnimation() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && navWrap.getAttribute('data-nav') === 'open') {
         closeNav();
+        // Return focus to the first menu toggle
+        const firstToggle = menuToggles[0] as HTMLElement;
+        if (firstToggle) {
+          firstToggle.focus();
+        }
       }
     });
   }
