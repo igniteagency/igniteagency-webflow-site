@@ -1,4 +1,4 @@
-const NAVBAR = document.querySelector('.nav_component') as HTMLElement;
+const NAVBAR = document.querySelector('.nav_component, .gradient-blur') as HTMLElement;
 const ANIMATION_DURATION: number = 0.5; // Duration in seconds
 const ANIMATION_EASE: string = 'power4.inOut'; // Easing function
 
