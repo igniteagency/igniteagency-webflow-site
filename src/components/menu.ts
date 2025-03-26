@@ -25,7 +25,6 @@ export function menuAnimation() {
     const fadeTargets = navWrap.querySelectorAll('[data-menu-fade]');
     const menuButton = document.querySelector('.menu-button') as HTMLElement;
     const menuButtonTexts = menuButton.querySelectorAll('p');
-    const menuButtonIcon = menuButton.querySelector('.menu-button-icon');
     const bolt = navWrap.querySelectorAll('.menu-bolt');
 
     // All focusable elements within the menu
@@ -38,7 +37,7 @@ export function menuAnimation() {
     const openNav = () => {
       navWrap.setAttribute('data-nav', 'open');
 
-      // Restore accessibility
+      // Restore accessibility\
       navWrap.setAttribute('aria-hidden', 'false');
       focusableElements.forEach((el) => {
         (el as HTMLElement).setAttribute('tabindex', '0');
@@ -48,7 +47,6 @@ export function menuAnimation() {
         .set(navWrap, { visibility: 'visible', opacity: 1 })
         .set(menu, { xPercent: 0 }, '<')
         .fromTo(menuButtonTexts, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
-        .fromTo(menuButtonIcon, { rotate: 0 }, { rotate: 315 }, '<')
         .fromTo(overlay, { autoAlpha: 0 }, { autoAlpha: 1 }, '<')
         .fromTo(bgPanels, { xPercent: 101 }, { xPercent: 0, stagger: 0.12, duration: 0.575 }, '<')
         .fromTo(
@@ -79,7 +77,6 @@ export function menuAnimation() {
         .to(overlay, { autoAlpha: 0 })
         .to(menu, { xPercent: 120 }, '<')
         .to(menuButtonTexts, { yPercent: 0 }, '<')
-        .to(menuButtonIcon, { rotate: 0 }, '<')
         .set(navWrap, { visibility: 'hidden', opacity: 0 });
     };
 
