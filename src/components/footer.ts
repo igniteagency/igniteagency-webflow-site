@@ -37,7 +37,10 @@ export function footerNextPageAnimation() {
     },
   });
 
-  // Add scroll-to-next-page interaction
+  /* =============================================
+   * Scroll to Next Page Functionality
+   * Commented out for now - to be re-enabled later
+   * =============================================
   if (nextPageLink) {
     // Get the href from the link
     const targetHref = nextPageLink.getAttribute('href');
@@ -303,4 +306,5 @@ export function footerNextPageAnimation() {
       }
     }
   }
+  */
 }
