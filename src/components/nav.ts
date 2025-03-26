@@ -9,6 +9,12 @@ export function navHideShow() {
   const handleScroll = (): void => {
     if (isAnimating) return;
 
+    // Check if nav is open - if so, don't apply any scroll animations
+    const navElement = NAVBAR.querySelector('.nav');
+    if (navElement?.getAttribute('data-nav') === 'open') {
+      return;
+    }
+
     const scrollTop: number = window.scrollY || document.documentElement.scrollTop;
     const scrollDelta: number = scrollTop - lastScrollTop;
 
