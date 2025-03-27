@@ -1,3 +1,4 @@
+// TODO: add loader session detection and hide code in the head area
 export function loaderAnimation() {
   // Check if loader has already been shown in this session
   const loaderShown = sessionStorage.getItem('loaderShown');
