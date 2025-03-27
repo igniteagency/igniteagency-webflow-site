@@ -1,8 +1,8 @@
-import JSConfetti from 'js-confetti';
 import Matter from 'matter-js';
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 import Swiper from 'swiper';
 
+import { showerConfetti } from '$components/home/confetti';
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   setHorizontalScrollWrapperHeight();
   featuredWorkSlider();
@@ -233,23 +233,6 @@ function featuredWorkSlider() {
       slideShadows: true,
     },
   });
-}
-
-function showerConfetti() {
-  const canvas = document.querySelector<HTMLCanvasElement>('#canvas-target');
-  // Use non-null assertion since JSConfetti can handle null canvas
-  const jsConfetti = new JSConfetti({ canvas: canvas || undefined });
-
-  const showConfetti = (event: MouseEvent) => {
-    jsConfetti.addConfetti({
-      emojis: ['😎', '⚡️', '🎉', '🌈', '👀', '🦄'],
-      emojiSize: 100,
-      confettiNumber: 50,
-    });
-  };
-
-  // Attach the event listener to the canvas
-  canvas?.addEventListener('click', showConfetti);
 }
 
 function rainEmojis() {
