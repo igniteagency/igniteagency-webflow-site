@@ -25,10 +25,10 @@ function loaderAnimation() {
   const loaderElement = document.querySelector(`.${LOADER_CLASS}`);
 
   // If loader has been shown before in this session, hide it immediately and return
-  // if (isLoaderShown === 'true' && loaderElement) {
-  //   loaderElement.style.display = 'none';
-  //   return;
-  // }
+  if (isLoaderShown === 'true' && loaderElement) {
+    loaderElement.style.display = 'none';
+    return;
+  }
 
   // Mark that the loader has been shown for this session
   sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
