@@ -10,12 +10,12 @@ import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
-import { loaderAnimation } from '$components/loader';
 import { menuAnimation } from '$components/menu';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { navHideShow } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
 import { textAnimation } from '$components/text';
+import { initializeVimeoPlayers } from '$components/vimeo-player';
 
 import { SCRIPTS_LOADED_EVENT } from './constants';
 
@@ -38,7 +38,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   animatedDetailsAccordions();
   navHideShow();
   animateBook();
-  loaderAnimation();
+  initializeVimeoPlayers();
 });
 
 const currentYearElements = document.querySelectorAll('[data-current-year]');
