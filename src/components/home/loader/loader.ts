@@ -1,19 +1,37 @@
 // TODO: add loader session detection and hide code in the head area
-export function loaderAnimation() {
+import { SCRIPTS_LOADED_EVENT } from '$src/constants';
+
+import { LOADER_SESSION_STORAGE_KEY } from './constants';
+
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  loaderAnimation();
+});
+
+// Loader class constants
+const LOADER_CLASS = 'home-loader';
+const LOADER_NUMBER_CLASS = 'home-loader_number-sub-wrap';
+const LOADER_NUMBER_TEXT_CLASS = 'home-loader_number';
+const LOADER_NUMBER_WRAPPER_CLASS = 'home-loader_number-wrapper';
+const LOADER_CENTER_BOLT_CLASS = 'home-loader_center-bolt';
+const LOADER_CENTER_BOLT_WRAP_CLASS = 'home-loader_center-bolt-wrap';
+const LOADER_CENTER_BOLT_PATH_CLASS = 'home-loader_center-bolt-path';
+const BOLT_CLONE_GROUP_CLASS = 'bolt-clone-group';
+
+function loaderAnimation() {
   // Check if loader has already been shown in this session
-  const loaderShown = sessionStorage.getItem('loaderShown');
+  const isLoaderShown = sessionStorage.getItem(LOADER_SESSION_STORAGE_KEY);
 
   // Get the loader element
-  const loaderElement = document.querySelector('.loader');
+  const loaderElement = document.querySelector(`.${LOADER_CLASS}`);
 
   // If loader has been shown before in this session, hide it immediately and return
-  if (loaderShown === 'true' && loaderElement) {
-    loaderElement.style.display = 'none';
-    return;
-  }
+  // if (isLoaderShown === 'true' && loaderElement) {
+  //   loaderElement.style.display = 'none';
+  //   return;
+  // }
 
   // Mark that the loader has been shown for this session
-  sessionStorage.setItem('loaderShown', 'true');
+  sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
   // GSAP Loader Animation Sequence
   // Main timeline
@@ -32,8 +50,10 @@ export function loaderAnimation() {
   });
 
   // Reference to the original bolt SVG and its containers
-  const originalSvg = document.querySelector('.loader_center-bolt') as SVGSVGElement | null;
-  const boltContainer = document.querySelector('.loader_center-bolt-wrap');
+  const originalSvg = document.querySelector(
+    `.${LOADER_CENTER_BOLT_CLASS}`
+  ) as SVGSVGElement | null;
+  const boltContainer = document.querySelector(`.${LOADER_CENTER_BOLT_WRAP_CLASS}`);
 
   // Setup bolt clones immediately
   const totalDuplicates = 25;
@@ -48,7 +68,7 @@ export function loaderAnimation() {
     if (!originalGroup) return; // Safety check
 
     // Get the original path for later fill animation
-    originalPath = originalSvg.querySelector('.loader_center-bolt-path');
+    originalPath = originalSvg.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
 
     // Calculate scale needed to ensure elements are off-screen
     // Get viewport dimensions
@@ -75,8 +95,8 @@ export function loaderAnimation() {
       const groupClone = originalGroup.cloneNode(true) as SVGGElement;
 
       // Add classes for styling and identification
-      groupClone.classList.add('bolt-clone-group');
-      groupClone.id = `bolt-clone-group-${i}`;
+      groupClone.classList.add(BOLT_CLONE_GROUP_CLASS);
+      groupClone.id = `${BOLT_CLONE_GROUP_CLASS}-${i}`;
 
       // Add the cloned group to the original SVG
       originalSvg.appendChild(groupClone);
@@ -112,45 +132,50 @@ export function loaderAnimation() {
 
   // Create a number animation timeline
   const numberTimeline = gsap.timeline();
+  const numberEl = document.querySelector(`.${LOADER_NUMBER_TEXT_CLASS}`);
 
-  // 1. Number Animation (0% to 100% with movement and scaling)
-  numberTimeline
-    .to('.loader_number-text > span', {
-      innerText: 100,
-      snap: {
-        innerText: 1,
-      },
-      duration: 2.0,
-    })
-    .to(
-      '.loader_number',
-      {
-        scale: 2,
-        duration: 2.0,
-      },
-      '<'
-    )
-    .to(
-      '.loader_number-wrapper',
-      {
-        right: '3rem',
-        duration: 2.0,
-      },
-      '<'
-    ) // Run simultaneously with the percentage count
-    // Add the number disappear animation immediately after the number reaches 100
-    .to(
-      '.loader_number *',
-      {
-        yPercent: 200, // Move up 100% of its own height
-        duration: 0.8,
-        ease: 'power2.inOut',
-      },
-      '+=0.1' // Small delay after reaching 100
-    );
+  if (numberEl) {
+    const numberValue = { val: 0 };
 
-  // Add the number timeline to the main timeline
-  loaderTimeline.add(numberTimeline);
+    // 1. Number Animation (0% to 100% with movement and scaling)
+    numberTimeline
+      .to(numberValue, {
+        val: 100,
+        duration: 2.0,
+        onUpdate: () => {
+          numberEl.textContent = Math.round(numberValue.val).toString();
+        },
+      })
+      .to(
+        `.${LOADER_NUMBER_CLASS}`,
+        {
+          scale: 2,
+          duration: 2.0,
+        },
+        '<'
+      )
+      .to(
+        `.${LOADER_NUMBER_WRAPPER_CLASS}`,
+        {
+          right: '3rem',
+          duration: 2.0,
+        },
+        '<'
+      ) // Run simultaneously with the percentage count
+      // Add the number disappear animation immediately after the number reaches 100
+      .to(
+        `.${LOADER_NUMBER_CLASS} > *`,
+        {
+          yPercent: 200, // Move up 100% of its own height
+          duration: 0.8,
+          ease: 'power2.inOut',
+        },
+        '+=0.1' // Small delay after reaching 100
+      );
+
+    // Add the number timeline to the main timeline
+    loaderTimeline.add(numberTimeline);
+  }
 
   // 2. Bolt Animation - Create a separate timeline for bolt animation
   if (originalGroup && duplicates.length > 0) {
@@ -173,7 +198,7 @@ export function loaderAnimation() {
     });
 
     // Flash effect at culmination
-    boltTimeline.to('.bolt-clone-group', {
+    boltTimeline.to(`.${BOLT_CLONE_GROUP_CLASS}`, {
       opacity: 1,
       duration: 0.15,
     });
@@ -184,7 +209,7 @@ export function loaderAnimation() {
 
     // Add all clone paths to the collection
     duplicates.forEach((clone) => {
-      const clonePath = clone.querySelector('.loader_center-bolt-path');
+      const clonePath = clone.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
       if (clonePath) allBoltPaths.push(clonePath);
     });
 
@@ -193,18 +218,6 @@ export function loaderAnimation() {
     const brandRedColor = cursorBackground
       ? getComputedStyle(cursorBackground).backgroundColor
       : '#ff0000';
-
-    // Fill all bolts with black simultaneously
-    // boltTimeline.to(
-    //   allBoltPaths,
-    //   {
-    //     fill: 'black',
-    //     stroke: 'black',
-    //     duration: 0.4,
-    //     ease: 'power2.inOut',
-    //   },
-    //   '+=0.1' // Small delay after the flash effect
-    // );
 
     // Scale up all bolts and transition to red
     boltTimeline.to(
@@ -406,7 +419,7 @@ export function loaderAnimation() {
     // Get all visible bolt paths (original + 8 clones)
     const visibleBoltPaths = [originalPath];
     [...clonesForTop, ...clonesForBottom].forEach((clone) => {
-      const clonePath = clone.querySelector('.loader_center-bolt-path');
+      const clonePath = clone.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
       if (clonePath) visibleBoltPaths.push(clonePath);
     });
 
@@ -415,7 +428,7 @@ export function loaderAnimation() {
 
     // Calculate expansion amount based on half the screen width
     const screenWidth = window.innerWidth;
-    const expansionAmount = screenWidth / 3;
+    const expansionAmount = screenWidth / 2;
 
     // Add path animations with no stagger
     visibleBoltPaths.forEach((path, index) => {
@@ -436,13 +449,13 @@ export function loaderAnimation() {
 
   // 3. Final transition to content
   loaderTimeline.to(
-    '.loader',
+    `.${LOADER_CLASS}`,
     {
       duration: 0.5,
       ease: 'power2.inOut',
       yPercent: -100,
       onComplete: () => {
-        const loader = document.querySelector('.loader');
+        const loader = document.querySelector(`.${LOADER_CLASS}`);
         if (loader) {
           loader.style.display = 'none';
         }

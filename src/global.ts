@@ -10,7 +10,6 @@ import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
-import { loaderAnimation } from '$components/loader';
 import { menuAnimation } from '$components/menu';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { navHideShow } from '$components/nav';
@@ -39,7 +38,6 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   animatedDetailsAccordions();
   navHideShow();
   animateBook();
-  loaderAnimation();
   initializeVimeoPlayers();
 });
 
