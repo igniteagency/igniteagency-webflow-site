@@ -47,20 +47,13 @@ export function initializeVimeoPlayer(container: HTMLElement): void {
   const playPauseButton = container.querySelector('[data-vimeo-play-pause-button]') as HTMLElement;
   const playIcon = container.querySelector('[data-vimeo-play-icon]') as HTMLElement;
   const pauseIcon = container.querySelector('[data-vimeo-pause-icon]') as HTMLElement;
-  const audioButton = container.querySelector('[data-vimeo-audio-button]') as HTMLElement;
-  const audioOnIcon = container.querySelector('[data-vimeo-audio-on]') as HTMLElement;
-  const audioOffIcon = container.querySelector('[data-vimeo-audio-off]') as HTMLElement;
 
   // Get custom time range from data attributes
   const startTime = parseFloat(container.getAttribute('data-vimeo-start') || '0') || 0;
   const endTime = parseFloat(container.getAttribute('data-vimeo-end') || '') || null;
 
-  // Check if hover play is enabled
-  const hoverPlayEnabled = container.hasAttribute('data-vimeo-hover-play');
-
   // Set initial states
   let playing = false;
-  let audioEnabled = false;
   let isInView = false;
   let userPaused = false; // Track if user manually paused the video
 
@@ -265,66 +258,6 @@ export function initializeVimeoPlayer(container: HTMLElement): void {
         }
       });
   });
-
-  // Add click event to the audio button
-  audioButton.addEventListener('click', function () {
-    if (audioEnabled) {
-      player
-        .setVolume(0)
-        .then(() => {
-          audioOnIcon.classList.add('hide');
-          audioOffIcon.classList.remove('hide');
-          audioEnabled = false;
-        })
-        .catch((err) => console.error('Error muting:', err));
-    } else {
-      player
-        .setVolume(1)
-        .then(() => {
-          audioOffIcon.classList.add('hide');
-          audioOnIcon.classList.remove('hide');
-          audioEnabled = true;
-        })
-        .catch((err) => console.error('Error unmuting:', err));
-    }
-  });
-
-  // Add hover events if hover play is enabled
-  if (hoverPlayEnabled) {
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Only enable hover functionality if reduced motion is not preferred
-    if (!prefersReducedMotion) {
-      container.addEventListener('mouseenter', function () {
-        if (isInView && !userPaused) {
-          player
-            .play()
-            .then(() => {
-              playIcon.classList.add('hide');
-              pauseIcon.classList.remove('hide');
-              playing = true;
-            })
-            .catch((err) => console.error('Error playing on hover:', err));
-        }
-      });
-
-      container.addEventListener('mouseleave', function () {
-        if (isInView && !userPaused) {
-          player
-            .pause()
-            .then(() => {
-              pauseIcon.classList.add('hide');
-              playIcon.classList.remove('hide');
-              playing = false;
-            })
-            .catch((err) => console.error('Error pausing on hover out:', err));
-        }
-      });
-    } else {
-      console.log('Hover play disabled due to reduced motion preference');
-    }
-  }
 
   // Update icons if the video state changes elsewhere
   player.on('play', function () {
