@@ -18,6 +18,29 @@ declare global {
   }
 }
 
+// Function to load Vimeo API script
+function loadVimeoAPI(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // If API is already loaded, resolve immediately
+    if (window.Vimeo) {
+      resolve();
+      return;
+    }
+
+    // Create script element
+    const script = document.createElement('script');
+    script.src = 'https://player.vimeo.com/api/player.js';
+    script.async = true;
+
+    // Set up load and error handlers
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Vimeo Player API'));
+
+    // Add script to document
+    document.body.appendChild(script);
+  });
+}
+
 export function initializeVimeoPlayer(container: HTMLElement): void {
   const iframe = container.querySelector('[data-vimeo-player]') as HTMLIFrameElement;
   const player = new window.Vimeo.Player(iframe);
@@ -344,15 +367,22 @@ export function initializeVimeoPlayers(): void {
   const containers = document.querySelectorAll('[data-vimeo-container]');
   console.log('Found', containers.length, 'Vimeo containers');
 
-  // Initialize each container separately
-  containers.forEach((container, index) => {
-    console.log('Initializing player', index + 1);
-    try {
-      initializeVimeoPlayer(container as HTMLElement);
-    } catch (error) {
-      console.error('Error initializing player', index + 1, error);
-    }
-  });
+  // Load Vimeo API first, then initialize players
+  loadVimeoAPI()
+    .then(() => {
+      // Initialize each container separately
+      containers.forEach((container, index) => {
+        console.log('Initializing player', index + 1);
+        try {
+          initializeVimeoPlayer(container as HTMLElement);
+        } catch (error) {
+          console.error('Error initializing player', index + 1, error);
+        }
+      });
 
-  console.log('All players initialization attempted');
+      console.log('All players initialization attempted');
+    })
+    .catch((error) => {
+      console.error('Failed to load Vimeo API:', error);
+    });
 }
