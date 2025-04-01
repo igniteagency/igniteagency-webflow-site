@@ -1,0 +1,1 @@
+"use strict";(()=>{function o(){let t=document.getElementById("supercharge"),e=document.querySelector(".section-home-hero");if(!t||!e){console.debug("Supercharge button or hero section not found");return}t.addEventListener("click",()=>{let r=e.getAttribute("data-supercharge");!r||r===""?e.setAttribute("data-supercharge","true"):e.removeAttribute("data-supercharge")})}})();
