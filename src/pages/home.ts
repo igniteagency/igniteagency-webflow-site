@@ -1,5 +1,4 @@
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
-import Swiper from 'swiper';
 
 import { showerConfetti } from '$components/home/confetti';
 import { initRainEmojis } from '$components/home/rain-emojis';
@@ -7,7 +6,6 @@ import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   setHorizontalScrollWrapperHeight();
-  featuredWorkSlider();
   showerConfetti();
   initRainEmojis();
   initDraggableElements();
@@ -211,30 +209,6 @@ function setHorizontalScrollWrapperHeight() {
     window.gsap.delayedCall(0.05, () => {
       setHeight();
     });
-  });
-}
-
-function featuredWorkSlider() {
-  new Swiper('.featured-work_slider', {
-    slideClass: 'featured-work_card',
-    wrapperClass: 'featured-work_list',
-    effect: 'coverflow',
-    grabCursor: true,
-    centeredSlides: true,
-    slidesPerView: 'auto',
-    speed: 800,
-    //resistanceRatio: 0.5,
-    //freeMode: true,
-    //freeModeMomentum: true,
-    //freeModeMomentumRatio: 0.5,
-    //freeModeSticky: true,
-    loop: true,
-    coverflowEffect: {
-      rotate: 5,
-      stretch: 0,
-      modifier: 4,
-      slideShadows: true,
-    },
   });
 }
 
