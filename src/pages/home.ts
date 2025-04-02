@@ -51,7 +51,7 @@ function introScrubText() {
     if (!paragraph) return;
 
     // Split the paragraph text into characters
-    const split = new window.SplitType(paragraph, { types: ['words', 'chars'] });
+    const split = new window.SplitType(paragraph, { types: ['words', 'chars'], tagName: 'span' });
 
     // Count characters for this paragraph
     const chars = paragraph.querySelectorAll('.char');

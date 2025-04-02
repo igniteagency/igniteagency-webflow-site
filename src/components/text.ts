@@ -69,7 +69,7 @@ export function textAnimation() {
 
   // Handle scrub text animations
   document.querySelectorAll(ATTR_SELECTORS.SCRUB_TEXT).forEach((char) => {
-    const text = new window.SplitType(char, { types: ['chars', 'words'] });
+    const text = new window.SplitType(char, { types: ['chars', 'words'], tagName: 'span' });
     splitInstances.push(text);
 
     window.gsap.from(text.chars, {
