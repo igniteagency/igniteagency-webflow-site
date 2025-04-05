@@ -3,14 +3,12 @@
  *
  * @param url URL of the script to load
  * @param placement 'head' or 'body'
- * @param defer boolean to indicate if the script should be deferred
  * @param scriptName Optional name to identify the script for event dispatching
  * @returns Promise that resolves when the script is loaded
  */
 export function loadExternalScript(
   url: string,
   placement: 'head' | 'body' = 'body',
-  defer: boolean = true,
   scriptName: string | undefined = undefined
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -21,8 +19,8 @@ export function loadExternalScript(
     }
 
     const script = document.createElement('script');
+    script.type = 'module';
     script.src = url;
-    if (defer) script.defer = true;
 
     script.addEventListener('load', () => {
       // Dispatch event once the script is loaded
