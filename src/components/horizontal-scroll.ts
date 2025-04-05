@@ -43,7 +43,7 @@ export function horizontalScroll() {
     );
 
     // Ensure ScrollTriggers are refreshed
-    window.gsap.delayedCall(1, () => {
+    window.gsap.delayedCall(2, () => {
       window.ScrollTrigger.refresh();
     });
   }
