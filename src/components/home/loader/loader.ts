@@ -3,12 +3,8 @@ import { SCRIPTS_LOADED_EVENT } from '$src/constants';
 
 import { LOADER_SESSION_STORAGE_KEY } from './constants';
 
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  loaderAnimation();
-});
-
 // Loader class constants
-const LOADER_CLASS = 'home-loader';
+const LOADER_CLASS = 'home-loader_component';
 const LOADER_NUMBER_CLASS = 'home-loader_number-sub-wrap';
 const LOADER_NUMBER_TEXT_CLASS = 'home-loader_number';
 const LOADER_NUMBER_WRAPPER_CLASS = 'home-loader_number-wrapper';
@@ -17,58 +13,99 @@ const LOADER_CENTER_BOLT_WRAP_CLASS = 'home-loader_center-bolt-wrap';
 const LOADER_CENTER_BOLT_PATH_CLASS = 'home-loader_center-bolt-path';
 const BOLT_CLONE_GROUP_CLASS = 'bolt-clone-group';
 
-function loaderAnimation() {
-  // Check if loader has already been shown in this session
-  const isLoaderShown = sessionStorage.getItem(LOADER_SESSION_STORAGE_KEY);
+// Initialize the loader when scripts are loaded
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  const loader = new Loader();
+  loader.init();
+});
 
-  // Get the loader element
-  const loaderElement = document.querySelector(`.${LOADER_CLASS}`);
+/**
+ * Loader class that handles the animation and display of the loader
+ */
+class Loader {
+  private loaderElement: HTMLElement | null;
+  private originalSvg: SVGSVGElement | null;
+  private boltContainer: Element | null;
+  private originalGroup: Element | null;
+  private originalPath: Element | null;
+  private duplicates: Element[] = [];
+  private loaderTimeline: gsap.core.Timeline | null = null;
 
-  // If loader has been shown before in this session, hide it immediately and return
-  if (isLoaderShown === 'true' && loaderElement) {
-    loaderElement.style.display = 'none';
-    return;
+  constructor() {
+    // Initialize elements
+    this.loaderElement = document.querySelector(`.${LOADER_CLASS}`);
+    this.originalSvg = document.querySelector(
+      `.${LOADER_CENTER_BOLT_CLASS}`
+    ) as SVGSVGElement | null;
+    this.boltContainer = document.querySelector(`.${LOADER_CENTER_BOLT_WRAP_CLASS}`);
+    this.originalGroup = null;
+    this.originalPath = null;
   }
 
-  // Mark that the loader has been shown for this session
-  sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
+  /**
+   * Initialize the loader and start the animation
+   */
+  public init(): void {
+    // Check if loader has already been shown in this session
+    const isLoaderShown = sessionStorage.getItem(LOADER_SESSION_STORAGE_KEY);
 
-  // GSAP Loader Animation Sequence
-  // Main timeline
-  const loaderTimeline = gsap.timeline({
-    defaults: {
-      duration: 2.5, // Default duration for animations
-      ease: 'power4.inOut', // Default easing for animations
-      /* Common timing controls:
-  ">>"     = start after all previous animations
-  "<"      = start at same time as previous
-  "-=0.5"  = start 0.5s before previous ends
-  "+=0.5"  = start 0.5s after previous ends
-  "2"      = start at absolute time 2s
-*/
-    },
-  });
+    // If loader has been shown before in this session, hide it immediately and return
+    if (isLoaderShown === 'true' && this.loaderElement) {
+      this.loaderElement.style.display = 'none';
+      return;
+    }
 
-  // Reference to the original bolt SVG and its containers
-  const originalSvg = document.querySelector(
-    `.${LOADER_CENTER_BOLT_CLASS}`
-  ) as SVGSVGElement | null;
-  const boltContainer = document.querySelector(`.${LOADER_CENTER_BOLT_WRAP_CLASS}`);
+    // Mark that the loader has been shown for this session
+    sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
-  // Setup bolt clones immediately
-  const totalDuplicates = 25;
-  const duplicates: Element[] = [];
-  let originalGroup: Element | null = null;
-  let originalPath: Element | null = null;
+    // Setup the loader animation
+    this.setupLoaderAnimation();
+  }
 
-  if (originalSvg && boltContainer) {
+  /**
+   * Setup the loader animation
+   */
+  private setupLoaderAnimation(): void {
+    // GSAP Loader Animation Sequence
+    // Main timeline
+    this.loaderTimeline = gsap.timeline({
+      defaults: {
+        duration: 2.5, // Default duration for animations
+        ease: 'power4.inOut', // Default easing for animations
+      },
+    });
+
+    // Setup bolt clones
+    this.setupBoltClones();
+
+    // Setup number animation
+    this.setupNumberAnimation();
+
+    // Setup bolt animation
+    this.setupBoltAnimation();
+
+    // Setup final transition
+    this.setupFinalTransition();
+
+    // Start the animation
+    this.loaderTimeline.play();
+
+    console.debug('Loader animation initialized and started');
+  }
+
+  /**
+   * Setup bolt clones for animation
+   */
+  private setupBoltClones(): void {
+    if (!this.originalSvg || !this.boltContainer) return;
+
     // Get the original group
-    originalGroup = originalSvg.querySelector('g');
+    this.originalGroup = this.originalSvg.querySelector('g');
 
-    if (!originalGroup) return; // Safety check
+    if (!this.originalGroup) return; // Safety check
 
     // Get the original path for later fill animation
-    originalPath = originalSvg.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
+    this.originalPath = this.originalSvg.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
 
     // Calculate scale needed to ensure elements are off-screen
     // Get viewport dimensions
@@ -76,7 +113,7 @@ function loaderAnimation() {
     const viewportHeight = window.innerHeight;
 
     // Get the bolt container dimensions
-    const boltRect = originalSvg.getBoundingClientRect();
+    const boltRect = this.originalSvg.getBoundingClientRect();
     const boltWidth = boltRect.width;
     const boltHeight = boltRect.height;
 
@@ -90,26 +127,27 @@ function loaderAnimation() {
     const baseScale = (viewportDiagonal / Math.max(boltWidth, boltHeight)) * 33;
 
     // Create clones of the group and add them to the original SVG
+    const totalDuplicates = 25;
     for (let i = 1; i <= totalDuplicates; i++) {
       // Clone the group with all its nested structure
-      const groupClone = originalGroup.cloneNode(true) as SVGGElement;
+      const groupClone = this.originalGroup.cloneNode(true) as SVGGElement;
 
       // Add classes for styling and identification
       groupClone.classList.add(BOLT_CLONE_GROUP_CLASS);
       groupClone.id = `${BOLT_CLONE_GROUP_CLASS}-${i}`;
 
       // Add the cloned group to the original SVG
-      originalSvg.appendChild(groupClone);
+      this.originalSvg.appendChild(groupClone);
 
       // Store the group for animation
-      duplicates.push(groupClone);
+      this.duplicates.push(groupClone);
     }
 
     // Create a collection with original first, then all duplicates
-    const allBoltGroups = [originalGroup, ...duplicates];
+    const allBoltGroups = [this.originalGroup, ...this.duplicates];
 
     // Set a consistent transform origin for the SVG
-    gsap.set(originalSvg, {
+    gsap.set(this.originalSvg, {
       transformOrigin: 'center center',
     });
 
@@ -122,64 +160,75 @@ function loaderAnimation() {
     });
 
     // Ensure the original path has no fill initially
-    if (originalPath) {
-      gsap.set(originalPath, {
+    if (this.originalPath) {
+      gsap.set(this.originalPath, {
         fill: 'none',
         stroke: 'black',
       });
     }
   }
 
-  // Create a number animation timeline
-  const numberTimeline = gsap.timeline();
-  const numberEl = document.querySelector(`.${LOADER_NUMBER_TEXT_CLASS}`);
+  /**
+   * Setup number animation
+   */
+  private setupNumberAnimation(): void {
+    if (!this.loaderTimeline) return;
 
-  if (numberEl) {
-    const numberValue = { val: 0 };
+    // Create a number animation timeline
+    const numberTimeline = gsap.timeline();
+    const numberEl = document.querySelector(`.${LOADER_NUMBER_TEXT_CLASS}`);
 
-    // 1. Number Animation (0% to 100% with movement and scaling)
-    numberTimeline
-      .to(numberValue, {
-        val: 100,
-        duration: 2.0,
-        onUpdate: () => {
-          numberEl.textContent = Math.round(numberValue.val).toString();
-        },
-      })
-      .to(
-        `.${LOADER_NUMBER_CLASS}`,
-        {
-          scale: 2,
+    if (numberEl) {
+      const numberValue = { val: 0 };
+
+      // 1. Number Animation (0% to 100% with movement and scaling)
+      numberTimeline
+        .to(numberValue, {
+          val: 100,
           duration: 2.0,
-        },
-        '<'
-      )
-      .to(
-        `.${LOADER_NUMBER_WRAPPER_CLASS}`,
-        {
-          right: '3rem',
-          duration: 2.0,
-        },
-        '<'
-      ) // Run simultaneously with the percentage count
-      // Add the number disappear animation immediately after the number reaches 100
-      .to(
-        `.${LOADER_NUMBER_CLASS} > *`,
-        {
-          yPercent: 200, // Move up 100% of its own height
-          duration: 0.8,
-          ease: 'power2.inOut',
-        },
-        '+=0.1' // Small delay after reaching 100
-      );
+          onUpdate: () => {
+            numberEl.textContent = Math.round(numberValue.val).toString();
+          },
+        })
+        .to(
+          `.${LOADER_NUMBER_CLASS}`,
+          {
+            scale: 2,
+            duration: 2.0,
+          },
+          '<'
+        )
+        .to(
+          `.${LOADER_NUMBER_WRAPPER_CLASS}`,
+          {
+            right: '3rem',
+            duration: 2.0,
+          },
+          '<'
+        ) // Run simultaneously with the percentage count
+        // Add the number disappear animation immediately after the number reaches 100
+        .to(
+          `.${LOADER_NUMBER_CLASS} > *`,
+          {
+            yPercent: 200, // Move up 100% of its own height
+            duration: 0.8,
+            ease: 'power2.inOut',
+          },
+          '+=0.1' // Small delay after reaching 100
+        );
 
-    // Add the number timeline to the main timeline
-    loaderTimeline.add(numberTimeline);
+      // Add the number timeline to the main timeline
+      this.loaderTimeline.add(numberTimeline);
+    }
   }
 
-  // 2. Bolt Animation - Create a separate timeline for bolt animation
-  if (originalGroup && duplicates.length > 0) {
-    const allBoltGroups = [originalGroup, ...duplicates];
+  /**
+   * Setup bolt animation
+   */
+  private setupBoltAnimation(): void {
+    if (!this.loaderTimeline || !this.originalGroup || this.duplicates.length === 0) return;
+
+    const allBoltGroups = [this.originalGroup, ...this.duplicates];
     const boltTimeline = gsap.timeline();
 
     // Main bolt animation - converge to center with staggered timing
@@ -205,10 +254,10 @@ function loaderAnimation() {
 
     // Instead of fading out clones, fill all bolts (original and clones) with black
     // Create a selector that targets both the original bolt path and all clone paths
-    const allBoltPaths = [originalPath];
+    const allBoltPaths = [this.originalPath];
 
     // Add all clone paths to the collection
-    duplicates.forEach((clone) => {
+    this.duplicates.forEach((clone) => {
       const clonePath = clone.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
       if (clonePath) allBoltPaths.push(clonePath);
     });
@@ -241,13 +290,13 @@ function loaderAnimation() {
 
     // Reposition clones to stack vertically
     // Use exactly 4 clones for top and 4 for bottom, but keep all clones visible until now
-    const clonesForTop = duplicates.slice(0, 4); // First 4 clones for top
-    const clonesForBottom = duplicates.slice(4, 8); // Next 4 clones for bottom
+    const clonesForTop = this.duplicates.slice(0, 4); // First 4 clones for top
+    const clonesForBottom = this.duplicates.slice(4, 8); // Next 4 clones for bottom
 
     // Hide all other clones that won't be used in the stacking, but only after the red transition
-    if (duplicates.length > 8) {
+    if (this.duplicates.length > 8) {
       boltTimeline.to(
-        duplicates.slice(8),
+        this.duplicates.slice(8),
         {
           opacity: 0,
           duration: 0.2,
@@ -289,135 +338,8 @@ function loaderAnimation() {
     );
 
     // Path animation for all visible bolts (original + 8 clones)
-    // Function to create path animation for each SVG path
-    function createPathExpandAnimation(pathElement: Element, maxOffset = 10, duration = 1.2) {
-      // Get the original path data
-      const originalPathData = pathElement.getAttribute('d');
-      if (!originalPathData) return null;
-
-      // Parse the path data to extract points
-      // This is a simplified approach - in a real implementation, you'd need a more robust path parser
-      const pathCommands = originalPathData.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
-      const originalPoints: { command: string; x: number; y: number; isAbsolute: boolean }[] = [];
-
-      // Parse each command in the path
-      pathCommands.forEach((cmd) => {
-        const command = cmd.charAt(0);
-        const isAbsolute = command === command.toUpperCase();
-        const values = cmd
-          .substring(1)
-          .trim()
-          .split(/[\s,]+/)
-          .map(parseFloat);
-
-        // Handle different command types (M, L, H, V, Z, etc.)
-        switch (command.toUpperCase()) {
-          case 'M': // Move to
-          case 'L': // Line to
-            for (let i = 0; i < values.length; i += 2) {
-              originalPoints.push({
-                command: command,
-                x: values[i],
-                y: values[i + 1],
-                isAbsolute,
-              });
-            }
-            break;
-          case 'H': // Horizontal line
-            values.forEach((x) => {
-              originalPoints.push({
-                command: command,
-                x,
-                y: 0, // Y doesn't change for H command
-                isAbsolute,
-              });
-            });
-            break;
-          case 'V': // Vertical line
-            values.forEach((y) => {
-              originalPoints.push({
-                command: command,
-                x: 0, // X doesn't change for V command
-                y,
-                isAbsolute,
-              });
-            });
-            break;
-          case 'Z': // Close path
-            originalPoints.push({
-              command: command,
-              x: 0,
-              y: 0,
-              isAbsolute: true,
-            });
-            break;
-          // Add more cases for other SVG path commands as needed
-        }
-      });
-
-      // Create animation state object
-      const state = { offset: 0 };
-
-      // Create update function for this specific path
-      const update = () => {
-        const offset = state.offset;
-
-        // Apply offsets to create the animation effect
-        // For the first half of points, move left/up
-        // For the second half, move right/down
-        const midpoint = Math.floor(originalPoints.length / 2);
-
-        let newPathData = '';
-
-        originalPoints.forEach((point, index) => {
-          // Determine direction of offset based on point position
-          const direction = index < midpoint ? -1 : 1;
-          const xOffset = direction * offset;
-
-          // Apply offset based on command type
-          let newX = point.x;
-          let newY = point.y;
-
-          if (point.command.toUpperCase() !== 'Z') {
-            if (point.command.toUpperCase() !== 'V') {
-              newX = point.x + xOffset;
-            }
-          }
-
-          // Build the new path data
-          if (point.command.toUpperCase() === 'M') {
-            newPathData += `M${newX} ${newY}`;
-          } else if (point.command.toUpperCase() === 'L') {
-            newPathData += `L${newX} ${newY}`;
-          } else if (point.command.toUpperCase() === 'H') {
-            newPathData += `H${newX}`;
-          } else if (point.command.toUpperCase() === 'V') {
-            newPathData += `V${newY}`;
-          } else if (point.command.toUpperCase() === 'Z') {
-            newPathData += 'Z';
-          }
-        });
-
-        // Update the path element with new data
-        pathElement.setAttribute('d', newPathData);
-      };
-
-      // Create a timeline for this path animation
-      const pathTl = gsap.timeline();
-
-      // Add animation to the timeline
-      pathTl.to(state, {
-        offset: maxOffset,
-        duration: duration,
-        ease: 'power4.inOut',
-        onUpdate: update,
-      });
-
-      return pathTl;
-    }
-
     // Get all visible bolt paths (original + 8 clones)
-    const visibleBoltPaths = [originalPath];
+    const visibleBoltPaths = [this.originalPath];
     [...clonesForTop, ...clonesForBottom].forEach((clone) => {
       const clonePath = clone.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
       if (clonePath) visibleBoltPaths.push(clonePath);
@@ -431,9 +353,9 @@ function loaderAnimation() {
     const expansionAmount = screenWidth / 2;
 
     // Add path animations with no stagger
-    visibleBoltPaths.forEach((path, index) => {
+    visibleBoltPaths.forEach((path) => {
       if (path) {
-        const pathTl = createPathExpandAnimation(path, expansionAmount, 1);
+        const pathTl = this.createPathExpandAnimation(path, expansionAmount, 1);
         if (pathTl) {
           pathAnimationTimeline.add(pathTl, 0);
         }
@@ -444,30 +366,172 @@ function loaderAnimation() {
     boltTimeline.add(pathAnimationTimeline, '>'); // Small delay after stacking
 
     // Add the bolt timeline to the main timeline
-    loaderTimeline.add(boltTimeline, '-=1'); // Start 0.5s earlier than before
+    this.loaderTimeline.add(boltTimeline, '-=1'); // Start 0.5s earlier than before
   }
 
-  // 3. Final transition to content
-  loaderTimeline.to(
-    `.${LOADER_CLASS}`,
-    {
-      duration: 0.5,
-      ease: 'power2.inOut',
-      yPercent: -100,
-      onComplete: () => {
-        const loader = document.querySelector(`.${LOADER_CLASS}`);
-        if (loader) {
-          loader.style.display = 'none';
+  /**
+   * Create path expand animation for SVG paths
+   */
+  private createPathExpandAnimation(
+    pathElement: Element,
+    maxOffset = 10,
+    duration = 1.2
+  ): gsap.core.Timeline | null {
+    // Get the original path data
+    const originalPathData = pathElement.getAttribute('d');
+    if (!originalPathData) return null;
+
+    // Parse the path data to extract points
+    // This is a simplified approach - in a real implementation, you'd need a more robust path parser
+    const pathCommands = originalPathData.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
+    const originalPoints: { command: string; x: number; y: number; isAbsolute: boolean }[] = [];
+
+    // Parse each command in the path
+    pathCommands.forEach((cmd) => {
+      const command = cmd.charAt(0);
+      const isAbsolute = command === command.toUpperCase();
+      const values = cmd
+        .substring(1)
+        .trim()
+        .split(/[\s,]+/)
+        .map(parseFloat);
+
+      // Handle different command types (M, L, H, V, Z, etc.)
+      switch (command.toUpperCase()) {
+        case 'M': // Move to
+        case 'L': // Line to
+          for (let i = 0; i < values.length; i += 2) {
+            originalPoints.push({
+              command: command,
+              x: values[i],
+              y: values[i + 1],
+              isAbsolute,
+            });
+          }
+          break;
+        case 'H': // Horizontal line
+          values.forEach((x) => {
+            originalPoints.push({
+              command: command,
+              x,
+              y: 0, // Y doesn't change for H command
+              isAbsolute,
+            });
+          });
+          break;
+        case 'V': // Vertical line
+          values.forEach((y) => {
+            originalPoints.push({
+              command: command,
+              x: 0, // X doesn't change for V command
+              y,
+              isAbsolute,
+            });
+          });
+          break;
+        case 'Z': // Close path
+          originalPoints.push({
+            command: command,
+            x: 0,
+            y: 0,
+            isAbsolute: true,
+          });
+          break;
+        // Add more cases for other SVG path commands as needed
+      }
+    });
+
+    // Create animation state object
+    const state = { offset: 0 };
+
+    // Create update function for this specific path
+    const update = () => {
+      const offset = state.offset;
+
+      // Apply offsets to create the animation effect
+      // For the first half of points, move left/up
+      // For the second half, move right/down
+      const midpoint = Math.floor(originalPoints.length / 2);
+
+      let newPathData = '';
+
+      originalPoints.forEach((point, index) => {
+        // Determine direction of offset based on point position
+        const direction = index < midpoint ? -1 : 1;
+        const xOffset = direction * offset;
+
+        // Apply offset based on command type
+        let newX = point.x;
+        let newY = point.y;
+
+        if (point.command.toUpperCase() !== 'Z') {
+          if (point.command.toUpperCase() !== 'V') {
+            newX = point.x + xOffset;
+          }
         }
+
+        // Build the new path data
+        if (point.command.toUpperCase() === 'M') {
+          newPathData += `M${newX} ${newY}`;
+        } else if (point.command.toUpperCase() === 'L') {
+          newPathData += `L${newX} ${newY}`;
+        } else if (point.command.toUpperCase() === 'H') {
+          newPathData += `H${newX}`;
+        } else if (point.command.toUpperCase() === 'V') {
+          newPathData += `V${newY}`;
+        } else if (point.command.toUpperCase() === 'Z') {
+          newPathData += 'Z';
+        }
+      });
+
+      // Update the path element with new data
+      pathElement.setAttribute('d', newPathData);
+    };
+
+    // Create a timeline for this path animation
+    const pathTl = gsap.timeline();
+
+    // Add animation to the timeline
+    pathTl.to(state, {
+      offset: maxOffset,
+      duration: duration,
+      ease: 'power4.inOut',
+      onUpdate: update,
+    });
+
+    return pathTl;
+  }
+
+  /**
+   * Setup final transition
+   */
+  private setupFinalTransition(): void {
+    if (!this.loaderTimeline) return;
+
+    // 3. Final transition to content
+    this.loaderTimeline.to(
+      `.${LOADER_CLASS}`,
+      {
+        duration: 0.5,
+        ease: 'power2.inOut',
+        yPercent: -100,
+        onComplete: () => {
+          const loader = document.querySelector(`.${LOADER_CLASS}`);
+          if (loader) {
+            loader.style.display = 'none';
+          }
+        },
       },
-    },
-    '-=0.2'
-  );
+      '-=0.2'
+    );
+  }
 
-  // Start the animation
-  loaderTimeline.play();
-
-  console.debug('Loader animation initialized and started');
-
-  return loaderTimeline; // Return the timeline in case it needs to be controlled externally
+  /**
+   * Get the loader timeline
+   */
+  public getTimeline(): gsap.core.Timeline | null {
+    return this.loaderTimeline;
+  }
 }
+
+export default Loader;
