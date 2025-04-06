@@ -53,3 +53,13 @@ pattern.constants = "Use UPPERCASE for constants, camelCase for variables and fu
 
 # Function structure
 pattern.functions = "Keep functions short and focused on a single responsibility"
+
+# Comment Guidelines
+pattern.comments = [
+  "Only add comments for complex logic that isn't immediately obvious",
+  "Avoid commenting self-explanatory code or function names",
+  "Use JSDoc comments only for public APIs and complex type definitions",
+  "Document 'why' not 'what' - the code should be self-documenting",
+  "Add comments for non-obvious performance considerations",
+  "Document any workarounds or temporary solutions with TODO comments"
+]
