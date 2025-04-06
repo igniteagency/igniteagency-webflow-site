@@ -11,9 +11,8 @@ import { cursorMove } from '$components/cursor';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
 import { initLenisSmoothScroll } from '$components/lenis';
-import { menuAnimation } from '$components/menu';
 import { mouseTrackImage } from '$components/mouse-track-img';
-import { navHideShow } from '$components/nav';
+import { initNavigation } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
 import { textAnimation } from '$components/text';
 import { initializeVimeoPlayers } from '$components/vimeo-player';
@@ -35,8 +34,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 
   cursorMove();
 
-  navHideShow();
-  menuAnimation();
+  initNavigation();
 
   horizontalScroll();
 
