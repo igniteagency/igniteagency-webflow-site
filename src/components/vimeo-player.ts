@@ -5,6 +5,7 @@ interface PlayerState {
   playing: boolean;
   isInView: boolean;
   isHoverMode: boolean;
+  hoverElement: HTMLElement | null;
   initialized: boolean;
 }
 
@@ -12,13 +13,37 @@ class VimeoPlayerManager {
   private static instance: VimeoPlayerManager | null = null;
 
   // Data attribute selectors
-  private readonly CONTAINER_SELECTOR = '[data-vimeo-el="component"]';
+  /**
+   * Set attribute on the component
+   */
+  private readonly COMPONENT_SELECTOR = '[data-vimeo-el="component"]';
+  /**
+   * Set attribute on the player iframe element
+   */
   private readonly PLAYER_SELECTOR = '[data-vimeo-el="player-iframe"]';
+  /**
+   * Set attribute on the play/pause button wrapper element
+   */
   private readonly PLAY_PAUSE_BUTTON_SELECTOR = '[data-vimeo-el="toggle-button"]';
+  /**
+   * Set the play icon element
+   */
   private readonly PLAY_ICON_SELECTOR = '[data-vimeo-el="play-icon"]';
+  /**
+   * Set the pause icon element
+   */
   private readonly PAUSE_ICON_SELECTOR = '[data-vimeo-el="pause-icon"]';
+  /**
+   * Set the loop attribute on component to false to disable looping
+   */
   private readonly LOOP_ATTR = 'data-vimeo-loop';
+  /**
+   * Set the hover attribute on either the container or a parent element to play video on hover
+   */
   private readonly HOVER_ATTR = 'data-vimeo-hover';
+  /**
+   * Hide class for the play/pause button icon toggle
+   */
   private readonly HIDE_CLASS = 'hide';
 
   private players: Map<HTMLElement, Player> = new Map();
@@ -36,16 +61,18 @@ class VimeoPlayerManager {
       (entries) => {
         entries.forEach((entry) => {
           const container = entry.target as HTMLElement;
-          const state = this.playerStates.get(container);
+          let state = this.playerStates.get(container);
+
+          if (!state) {
+            // Handle initialization if needed
+            if (entry.isIntersecting) {
+              this.initializePlayer(container);
+            }
+          }
+          state = this.playerStates.get(container);
           if (!state) return;
 
           state.isInView = entry.isIntersecting;
-
-          // Handle initialization if needed
-          if (entry.isIntersecting && !state.initialized) {
-            this.initializePlayer(container);
-            state.initialized = true;
-          }
 
           // Handle play/pause based on visibility
           const player = this.players.get(container);
@@ -116,21 +143,21 @@ class VimeoPlayerManager {
   }
 
   private setupPlayerEvents(container: HTMLElement, player: Player, state: PlayerState): void {
-    const playPauseButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR) as HTMLElement;
+    const playPauseButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR);
 
     // Check if looping should be disabled
     const disableLoop = container.getAttribute(this.LOOP_ATTR) === 'false';
     player.setLoop(!disableLoop);
 
     // Set up hover functionality if enabled
-    if (state.isHoverMode) {
-      container.addEventListener('mouseenter', () => {
+    if (state.isHoverMode && state.hoverElement) {
+      state.hoverElement.addEventListener('mouseenter', () => {
         if (!state.playing) {
           this.playVideo(player, state);
         }
       });
 
-      container.addEventListener('mouseleave', () => {
+      state.hoverElement.addEventListener('mouseleave', () => {
         if (state.playing) {
           this.pauseVideo(player, state);
         }
@@ -181,13 +208,17 @@ class VimeoPlayerManager {
     this.players.set(container, player);
 
     // Check if hover mode is enabled
-    const isHoverMode = container.getAttribute(this.HOVER_ATTR) === 'true';
+    const hoverElement = container.getAttribute(this.HOVER_ATTR)
+      ? container
+      : container.closest<HTMLElement>(`[${this.HOVER_ATTR}]`) || null;
+    const isHoverMode = hoverElement ? true : false;
 
     // Initialize player state
     const state: PlayerState = {
       playing: false,
       isInView: false,
       isHoverMode,
+      hoverElement,
       initialized: true,
     };
     this.playerStates.set(container, state);
@@ -195,9 +226,9 @@ class VimeoPlayerManager {
     // Basic initialization
     player
       .ready()
-      // .then(() => {
-      //   this.updatePlayPauseUI(container, false);
-      // })
+      .then(() => {
+        this.updatePlayPauseUI(container, false);
+      })
       .catch((error) => {
         console.error('Error initializing Vimeo player:', error);
         player.pause().catch(() => {});
@@ -210,24 +241,13 @@ class VimeoPlayerManager {
   }
 
   public initializeAllPlayers(): void {
-    const containers = document.querySelectorAll(this.CONTAINER_SELECTOR);
+    const containers = document.querySelectorAll(this.COMPONENT_SELECTOR);
 
     // Set up the intersection observer for all containers
     containers.forEach((container) => {
-      const element = container as HTMLElement;
-
-      // Create a minimal player state to track initialization status
-      const state: PlayerState = {
-        playing: false,
-        isInView: false,
-        isHoverMode: element.getAttribute(this.HOVER_ATTR) === 'true',
-        initialized: false,
-      };
-      this.playerStates.set(element, state);
-
       // Observe the container for intersection
       if (this.intersectionObserver) {
-        this.intersectionObserver.observe(element);
+        this.intersectionObserver.observe(container);
       }
     });
   }

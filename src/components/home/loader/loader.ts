@@ -1,4 +1,3 @@
-// TODO: add loader session detection and hide code in the head area
 import { SCRIPTS_LOADED_EVENT } from '$src/constants';
 
 import { LOADER_SESSION_STORAGE_KEY } from './constants';
