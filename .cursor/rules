@@ -1,0 +1,55 @@
+# Ignite Webflow Site 2024 Cursor Rules
+
+# TypeScript Configuration
+ts.useExplicitAny = false
+ts.preferConstOverLet = true
+ts.preferEarlyReturn = true
+ts.useExplicitReturnType = true
+ts.useShorthandArrayType = true
+ts.useShorthandPropertyAssignment = true
+ts.organizeSortImports = true
+
+# Code Structure and Style
+code.preferDefaultParameters = true
+code.useNullCoalescing = true
+code.useOptionalChaining = true
+code.useSwitchFallthrough = false
+code.useTrailingCommas = true
+code.maxLineLength = 100
+code.useBraces = true
+code.useConsistentSpacing = true
+
+# Project-Specific Rules
+# Extract selectors to top of file for easy editing
+pattern.extractSelectors = "Place DOM selectors at the top of each file for easy editing"
+
+# Global declarations (avoiding duplicate imports)
+pattern.globalLibraries = "Libraries exposed in global.ts should be accessed via window.X instead of importing directly"
+
+# Performance optimization
+pattern.performanceOptimization = "Always opt for the most performant and simplified code implementation"
+
+# Animation standards
+pattern.animations = "Use GSAP for all animations with proper ease parameters and durations"
+
+# Event handling
+pattern.events = "Use the SCRIPTS_LOADED_EVENT from constants.ts for code that should run after all scripts load"
+
+# DOM manipulation
+pattern.domManipulation = "Cache DOM elements and use typed assertions when selecting elements. Every querySelector is by default set as HTMLElement in `global.d.ts`"
+
+# Error handling
+pattern.errorHandling = "Implement appropriate error handling and logging using console.debug"
+
+# TypeScript organization
+ts.groupImports = [
+  { name: "Third-party libraries", match: "^[^$]" },
+  { name: "Components", match: "^\\$components" },
+  { name: "Constants and utils", match: "^\\$src" }
+]
+
+# Constants and naming conventions
+pattern.constants = "Use UPPERCASE for constants, camelCase for variables and functions, PascalCase for types"
+
+# Function structure
+pattern.functions = "Keep functions short and focused on a single responsibility"
