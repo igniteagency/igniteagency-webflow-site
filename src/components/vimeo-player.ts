@@ -1,5 +1,14 @@
 import Player from '@vimeo/player';
 
+// Define the PlayerState interface
+interface PlayerState {
+  playing: boolean;
+  isInView: boolean;
+  userPaused: boolean;
+  isHoverMode: boolean;
+  initialized: boolean;
+}
+
 class VimeoPlayerManager {
   private static instance: VimeoPlayerManager | null = null;
 
@@ -11,61 +20,73 @@ class VimeoPlayerManager {
   private readonly PAUSE_ICON_SELECTOR = '[data-vimeo-el="pause-icon"]';
   private readonly LOOP_ATTR = 'data-vimeo-loop';
   private readonly HOVER_ATTR = 'data-vimeo-hover';
+  private readonly HIDE_CLASS = 'hide';
 
   private players: Map<HTMLElement, Player> = new Map();
-  private playerStates: Map<
-    HTMLElement,
-    {
-      playing: boolean;
-      isInView: boolean;
-      userPaused: boolean;
-      isHoverMode: boolean;
-    }
-  > = new Map();
-
+  private playerStates: Map<HTMLElement, PlayerState> = new Map();
   private intersectionObserver: IntersectionObserver | null = null;
+  private prefersReducedMotion: boolean;
 
   private constructor() {
-    // Private constructor to enforce singleton pattern
+    this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.initIntersectionObserver();
+
+    // Listen for changes to reduced motion preference
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+      this.prefersReducedMotion = e.matches;
+      this.handleReducedMotionChange();
+    });
+  }
+
+  private handleReducedMotionChange(): void {
+    // Pause all playing videos if user enables reduced motion
+    if (this.prefersReducedMotion) {
+      this.players.forEach((player, container) => {
+        const state = this.playerStates.get(container);
+        if (state?.playing && !state.userPaused) {
+          this.pauseVideo(player, state);
+          this.updatePlayPauseUI(container, false);
+        }
+      });
+    }
   }
 
   private initIntersectionObserver(): void {
-    // Create an IntersectionObserver to efficiently track when elements are in view
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const container = entry.target as HTMLElement;
-          const playerState = this.playerStates.get(container);
+          const state = this.playerStates.get(container);
+          if (!state) return;
+
+          state.isInView = entry.isIntersecting;
+
+          // Handle initialization if needed
+          if (entry.isIntersecting && !state.initialized) {
+            this.initializePlayer(container);
+            state.initialized = true;
+            return;
+          }
+
+          // Handle play/pause based on visibility
           const player = this.players.get(container);
-
-          if (!playerState || !player) return;
-
-          // Update the isInView state
-          playerState.isInView = entry.isIntersecting;
-
-          // Check for reduced motion preference
-          const prefersReducedMotion = window.matchMedia(
-            '(prefers-reduced-motion: reduce)'
-          ).matches;
+          if (!player) return;
 
           // Only auto-play/pause based on visibility if reduced motion is not preferred
           // and not in hover mode
-          if (!prefersReducedMotion && !playerState.isHoverMode) {
-            if (entry.isIntersecting && playerState.playing && !playerState.userPaused) {
-              // Coming into view while playing
-              player.play();
-            } else if (!entry.isIntersecting && playerState.playing) {
-              // Going out of view while playing
-              player.pause();
+          if (!this.prefersReducedMotion && !state.isHoverMode) {
+            if (entry.isIntersecting && state.playing && !state.userPaused) {
+              this.playVideo(player, state);
+            } else if (!entry.isIntersecting && state.playing) {
+              this.pauseVideo(player, state);
             }
           }
         });
       },
       {
-        root: null, // Use the viewport as the root
-        rootMargin: '0px',
-        threshold: 0.1, // Consider visible when at least 10% is in view
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.1,
       }
     );
   }
@@ -77,290 +98,188 @@ class VimeoPlayerManager {
     return VimeoPlayerManager.instance;
   }
 
-  private setupPlayerEvents(container: HTMLElement, player: Player): void {
-    const iframe = container.querySelector(this.PLAYER_SELECTOR) as HTMLIFrameElement;
-    const playPauseButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR) as HTMLElement;
+  private updatePlayPauseUI(container: HTMLElement, isPlaying: boolean): void {
     const playIcon = container.querySelector(this.PLAY_ICON_SELECTOR) as HTMLElement;
     const pauseIcon = container.querySelector(this.PAUSE_ICON_SELECTOR) as HTMLElement;
+    const toggleButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR) as HTMLElement;
+
+    if (isPlaying) {
+      playIcon.classList.add(this.HIDE_CLASS);
+      pauseIcon.classList.remove(this.HIDE_CLASS);
+      if (toggleButton) {
+        toggleButton.setAttribute('aria-label', 'Pause video');
+      }
+    } else {
+      pauseIcon.classList.add(this.HIDE_CLASS);
+      playIcon.classList.remove(this.HIDE_CLASS);
+      if (toggleButton) {
+        toggleButton.setAttribute('aria-label', 'Play video');
+      }
+    }
+  }
+
+  private playVideo(player: Player, state: PlayerState): Promise<void> {
+    return player
+      .play()
+      .then(() => {
+        state.playing = true;
+        state.userPaused = false;
+      })
+      .catch((err) => {
+        console.error('Error playing video:', err);
+        state.playing = false;
+        state.userPaused = true;
+      });
+  }
+
+  private pauseVideo(player: Player, state: PlayerState): Promise<void> {
+    return player
+      .pause()
+      .then(() => {
+        state.playing = false;
+      })
+      .catch((err) => console.error('Error pausing video:', err));
+  }
+
+  private togglePlayPause(container: HTMLElement, player: Player, state: PlayerState): void {
+    if (state.playing) {
+      this.pauseVideo(player, state).then(() => {
+        this.updatePlayPauseUI(container, false);
+        state.userPaused = true;
+      });
+    } else {
+      state.userPaused = false;
+      this.playVideo(player, state)
+        .then(() => this.updatePlayPauseUI(container, true))
+        .catch(() => this.updatePlayPauseUI(container, false));
+    }
+  }
+
+  private setupPlayerEvents(container: HTMLElement, player: Player, state: PlayerState): void {
+    const playPauseButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR) as HTMLElement;
 
     // Check if looping should be disabled
     const disableLoop = container.getAttribute(this.LOOP_ATTR) === 'false';
-    if (disableLoop) {
-      player.setLoop(false);
-    } else {
-      player.setLoop(true); // Enable looping by default
+    player.setLoop(!disableLoop);
+
+    // Set up hover functionality if enabled
+    if (state.isHoverMode) {
+      container.addEventListener('mouseenter', () => {
+        if (!state.userPaused) {
+          this.playVideo(player, state).then(() => this.updatePlayPauseUI(container, true));
+        }
+      });
+
+      container.addEventListener('mouseleave', () => {
+        if (state.playing) {
+          this.pauseVideo(player, state).then(() => this.updatePlayPauseUI(container, false));
+        }
+      });
     }
+
+    // Set up Vimeo event listeners for play/pause
+    player.on('play', () => {
+      if (this.prefersReducedMotion && !state.playing && !state.userPaused) {
+        this.pauseVideo(player, state).then(() => this.updatePlayPauseUI(container, false));
+      } else {
+        state.playing = true;
+        this.updatePlayPauseUI(container, true);
+      }
+    });
+
+    player.on('pause', () => {
+      if (state.isInView) {
+        state.playing = false;
+        this.updatePlayPauseUI(container, false);
+      }
+    });
+
+    // Add click event to the play/pause button
+    if (playPauseButton) {
+      // Set initial aria-label based on current state
+      playPauseButton.setAttribute('aria-label', state.playing ? 'Pause video' : 'Play video');
+
+      playPauseButton.addEventListener('click', () => {
+        player
+          .getPaused()
+          .then((isPaused) => {
+            state.playing = !isPaused;
+            this.togglePlayPause(container, player, state);
+          })
+          .catch(() => {
+            state.playing = !state.playing;
+            state.userPaused = !state.playing;
+            this.togglePlayPause(container, player, state);
+          });
+      });
+    }
+  }
+
+  private initializePlayer(container: HTMLElement): void {
+    const iframe = container.querySelector(this.PLAYER_SELECTOR) as HTMLIFrameElement;
+
+    // Create player with autoplay disabled
+    const player = new Player(iframe, {
+      autoplay: false,
+      loop: true,
+    });
+
+    this.players.set(container, player);
 
     // Check if hover mode is enabled
     const isHoverMode = container.getAttribute(this.HOVER_ATTR) === 'true';
 
     // Initialize player state
-    const playerState = {
+    const state: PlayerState = {
       playing: false,
       isInView: false,
       userPaused: false,
-      isHoverMode: isHoverMode,
+      isHoverMode,
+      initialized: true,
     };
-    this.playerStates.set(container, playerState);
-
-    // Set up hover functionality if enabled
-    if (isHoverMode) {
-      container.addEventListener('mouseenter', () => {
-        if (!playerState.userPaused) {
-          player
-            .play()
-            .then(() => {
-              playerState.playing = true;
-              playIcon.classList.add('hide');
-              pauseIcon.classList.remove('hide');
-            })
-            .catch((err) => console.error('Error playing on hover:', err));
-        }
-      });
-
-      container.addEventListener('mouseleave', () => {
-        if (playerState.playing) {
-          player
-            .pause()
-            .then(() => {
-              playerState.playing = false;
-              pauseIcon.classList.add('hide');
-              playIcon.classList.remove('hide');
-            })
-            .catch((err) => console.error('Error pausing on hover out:', err));
-        }
-      });
-    }
-
-    // Only override automatic playing, not user-initiated playing
-    player.on('play', () => {
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // If the play event wasn't triggered by a user action, we should pause
-      if (prefersReducedMotion && !playerState.playing && !playerState.userPaused) {
-        console.log('Preventing autoplay due to reduced motion preference');
-        player
-          .pause()
-          .then(() => {
-            pauseIcon.classList.add('hide');
-            playIcon.classList.remove('hide');
-          })
-          .catch((err) => console.error('Error preventing autoplay:', err));
-      } else {
-        // This is a user-initiated or intended play
-        console.log('Allowing play - user initiated or intended');
-        playerState.playing = true;
-        playIcon.classList.add('hide');
-        pauseIcon.classList.remove('hide');
-      }
-    });
-
-    // Add click event to the play/pause button
-    playPauseButton.addEventListener('click', () => {
-      console.log(
-        'Play/pause button clicked, current state:',
-        playerState.playing,
-        'on container:',
-        container
-      );
-
-      // Force get the actual player state to ensure we're in sync
-      player
-        .getPaused()
-        .then((isPaused) => {
-          console.log('Actual player paused state:', isPaused);
-          playerState.playing = !isPaused;
-
-          if (playerState.playing) {
-            // Currently playing, so pause
-            player
-              .pause()
-              .then(() => {
-                console.log('Video paused successfully by user');
-                pauseIcon.classList.add('hide');
-                playIcon.classList.remove('hide');
-                playerState.playing = false;
-                playerState.userPaused = true; // User manually paused
-              })
-              .catch((err) => console.error('Error pausing:', err));
-          } else {
-            // Currently paused, so play
-            // Set userPaused to false BEFORE playing to indicate this is a user action
-            playerState.userPaused = false; // User is manually playing
-
-            player
-              .play()
-              .then(() => {
-                console.log('Video played successfully by user');
-                playIcon.classList.add('hide');
-                pauseIcon.classList.remove('hide');
-                playerState.playing = true;
-              })
-              .catch((err) => {
-                console.error('Error playing:', err);
-                // Reset flags if play fails
-                playerState.playing = false;
-                playerState.userPaused = true;
-              });
-          }
-        })
-        .catch((err) => {
-          console.error('Error getting player state:', err);
-          // Fallback behavior if we can't get the player state
-          playerState.playing = !playerState.playing;
-          playerState.userPaused = !playerState.playing;
-
-          if (playerState.playing) {
-            player
-              .play()
-              .then(() => {
-                playIcon.classList.add('hide');
-                pauseIcon.classList.remove('hide');
-                console.log('Fallback: Video playing by user');
-              })
-              .catch((err) => console.error('Fallback play error:', err));
-          } else {
-            player
-              .pause()
-              .then(() => {
-                pauseIcon.classList.add('hide');
-                playIcon.classList.remove('hide');
-                console.log('Fallback: Video paused by user');
-              })
-              .catch((err) => console.error('Fallback pause error:', err));
-          }
-        });
-    });
-
-    // Update icons if the video state changes elsewhere
-    player.on('play', () => {
-      playerState.playing = true;
-      playIcon.classList.add('hide');
-      pauseIcon.classList.remove('hide');
-    });
-
-    player.on('pause', () => {
-      // Only update UI if in view
-      if (playerState.isInView) {
-        playerState.playing = false;
-        pauseIcon.classList.add('hide');
-        playIcon.classList.remove('hide');
-      }
-    });
-  }
-
-  private initializePlayer(container: HTMLElement): void {
-    const iframe = container.querySelector(this.PLAYER_SELECTOR) as HTMLIFrameElement;
-    const player = new Player(iframe);
-    this.players.set(container, player);
-
-    const playIcon = container.querySelector(this.PLAY_ICON_SELECTOR) as HTMLElement;
-    const pauseIcon = container.querySelector(this.PAUSE_ICON_SELECTOR) as HTMLElement;
-
-    // Check if hover mode is enabled
-    const isHoverMode = container.getAttribute(this.HOVER_ATTR) === 'true';
+    this.playerStates.set(container, state);
 
     // Basic initialization
     player
       .ready()
+      .then(() => player.setVolume(0))
+      .then(() => player.pause())
       .then(() => {
-        // Set initial volume to 0 (muted)
-        return player.setVolume(0);
-      })
-      .then(() => {
-        // Explicitly pause the video first to ensure it doesn't autoplay
-        return player.pause();
-      })
-      .then(() => {
-        // Initialize player state
-        const playerState = {
-          playing: false,
-          isInView: false,
-          userPaused: false,
-          isHoverMode: isHoverMode,
-        };
-        this.playerStates.set(container, playerState);
-
-        // Check for reduced motion preference
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        console.log('User prefers reduced motion:', prefersReducedMotion);
-
-        // Default state is paused
-        pauseIcon.classList.add('hide');
-        playIcon.classList.remove('hide');
-
-        // Only consider playing if reduced motion is not preferred and not in hover mode
-        if (!prefersReducedMotion && !isHoverMode) {
-          // Start playing if in view and reduced motion is not preferred
-          return player
-            .play()
-            .then(() => {
-              playerState.playing = true;
-              playIcon.classList.add('hide');
-              pauseIcon.classList.remove('hide');
-              console.log('Video autostarted because in view and reduced motion not preferred');
-            })
-            .catch((err) => {
-              console.warn('Could not autoplay video:', err);
-              playerState.playing = false; // Ensure we know the video is still paused
-            });
-        } else if (prefersReducedMotion) {
-          console.log('Video kept paused due to reduced motion preference');
-        }
-      })
-      .then(() => {
-        const playerState = this.playerStates.get(container);
-        console.log('Vimeo player initialized successfully, playing:', playerState?.playing);
+        this.updatePlayPauseUI(container, false);
       })
       .catch((error) => {
         console.error('Error initializing Vimeo player:', error);
-        // Ensure video is paused on error
-        player.pause().catch((e) => console.error('Failed to pause on error:', e));
-        const playerState = this.playerStates.get(container);
-        if (playerState) {
-          playerState.playing = false;
-        }
-        pauseIcon.classList.add('hide');
-        playIcon.classList.remove('hide');
+        player.pause().catch(() => {});
+        state.playing = false;
+        this.updatePlayPauseUI(container, false);
       });
 
     // Set up player events
-    this.setupPlayerEvents(container, player);
-
-    // Observe the container for intersection changes
-    if (this.intersectionObserver) {
-      this.intersectionObserver.observe(container);
-    }
-  }
-
-  private checkForIframeAPIConflicts(): void {
-    // Look for iframe attributes that might be causing autoplay
-    const allIframes = document.querySelectorAll('iframe[src*="vimeo"]');
-    allIframes.forEach((iframe) => {
-      const src = iframe.getAttribute('src');
-      if (src && src.includes('autoplay=1')) {
-        console.warn('Found iframe with autoplay=1 which may override preferences:', iframe);
-      }
-    });
+    this.setupPlayerEvents(container, player, state);
   }
 
   public initializeAllPlayers(): void {
-    this.checkForIframeAPIConflicts();
-
     const containers = document.querySelectorAll(this.CONTAINER_SELECTOR);
-    console.log('Found', containers.length, 'Vimeo containers');
 
-    // Initialize each container separately
-    containers.forEach((container, index) => {
-      console.log('Initializing player', index + 1);
-      try {
-        this.initializePlayer(container as HTMLElement);
-      } catch (error) {
-        console.error('Error initializing player', index + 1, error);
+    // Set up the intersection observer for all containers
+    containers.forEach((container) => {
+      const element = container as HTMLElement;
+
+      // Create a minimal player state to track initialization status
+      const state: PlayerState = {
+        playing: false,
+        isInView: false,
+        userPaused: false,
+        isHoverMode: element.getAttribute(this.HOVER_ATTR) === 'true',
+        initialized: false,
+      };
+      this.playerStates.set(element, state);
+
+      // Observe the container for intersection
+      if (this.intersectionObserver) {
+        this.intersectionObserver.observe(element);
       }
     });
-
-    console.log('All players initialization attempted');
   }
 }
 
