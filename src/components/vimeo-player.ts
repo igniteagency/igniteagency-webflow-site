@@ -4,7 +4,6 @@ import Player from '@vimeo/player';
 interface PlayerState {
   playing: boolean;
   isInView: boolean;
-  userPaused: boolean;
   isHoverMode: boolean;
   initialized: boolean;
 }
@@ -30,25 +29,6 @@ class VimeoPlayerManager {
   private constructor() {
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.initIntersectionObserver();
-
-    // Listen for changes to reduced motion preference
-    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
-      this.prefersReducedMotion = e.matches;
-      this.handleReducedMotionChange();
-    });
-  }
-
-  private handleReducedMotionChange(): void {
-    // Pause all playing videos if user enables reduced motion
-    if (this.prefersReducedMotion) {
-      this.players.forEach((player, container) => {
-        const state = this.playerStates.get(container);
-        if (state?.playing && !state.userPaused) {
-          this.pauseVideo(player, state);
-          this.updatePlayPauseUI(container, false);
-        }
-      });
-    }
   }
 
   private initIntersectionObserver(): void {
@@ -65,7 +45,6 @@ class VimeoPlayerManager {
           if (entry.isIntersecting && !state.initialized) {
             this.initializePlayer(container);
             state.initialized = true;
-            return;
           }
 
           // Handle play/pause based on visibility
@@ -75,14 +54,14 @@ class VimeoPlayerManager {
           // Only auto-play/pause based on visibility if reduced motion is not preferred
           // and not in hover mode
           if (!this.prefersReducedMotion && !state.isHoverMode) {
-            if (entry.isIntersecting && !state.playing && !state.userPaused) {
+            if (entry.isIntersecting && !state.playing) {
               // Coming into view while not playing
-              this.playVideo(player, state)
-                .then(() => this.updatePlayPauseUI(container, true))
-                .catch(() => this.updatePlayPauseUI(container, false));
+              this.playVideo(player, state);
+              console.debug('In view, playing video', container);
             } else if (!entry.isIntersecting && state.playing) {
               // Going out of view while playing
               this.pauseVideo(player, state);
+              console.debug('Out of view, pausing video', container);
             }
           }
         });
@@ -107,55 +86,32 @@ class VimeoPlayerManager {
     const pauseIcon = container.querySelector(this.PAUSE_ICON_SELECTOR) as HTMLElement;
     const toggleButton = container.querySelector(this.PLAY_PAUSE_BUTTON_SELECTOR) as HTMLElement;
 
+    if (!playIcon || !pauseIcon || !toggleButton) return;
+
     if (isPlaying) {
       playIcon.classList.add(this.HIDE_CLASS);
       pauseIcon.classList.remove(this.HIDE_CLASS);
-      if (toggleButton) {
-        toggleButton.setAttribute('aria-label', 'Pause video');
-      }
+      toggleButton.setAttribute('aria-label', 'Pause video');
     } else {
       pauseIcon.classList.add(this.HIDE_CLASS);
       playIcon.classList.remove(this.HIDE_CLASS);
-      if (toggleButton) {
-        toggleButton.setAttribute('aria-label', 'Play video');
-      }
+      toggleButton.setAttribute('aria-label', 'Play video');
     }
   }
 
   private playVideo(player: Player, state: PlayerState): Promise<void> {
-    return player
-      .play()
-      .then(() => {
-        state.playing = true;
-        state.userPaused = false;
-      })
-      .catch((err) => {
-        console.error('Error playing video:', err);
-        state.playing = false;
-        state.userPaused = true;
-      });
+    return player.play().catch((err) => console.error('Error playing video:', err));
   }
 
   private pauseVideo(player: Player, state: PlayerState): Promise<void> {
-    return player
-      .pause()
-      .then(() => {
-        state.playing = false;
-      })
-      .catch((err) => console.error('Error pausing video:', err));
+    return player.pause().catch((err) => console.error('Error pausing video:', err));
   }
 
-  private togglePlayPause(container: HTMLElement, player: Player, state: PlayerState): void {
+  private togglePlayPause(player: Player, state: PlayerState): void {
     if (state.playing) {
-      this.pauseVideo(player, state).then(() => {
-        this.updatePlayPauseUI(container, false);
-        state.userPaused = true;
-      });
+      this.pauseVideo(player, state);
     } else {
-      state.userPaused = false;
-      this.playVideo(player, state)
-        .then(() => this.updatePlayPauseUI(container, true))
-        .catch(() => this.updatePlayPauseUI(container, false));
+      this.playVideo(player, state);
     }
   }
 
@@ -169,33 +125,27 @@ class VimeoPlayerManager {
     // Set up hover functionality if enabled
     if (state.isHoverMode) {
       container.addEventListener('mouseenter', () => {
-        if (!state.userPaused) {
-          this.playVideo(player, state).then(() => this.updatePlayPauseUI(container, true));
+        if (!state.playing) {
+          this.playVideo(player, state);
         }
       });
 
       container.addEventListener('mouseleave', () => {
         if (state.playing) {
-          this.pauseVideo(player, state).then(() => this.updatePlayPauseUI(container, false));
+          this.pauseVideo(player, state);
         }
       });
     }
 
     // Set up Vimeo event listeners for play/pause
     player.on('play', () => {
-      if (this.prefersReducedMotion && !state.playing && !state.userPaused) {
-        this.pauseVideo(player, state).then(() => this.updatePlayPauseUI(container, false));
-      } else {
-        state.playing = true;
-        this.updatePlayPauseUI(container, true);
-      }
+      state.playing = true;
+      this.updatePlayPauseUI(container, true);
     });
 
     player.on('pause', () => {
-      if (state.isInView) {
-        state.playing = false;
-        this.updatePlayPauseUI(container, false);
-      }
+      state.playing = false;
+      this.updatePlayPauseUI(container, false);
     });
 
     // Add click event to the play/pause button
@@ -208,12 +158,11 @@ class VimeoPlayerManager {
           .getPaused()
           .then((isPaused) => {
             state.playing = !isPaused;
-            this.togglePlayPause(container, player, state);
+            this.togglePlayPause(player, state);
           })
           .catch(() => {
             state.playing = !state.playing;
-            state.userPaused = !state.playing;
-            this.togglePlayPause(container, player, state);
+            this.togglePlayPause(player, state);
           });
       });
     }
@@ -226,6 +175,7 @@ class VimeoPlayerManager {
     const player = new Player(iframe, {
       autoplay: false,
       loop: true,
+      muted: true,
     });
 
     this.players.set(container, player);
@@ -237,7 +187,6 @@ class VimeoPlayerManager {
     const state: PlayerState = {
       playing: false,
       isInView: false,
-      userPaused: false,
       isHoverMode,
       initialized: true,
     };
@@ -246,11 +195,9 @@ class VimeoPlayerManager {
     // Basic initialization
     player
       .ready()
-      .then(() => player.setVolume(0))
-      .then(() => player.pause())
-      .then(() => {
-        this.updatePlayPauseUI(container, false);
-      })
+      // .then(() => {
+      //   this.updatePlayPauseUI(container, false);
+      // })
       .catch((error) => {
         console.error('Error initializing Vimeo player:', error);
         player.pause().catch(() => {});
@@ -273,7 +220,6 @@ class VimeoPlayerManager {
       const state: PlayerState = {
         playing: false,
         isInView: false,
-        userPaused: false,
         isHoverMode: element.getAttribute(this.HOVER_ATTR) === 'true',
         initialized: false,
       };
