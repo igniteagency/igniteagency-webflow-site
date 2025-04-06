@@ -17,6 +17,7 @@ import { navHideShow } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
 import { textAnimation } from '$components/text';
 import { initializeVimeoPlayers } from '$components/vimeo-player';
+import { replaceCurrentYear } from '$utils/current-year';
 
 import { SCRIPTS_LOADED_EVENT } from './constants';
 
@@ -28,22 +29,29 @@ window.gsap.registerPlugin(ScrollTrigger, TextPlugin, CustomEase, Draggable);
 window.SplitType = SplitType;
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  initLenisSmoothScroll();
+
+  textAnimation();
+
+  cursorMove();
+
+  navHideShow();
+  menuAnimation();
+
+  horizontalScroll();
+
+  testimonialCards();
+
+  mouseTrackImage();
+
+  animatedDetailsAccordions();
+
+  animateBook();
+
+  initializeVimeoPlayers();
+
   footerSpacer();
   footerNextPageAnimation();
-  horizontalScroll();
-  textAnimation();
-  testimonialCards();
-  mouseTrackImage();
-  cursorMove();
-  menuAnimation();
-  animatedDetailsAccordions();
-  navHideShow();
-  animateBook();
-  initializeVimeoPlayers();
-});
 
-const currentYearElements = document.querySelectorAll('[data-current-year]');
-
-currentYearElements.forEach((element) => {
-  element.textContent = new Date().getFullYear().toString();
+  replaceCurrentYear();
 });
