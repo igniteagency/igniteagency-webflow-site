@@ -13,13 +13,37 @@ class VimeoPlayerManager {
   private static instance: VimeoPlayerManager | null = null;
 
   // Data attribute selectors
-  private readonly CONTAINER_SELECTOR = '[data-vimeo-el="component"]';
+  /**
+   * Set attribute on the component
+   */
+  private readonly COMPONENT_SELECTOR = '[data-vimeo-el="component"]';
+  /**
+   * Set attribute on the player iframe element
+   */
   private readonly PLAYER_SELECTOR = '[data-vimeo-el="player-iframe"]';
+  /**
+   * Set attribute on the play/pause button wrapper element
+   */
   private readonly PLAY_PAUSE_BUTTON_SELECTOR = '[data-vimeo-el="toggle-button"]';
+  /**
+   * Set the play icon element
+   */
   private readonly PLAY_ICON_SELECTOR = '[data-vimeo-el="play-icon"]';
+  /**
+   * Set the pause icon element
+   */
   private readonly PAUSE_ICON_SELECTOR = '[data-vimeo-el="pause-icon"]';
+  /**
+   * Set the loop attribute on component to false to disable looping
+   */
   private readonly LOOP_ATTR = 'data-vimeo-loop';
+  /**
+   * Set the hover attribute on either the container or a parent element to play video on hover
+   */
   private readonly HOVER_ATTR = 'data-vimeo-hover';
+  /**
+   * Hide class for the play/pause button icon toggle
+   */
   private readonly HIDE_CLASS = 'hide';
 
   private players: Map<HTMLElement, Player> = new Map();
@@ -217,7 +241,7 @@ class VimeoPlayerManager {
   }
 
   public initializeAllPlayers(): void {
-    const containers = document.querySelectorAll(this.CONTAINER_SELECTOR);
+    const containers = document.querySelectorAll(this.COMPONENT_SELECTOR);
 
     // Set up the intersection observer for all containers
     containers.forEach((container) => {
