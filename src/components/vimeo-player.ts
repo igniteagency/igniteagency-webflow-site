@@ -75,9 +75,13 @@ class VimeoPlayerManager {
           // Only auto-play/pause based on visibility if reduced motion is not preferred
           // and not in hover mode
           if (!this.prefersReducedMotion && !state.isHoverMode) {
-            if (entry.isIntersecting && state.playing && !state.userPaused) {
-              this.playVideo(player, state);
+            if (entry.isIntersecting && !state.playing && !state.userPaused) {
+              // Coming into view while not playing
+              this.playVideo(player, state)
+                .then(() => this.updatePlayPauseUI(container, true))
+                .catch(() => this.updatePlayPauseUI(container, false));
             } else if (!entry.isIntersecting && state.playing) {
+              // Going out of view while playing
               this.pauseVideo(player, state);
             }
           }
@@ -199,7 +203,7 @@ class VimeoPlayerManager {
       // Set initial aria-label based on current state
       playPauseButton.setAttribute('aria-label', state.playing ? 'Pause video' : 'Play video');
 
-      playPauseButton.addEventListener('click', () => {
+      container.addEventListener('click', () => {
         player
           .getPaused()
           .then((isPaused) => {
