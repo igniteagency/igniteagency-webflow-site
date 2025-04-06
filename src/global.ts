@@ -10,6 +10,7 @@ import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
+import { initLenisSmoothScroll } from '$components/lenis';
 import { menuAnimation } from '$components/menu';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { navHideShow } from '$components/nav';
