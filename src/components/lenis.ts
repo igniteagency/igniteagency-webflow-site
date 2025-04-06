@@ -23,10 +23,10 @@ export class LenisSmoothScroll {
     this.lenis = new Lenis({
       duration: 1,
       easing: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      smoothWheel: true,
       touchMultiplier: 1.5,
-      infinite: false,
+      anchors: {
+        offset: 100,
+      },
     });
 
     // Expose Lenis instance to window for access by other components
