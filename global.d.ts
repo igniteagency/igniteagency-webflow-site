@@ -1,6 +1,8 @@
 import type { Webflow } from '@finsweet/ts-utils';
 import type SplitType from 'split-type';
 
+import type { loadExternalScript } from '$utils/load-external-script';
+
 export type SCRIPTS_ENV = 'dev' | 'prod';
 
 declare global {
@@ -17,6 +19,9 @@ declare global {
      * A wrapper function to directly console log when debug mode is active
      */
     DEBUG: (...args: any[]) => void;
+
+    loadExternalScript: typeof loadExternalScript;
+
     gsap: GSAP;
     ScrollTrigger: typeof ScrollTrigger;
     TextPlugin: typeof TextPlugin;
