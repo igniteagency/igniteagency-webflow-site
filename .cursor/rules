@@ -63,3 +63,21 @@ pattern.comments = [
   "Add comments for non-obvious performance considerations",
   "Document any workarounds or temporary solutions with TODO comments"
 ]
+
+# Webflow Integration Rules
+pattern.webflowIntegration = [
+  "Use `ignite-webflow-site` MCP (Model Context Protocol) server for all Webflow site interactions",,
+  "Don't ask for permission to fetch data using MCP",
+  "Always fetch latest site data before making updates",
+  "Confirm all update content changes with user before publishing",
+  "Use proper error handling for all Webflow API calls",
+  "Cache Webflow responses when appropriate to minimize API calls"
+]
+
+# Content Update Safety
+pattern.contentSafety = [
+  "Always preview changes before publishing to production",
+  "Confirm with user before pushing any content updates",
+  "Keep backup of content before making bulk updates",
+  "Log all content modifications for audit trail"
+]
