@@ -50,12 +50,9 @@ class Loader {
 
     // If loader has been shown before in this session, hide it immediately and return
     if (isLoaderShown === 'true' && this.loaderElement) {
-      this.loaderElement.style.display = 'none';
+      // this.loaderElement.style.display = 'none';
       return;
     }
-
-    // Mark that the loader has been shown for this session
-    sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
     // Setup the loader animation
     this.setupLoaderAnimation();
@@ -88,6 +85,9 @@ class Loader {
 
     // Start the animation
     this.loaderTimeline.play();
+
+    // Mark that the loader has been shown for this session
+    sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
     console.debug('Loader animation initialized and started');
   }
@@ -347,9 +347,12 @@ class Loader {
     // Create a master timeline for all path animations
     const pathAnimationTimeline = gsap.timeline();
 
-    // Calculate expansion amount based on half the screen width
+    // Calculate expansion amount based on screen size
     const screenWidth = window.innerWidth;
-    const expansionAmount = screenWidth / 2;
+    const isPortrait = window.innerHeight > screenWidth;
+
+    // Use more aggressive expansion for mobile devices
+    const expansionAmount = isPortrait ? screenWidth * 1.5 : screenWidth / 2;
 
     // Add path animations with no stagger
     visibleBoltPaths.forEach((path) => {
