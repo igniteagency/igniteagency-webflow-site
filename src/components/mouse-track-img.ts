@@ -3,21 +3,25 @@ export function mouseTrackImage() {
     const image = block.querySelector('[data-hover-move]');
 
     if (image) {
-      block.addEventListener('mouseenter', () => {
+      const inAnimation = () => {
         window.gsap.to(image, {
           scale: 1,
           duration: 0.3,
           ease: 'power3.out',
         });
-      });
+      };
 
-      block.addEventListener('mouseleave', () => {
+      const outAnimation = () => {
         window.gsap.to(image, {
           scale: 0,
           duration: 0.3,
           ease: 'power3.out',
         });
-      });
+      };
+      block.addEventListener('mouseenter', () => inAnimation());
+      block.addEventListener('focusin', () => inAnimation());
+      block.addEventListener('mouseleave', () => outAnimation());
+      block.addEventListener('focusout', () => outAnimation());
 
       block.addEventListener('mousemove', (e) => {
         const rect = block.getBoundingClientRect();
