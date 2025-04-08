@@ -29,9 +29,9 @@ window.Draggable = Draggable;
 window.gsap.registerPlugin(ScrollTrigger, TextPlugin, CustomEase, Draggable);
 window.SplitType = SplitType;
 
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  initLenisSmoothScroll();
+initLenisSmoothScroll();
 
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   textAnimation();
 
   cursorMove();
