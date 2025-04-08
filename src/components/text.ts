@@ -148,13 +148,6 @@ export function textAnimation() {
         el.addEventListener('mouseleave', () => tl.reverse());
       }
     });
-
-  // Simple resize handler for responsive text splitting
-  window.ScrollTrigger.addEventListener('refreshInit', () => {
-    // Refresh all split instances
-    splitInstances.forEach((instance) => instance.revert());
-    splitInstances.forEach((instance) => instance.split());
-  });
 }
 
 function getDurationAttrValue(el: HTMLElement, defaultValue: number) {
