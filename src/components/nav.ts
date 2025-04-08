@@ -101,35 +101,22 @@ export class Navigation {
    * Initialize the nav hide/show functionality
    */
   private initNavHideShow(): void {
-    if (this.isNavOpen()) {
-      return;
-    }
+    let animateNav = window.gsap.quickTo(this.navbar, 'yPercent', {
+      duration: this.ANIMATION_DURATION,
+      ease: this.ANIMATION_EASE,
+    });
 
-    // Create a ScrollTrigger to track scroll direction
-    window.ScrollTrigger.create({
-      start: 'top top',
-      end: 'max',
-      onUpdate: (self) => {
-        if (this.isNavOpen()) {
-          return;
-        }
+    // Use Lenis scroll event instead
+    this.lenis.on('scroll', (lenis: Lenis) => {
+      if (this.isNavOpen()) {
+        return;
+      }
 
-        if (self.direction === 1) {
-          // Scrolling down
-          window.gsap.to(this.navbar, {
-            yPercent: -100,
-            duration: this.ANIMATION_DURATION,
-            ease: this.ANIMATION_EASE,
-          });
-        } else if (self.direction === -1) {
-          // Scrolling up
-          window.gsap.to(this.navbar, {
-            yPercent: 0,
-            duration: this.ANIMATION_DURATION,
-            ease: this.ANIMATION_EASE,
-          });
-        }
-      },
+      if (lenis.direction === -1) {
+        animateNav(-100);
+      } else {
+        animateNav(0);
+      }
     });
   }
 
