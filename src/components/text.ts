@@ -4,12 +4,12 @@ const DURATION_ATTR = 'data-duration';
 const STAGGER_ATTR = 'data-stagger';
 const TRIGGER_ATTR = 'data-trigger-start';
 
-const ATTR_SELECTORS = {
-  LETTER_STAGGER: '[gsap-letter-stagger]',
-  LINE_STAGGER: '[gsap-line-stagger]',
-  SCRUB_TEXT: '[data-scrub]',
-  HOVER_STAGGER_TRIGGER: '[gsap-hover-stagger-trigger]',
-  HOVER_STAGGER: '[gsap-hover-stagger]',
+const ATTR_NAME = {
+  LETTER_STAGGER: 'gsap-letter-stagger',
+  LINE_STAGGER: 'gsap-line-stagger',
+  SCRUB_TEXT: 'data-scrub',
+  HOVER_STAGGER_TRIGGER: 'gsap-hover-stagger-trigger',
+  HOVER_STAGGER: 'gsap-hover-stagger',
 };
 
 export function textAnimation() {
@@ -17,7 +17,7 @@ export function textAnimation() {
   const splitInstances: SplitType[] = [];
 
   // Handle letter stagger animations
-  document.querySelectorAll(ATTR_SELECTORS.LETTER_STAGGER).forEach((el) => {
+  document.querySelectorAll(`[${ATTR_NAME.LETTER_STAGGER}]`).forEach((el) => {
     let typeSplit = new window.SplitType(el, {
       types: 'words,lines,chars',
       tagName: 'span',
@@ -41,7 +41,7 @@ export function textAnimation() {
   });
 
   // Handle line stagger animations
-  document.querySelectorAll(ATTR_SELECTORS.LINE_STAGGER).forEach((el) => {
+  document.querySelectorAll(`[${ATTR_NAME.LINE_STAGGER}]`).forEach((el) => {
     let lineSplit = new window.SplitType(el, {
       types: 'lines',
       tagName: 'span',
@@ -68,7 +68,7 @@ export function textAnimation() {
   });
 
   // Handle scrub text animations
-  document.querySelectorAll(ATTR_SELECTORS.SCRUB_TEXT).forEach((char) => {
+  document.querySelectorAll(`[${ATTR_NAME.SCRUB_TEXT}]`).forEach((char) => {
     const text = new window.SplitType(char, { types: ['chars', 'words'], tagName: 'span' });
     splitInstances.push(text);
 
@@ -88,11 +88,11 @@ export function textAnimation() {
 
   // Handle hover letter stagger animations
   document
-    .querySelectorAll(`${ATTR_SELECTORS.HOVER_STAGGER}, ${ATTR_SELECTORS.HOVER_STAGGER_TRIGGER}`)
+    .querySelectorAll(`[${ATTR_NAME.HOVER_STAGGER}], [${ATTR_NAME.HOVER_STAGGER_TRIGGER}`)
     .forEach((el) => {
       // For trigger elements, set up animations for all stagger elements within
-      if (el.hasAttribute(ATTR_SELECTORS.HOVER_STAGGER_TRIGGER)) {
-        const staggerElements = el.querySelectorAll(ATTR_SELECTORS.HOVER_STAGGER);
+      if (el.hasAttribute(ATTR_NAME.HOVER_STAGGER_TRIGGER)) {
+        const staggerElements = el.querySelectorAll(`[${ATTR_NAME.HOVER_STAGGER}]`);
 
         if (staggerElements.length === 0) return;
 
@@ -120,12 +120,11 @@ export function textAnimation() {
 
         el.addEventListener('mouseenter', () => animations.forEach((tl) => tl.play()));
         el.addEventListener('mouseleave', () => animations.forEach((tl) => tl.reverse()));
-      }
-      // For direct stagger elements without a parent trigger
-      else if (
-        el.hasAttribute('gsap-hover-stagger') &&
-        !el.closest(ATTR_SELECTORS.HOVER_STAGGER_TRIGGER)
+      } else if (
+        el.hasAttribute(ATTR_NAME.HOVER_STAGGER) &&
+        !el.closest(`[${ATTR_NAME.HOVER_STAGGER_TRIGGER}]`)
       ) {
+        // For direct stagger elements without a parent trigger
         const split = new window.SplitType(el, {
           types: 'chars',
           tagName: 'span',
