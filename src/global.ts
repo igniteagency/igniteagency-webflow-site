@@ -18,6 +18,7 @@ import { textAnimation } from '$components/text';
 import { initializeVimeoPlayers } from '$components/vimeo-player';
 import { initBugHerd } from '$utils/bugherd-script';
 import { replaceCurrentYear } from '$utils/current-year';
+import '$utils/load-external-script';
 
 import { SCRIPTS_LOADED_EVENT } from './constants';
 
