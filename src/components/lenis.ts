@@ -24,9 +24,7 @@ export class LenisSmoothScroll {
       duration: 1,
       easing: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
       touchMultiplier: 1.5,
-      anchors: {
-        offset: 100,
-      },
+      anchors: false, // Disable built-in anchors functionality
     });
 
     // Expose Lenis instance to window for access by other components
@@ -34,6 +32,43 @@ export class LenisSmoothScroll {
 
     // Initialize Lenis
     this.initLenis();
+
+    // Setup custom anchor handling
+    this.setupAnchorHandling();
+  }
+
+  /**
+   * Set up custom anchor link handling
+   */
+  private setupAnchorHandling(): void {
+    const links = document.querySelectorAll<HTMLAnchorElement>('a');
+
+    links.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+
+        // Skip if no href, external link, or not an anchor link
+        if (!href || link.target === '_blank' || !href.startsWith('#')) return;
+
+        // Skip Webflow tabs
+        if (href.startsWith('#w-tabs')) return;
+
+        // Get the ID part (remove the # symbol)
+        const id = href.substring(1);
+
+        // Use getElementById instead of querySelector to avoid selector syntax issues
+        const targetElement = document.getElementById(id);
+
+        if (targetElement) {
+          e.preventDefault();
+
+          // Use Lenis scrollTo
+          this.lenis.scrollTo(targetElement, {
+            offset: -100,
+          });
+        }
+      });
+    });
   }
 
   /**

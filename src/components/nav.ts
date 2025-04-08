@@ -113,9 +113,9 @@ export class Navigation {
       }
 
       if (lenis.direction === -1) {
-        animateNav(-100);
-      } else {
         animateNav(0);
+      } else {
+        animateNav(-100);
       }
     });
   }
