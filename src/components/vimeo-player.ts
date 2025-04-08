@@ -157,7 +157,19 @@ class VimeoPlayerManager {
         }
       });
 
+      state.hoverElement.addEventListener('focusin', () => {
+        if (!state.playing) {
+          this.playVideo(player, state);
+        }
+      });
+
       state.hoverElement.addEventListener('mouseleave', () => {
+        if (state.playing) {
+          this.pauseVideo(player, state);
+        }
+      });
+
+      state.hoverElement.addEventListener('focusout', () => {
         if (state.playing) {
           this.pauseVideo(player, state);
         }
