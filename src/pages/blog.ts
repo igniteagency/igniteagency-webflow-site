@@ -1,35 +1,74 @@
-// Select the elements
-const progressLine = document.querySelector('.post-content_progress');
-const tocLinks = document.querySelectorAll('.post-content_link');
-const container = document.querySelector('.post-content_link-content');
+import { SCRIPTS_LOADED_EVENT } from '../constants';
 
-// Function to update progress line
-function updateProgressLine() {
-  // Find all links with the `.w--current` class
-  const currentLinks = Array.from(tocLinks).filter((link) => link.classList.contains('w--current'));
+/**
+ * BlogProgressLine class to handle the TOC progress line functionality
+ */
+class BlogProgressLine {
+  private progressLine: HTMLElement | null;
+  private tocLinks: NodeListOf<Element>;
+  private container: HTMLElement | null;
+  private progressLineAnimation!: gsap.QuickToFunc;
 
-  if (currentLinks.length === 0) return; // No current link found
+  constructor() {
+    // Select the elements
+    this.progressLine = document.querySelector('.post-content_progress');
+    this.tocLinks = document.querySelectorAll('.post-content_link');
+    this.container = document.querySelector('.post-content_link-content');
+  }
 
-  // Calculate the total height based on all current links
-  const containerTop = container.getBoundingClientRect().top;
+  /**
+   * Initialize the progress line functionality
+   */
+  init(): void {
+    if (!this.progressLine || !this.container) return;
 
-  // Find the bottom-most link with `.w--current`
-  const lastCurrentLink = currentLinks[currentLinks.length - 1];
-  const currentLinkTop = lastCurrentLink.getBoundingClientRect().top;
+    // Initial setup of GSAP animation
+    this.progressLineAnimation = window.gsap.quickTo(this.progressLine, 'height', {
+      duration: 0.5,
+      ease: 'power2.out',
+    });
 
-  const height = currentLinkTop - containerTop;
+    // Initial update
+    this.updateProgressLine();
 
-  // Animate the progress line height
-  gsap.to(progressLine, {
-    height: height,
-    duration: 0.5,
-    ease: 'power2.out',
-    //scrub: true,
-  });
+    // Update the progress line on scroll using lenis
+    window.lenis.on('scroll', () => this.updateProgressLine());
+  }
+
+  /**
+   * Update the progress line based on current TOC links
+   */
+  updateProgressLine(): void {
+    // Find all links with the `.w--current` class
+    const currentLinks = Array.from(this.tocLinks).filter((link) =>
+      link.classList.contains('w--current')
+    );
+
+    if (currentLinks.length === 0) return; // No current link found
+
+    // Calculate the total height based on all current links
+    const containerTop = (this.container as HTMLElement).getBoundingClientRect().top;
+
+    // Find the bottom-most link with `.w--current`
+    const lastCurrentLink = currentLinks[currentLinks.length - 1];
+    const currentLinkTop = lastCurrentLink.getBoundingClientRect().top;
+
+    const height = currentLinkTop - containerTop;
+
+    // Animate the progress line height
+    this.progressLineAnimation(height);
+  }
 }
 
-// Initial update
-updateProgressLine();
+/**
+ * Initialize the blog progress line functionality
+ */
+export function initBlogProgressLine(): void {
+  const blogProgressLine = new BlogProgressLine();
+  blogProgressLine.init();
+}
 
-// Update the progress line on scroll
-window.addEventListener('scroll', updateProgressLine);
+// Initialize when all scripts are loaded
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  initBlogProgressLine();
+});
