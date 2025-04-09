@@ -1,4 +1,5 @@
 import { CustomEase } from 'gsap/CustomEase';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type Lenis from 'lenis';
 
 /**
@@ -22,11 +23,12 @@ export class Navigation {
   private state: string;
   private body: HTMLElement;
   private lenis: Lenis;
+  private colorTriggers: NodeListOf<Element>;
 
   private readonly ANIMATION_DURATION: number = 0.5; // Duration in seconds
   private readonly ANIMATION_EASE: string = 'power4.inOut'; // Easing function
-
   private readonly OVERFLOW_HIDDEN_CLASS: string = 'overflow-hidden';
+  private readonly TEXT_COLOR_ALTERNATE_CLASS: string = 'text-color-alternate';
 
   // Singleton instance
   private static instance: Navigation | null = null;
@@ -43,6 +45,9 @@ export class Navigation {
 
     // Get Lenis instance from window
     this.lenis = window.lenis;
+
+    // Get color triggers
+    this.colorTriggers = document.querySelectorAll('.nav-color-trigger');
 
     // Menu elements
     this.menu = this.navWrap.querySelector('.menu');
@@ -64,6 +69,9 @@ export class Navigation {
 
     this.timeline = window.gsap.timeline();
 
+    // Register ScrollTrigger plugin
+    window.gsap.registerPlugin(ScrollTrigger);
+
     // Create custom ease for animations
     CustomEase.create('main', '0.65, 0.01, 0.05, 0.99');
 
@@ -76,6 +84,76 @@ export class Navigation {
     // Initialize
     this.initMenu();
     this.initNavHideShow();
+    this.initColorTriggers();
+  }
+
+  /**
+   * Initialize the color trigger functionality using GSAP ScrollTrigger
+   */
+  private initColorTriggers(): void {
+    this.colorTriggers.forEach((trigger) => {
+      const triggerColor = trigger.getAttribute('data-nav-trigger-color');
+
+      ScrollTrigger.create({
+        trigger: trigger,
+        start: 'top top',
+        end: 'bottom top',
+        onEnter: () => {
+          const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
+
+          if (triggerColor === 'black' && !hasClass) {
+            this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
+          } else if (['white', 'red', 'blue'].includes(triggerColor || '') && hasClass) {
+            this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
+          }
+        },
+        onEnterBack: () => {
+          const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
+
+          if (triggerColor === 'black' && !hasClass) {
+            this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
+          } else if (['white', 'red', 'blue'].includes(triggerColor || '') && hasClass) {
+            this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
+          }
+        },
+        onLeave: () => {
+          // Find the next trigger (if any)
+          const triggers = Array.from(this.colorTriggers);
+          const currentIndex = triggers.indexOf(trigger);
+          const nextTrigger = triggers[currentIndex + 1];
+
+          if (nextTrigger) {
+            const nextColor = nextTrigger.getAttribute('data-nav-trigger-color');
+            const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
+
+            // Apply the next trigger's color
+            if (nextColor === 'black' && !hasClass) {
+              this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
+            } else if (['white', 'red', 'blue'].includes(nextColor || '') && hasClass) {
+              this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
+            }
+          }
+        },
+        onLeaveBack: () => {
+          // Find the previous trigger (if any)
+          const triggers = Array.from(this.colorTriggers);
+          const currentIndex = triggers.indexOf(trigger);
+          const prevTrigger = triggers[currentIndex - 1];
+
+          if (prevTrigger) {
+            const prevColor = prevTrigger.getAttribute('data-nav-trigger-color');
+            const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
+
+            // Apply the previous trigger's color
+            if (prevColor === 'black' && !hasClass) {
+              this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
+            } else if (['white', 'red', 'blue'].includes(prevColor || '') && hasClass) {
+              this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
+            }
+          }
+        },
+      });
+    });
   }
 
   /**
