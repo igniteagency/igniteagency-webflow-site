@@ -9,6 +9,7 @@
 export function loadExternalScript(
   url: string,
   placement: 'head' | 'body' = 'body',
+  isModule: boolean = true,
   scriptName: string | undefined = undefined
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ export function loadExternalScript(
     }
 
     const script = document.createElement('script');
-    script.type = 'module';
+    script.type = isModule ? 'module' : 'text/javascript';
     script.src = url;
 
     script.addEventListener('load', () => {

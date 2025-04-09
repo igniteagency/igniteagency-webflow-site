@@ -1,5 +1,4 @@
 import { CustomEase } from 'gsap/CustomEase';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type Lenis from 'lenis';
 
 /**
@@ -69,9 +68,6 @@ export class Navigation {
 
     this.timeline = window.gsap.timeline();
 
-    // Register ScrollTrigger plugin
-    window.gsap.registerPlugin(ScrollTrigger);
-
     // Create custom ease for animations
     CustomEase.create('main', '0.65, 0.01, 0.05, 0.99');
 
@@ -88,13 +84,55 @@ export class Navigation {
   }
 
   /**
+   * Get the singleton instance of the Navigation class
+   * @returns {Navigation} The singleton instance
+   */
+  public static getInstance(): Navigation {
+    if (!Navigation.instance) {
+      Navigation.instance = new Navigation();
+    }
+    return Navigation.instance;
+  }
+
+  /**
+   * Checks if the navigation menu is open
+   * @returns {boolean} True if the nav is open, false otherwise
+   */
+  private isNavOpen(): boolean {
+    return this.navWrap.getAttribute('data-nav') === 'open';
+  }
+
+  /**
+   * Initialize the nav hide/show functionality
+   */
+  private initNavHideShow(): void {
+    let animateNav = window.gsap.quickTo(this.navbar, 'yPercent', {
+      duration: this.ANIMATION_DURATION,
+      ease: this.ANIMATION_EASE,
+    });
+
+    // Use Lenis scroll event instead
+    this.lenis.on('scroll', (lenis: Lenis) => {
+      if (this.isNavOpen()) {
+        return;
+      }
+
+      if (lenis.direction === -1) {
+        animateNav(0);
+      } else {
+        animateNav(-100);
+      }
+    });
+  }
+
+  /**
    * Initialize the color trigger functionality using GSAP ScrollTrigger
    */
   private initColorTriggers(): void {
     this.colorTriggers.forEach((trigger) => {
       const triggerColor = trigger.getAttribute('data-nav-trigger-color');
 
-      ScrollTrigger.create({
+      window.ScrollTrigger.create({
         trigger: trigger,
         start: 'top top',
         end: 'bottom top',
@@ -153,48 +191,6 @@ export class Navigation {
           }
         },
       });
-    });
-  }
-
-  /**
-   * Get the singleton instance of the Navigation class
-   * @returns {Navigation} The singleton instance
-   */
-  public static getInstance(): Navigation {
-    if (!Navigation.instance) {
-      Navigation.instance = new Navigation();
-    }
-    return Navigation.instance;
-  }
-
-  /**
-   * Checks if the navigation menu is open
-   * @returns {boolean} True if the nav is open, false otherwise
-   */
-  private isNavOpen(): boolean {
-    return this.navWrap.getAttribute('data-nav') === 'open';
-  }
-
-  /**
-   * Initialize the nav hide/show functionality
-   */
-  private initNavHideShow(): void {
-    let animateNav = window.gsap.quickTo(this.navbar, 'yPercent', {
-      duration: this.ANIMATION_DURATION,
-      ease: this.ANIMATION_EASE,
-    });
-
-    // Use Lenis scroll event instead
-    this.lenis.on('scroll', (lenis: Lenis) => {
-      if (this.isNavOpen()) {
-        return;
-      }
-
-      if (lenis.direction === -1) {
-        animateNav(0);
-      } else {
-        animateNav(-100);
-      }
     });
   }
 
