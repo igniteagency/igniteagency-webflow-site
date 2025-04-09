@@ -9,7 +9,8 @@ export function initBugHerd(): void {
     window
       .loadExternalScript(
         'https://www.bugherd.com/sidebarv2.js?apikey=isoy2toufqtvvbdlk6aeia',
-        'body'
+        'body',
+        false
       )
       .then(() => {
         console.log('BugHerd script loaded successfully');
