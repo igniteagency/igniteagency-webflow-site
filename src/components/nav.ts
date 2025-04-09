@@ -22,7 +22,7 @@ export class Navigation {
   private state: string;
   private body: HTMLElement;
   private lenis: Lenis;
-  private colorTriggers: NodeListOf<Element>;
+  private colorTriggers: NodeListOf<HTMLElement>;
 
   private readonly ANIMATION_DURATION: number = 0.5; // Duration in seconds
   private readonly ANIMATION_EASE: string = 'power4.inOut'; // Easing function
@@ -37,7 +37,7 @@ export class Navigation {
    * Use the getInstance() method instead
    */
   private constructor() {
-    this.navbar = document.querySelector('.nav_component, .gradient-blur') as HTMLElement;
+    this.navbar = document.querySelector('.nav_component') as HTMLElement;
     this.navWrap = document.querySelector('.nav') as HTMLElement;
     this.state = this.navWrap.getAttribute('data-nav') || 'closed';
     this.body = document.body;
@@ -46,7 +46,7 @@ export class Navigation {
     this.lenis = window.lenis;
 
     // Get color triggers
-    this.colorTriggers = document.querySelectorAll('.nav-color-trigger');
+    this.colorTriggers = document.querySelectorAll('[data-el="nav-color-change-trigger"]');
 
     // Menu elements
     this.menu = this.navWrap.querySelector('.menu');
@@ -130,68 +130,39 @@ export class Navigation {
    */
   private initColorTriggers(): void {
     this.colorTriggers.forEach((trigger) => {
-      const triggerColor = trigger.getAttribute('data-nav-trigger-color');
+      // Themes - `dark` or `light`
+      const theme = (trigger.firstChild as HTMLElement).getAttribute(
+        'data-wf--nav-color-trigger-theme-atom--theme'
+      );
 
       window.ScrollTrigger.create({
         trigger: trigger,
         start: 'top top',
-        end: 'bottom top',
+        markers: true,
+        invalidateOnRefresh: true,
         onEnter: () => {
-          const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
-
-          if (triggerColor === 'black' && !hasClass) {
-            this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
-          } else if (['white', 'red', 'blue'].includes(triggerColor || '') && hasClass) {
-            this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
-          }
-        },
-        onEnterBack: () => {
-          const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
-
-          if (triggerColor === 'black' && !hasClass) {
-            this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
-          } else if (['white', 'red', 'blue'].includes(triggerColor || '') && hasClass) {
-            this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
-          }
-        },
-        onLeave: () => {
-          // Find the next trigger (if any)
-          const triggers = Array.from(this.colorTriggers);
-          const currentIndex = triggers.indexOf(trigger);
-          const nextTrigger = triggers[currentIndex + 1];
-
-          if (nextTrigger) {
-            const nextColor = nextTrigger.getAttribute('data-nav-trigger-color');
-            const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
-
-            // Apply the next trigger's color
-            if (nextColor === 'black' && !hasClass) {
-              this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
-            } else if (['white', 'red', 'blue'].includes(nextColor || '') && hasClass) {
-              this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
-            }
+          window.IS_DEBUG_MODE && console.log('onEnter', trigger, theme);
+          if (theme === 'light') {
+            this.toggleNavTextClass(true);
+          } else {
+            this.toggleNavTextClass(false);
           }
         },
         onLeaveBack: () => {
-          // Find the previous trigger (if any)
-          const triggers = Array.from(this.colorTriggers);
-          const currentIndex = triggers.indexOf(trigger);
-          const prevTrigger = triggers[currentIndex - 1];
-
-          if (prevTrigger) {
-            const prevColor = prevTrigger.getAttribute('data-nav-trigger-color');
-            const hasClass = this.navbar.classList.contains(this.TEXT_COLOR_ALTERNATE_CLASS);
-
-            // Apply the previous trigger's color
-            if (prevColor === 'black' && !hasClass) {
-              this.navbar.classList.add(this.TEXT_COLOR_ALTERNATE_CLASS);
-            } else if (['white', 'red', 'blue'].includes(prevColor || '') && hasClass) {
-              this.navbar.classList.remove(this.TEXT_COLOR_ALTERNATE_CLASS);
-            }
+          // revert on leave back
+          window.IS_DEBUG_MODE && console.log('onLeaveBack', trigger, theme);
+          if (theme === 'light') {
+            this.toggleNavTextClass(false);
+          } else {
+            this.toggleNavTextClass(true);
           }
         },
       });
     });
+  }
+
+  private toggleNavTextClass(state: boolean): void {
+    this.navbar.classList.toggle(this.TEXT_COLOR_ALTERNATE_CLASS, state);
   }
 
   /**
