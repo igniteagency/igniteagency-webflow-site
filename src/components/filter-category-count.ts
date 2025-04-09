@@ -11,7 +11,6 @@ export function initFilterCategoryCount(): void {
       const [filterInstance] = filterInstances;
 
       filterInstance.filtersData.forEach((filterData) => {
-        console.debug('filterData', filterData);
         // Check if this filter has a category key (case insensitive)
         const hasCategoryKey = filterData.filterKeys.find(
           (key) => key.toLowerCase() === 'category'
