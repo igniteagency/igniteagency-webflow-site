@@ -106,10 +106,14 @@ export class Navigation {
    * Initialize the nav hide/show functionality
    */
   private initNavHideShow(): void {
-    let animateNav = window.gsap.quickTo(this.navbar, 'yPercent', {
-      duration: this.ANIMATION_DURATION,
-      ease: this.ANIMATION_EASE,
-    });
+    let animateNav = (yPercent: number) => {
+      this.navbar.animate(
+        {
+          transform: `translateY(${yPercent}%)`,
+        },
+        { duration: this.ANIMATION_DURATION * 1000, easing: 'ease-in-out' }
+      );
+    };
 
     // Use Lenis scroll event instead
     this.lenis.on('scroll', (lenis: Lenis) => {
