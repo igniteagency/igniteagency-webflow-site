@@ -8,7 +8,6 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   setHorizontalScrollWrapperHeight();
   showerConfetti();
   initRainEmojis();
-  initDraggableElements();
   introScrubText();
   setHeroSuperchargeMode();
 });
@@ -208,47 +207,6 @@ function setHorizontalScrollWrapperHeight() {
   window.ScrollTrigger.addEventListener('refresh', () => {
     window.gsap.delayedCall(0.05, () => {
       setHeight();
-    });
-  });
-}
-
-function initDraggableElements() {
-  const container = document.querySelector('#drag-container');
-  const draggableElements = document.querySelectorAll('[data-cursor="drag me"]');
-  const cursor = document.querySelectorAll('.cursor');
-  const xTo = window.gsap.quickTo(cursor, 'x', { duration: 0.2, ease: 'power3' });
-  const yTo = window.gsap.quickTo(cursor, 'y', { duration: 0.2, ease: 'power3' });
-
-  if (!container || !draggableElements.length) {
-    console.warn('Draggable elements or container not found');
-    return;
-  }
-
-  draggableElements.forEach((element) => {
-    window.Draggable.create(element, {
-      type: 'x,y',
-      bounds: container,
-      inertia: true,
-      dragResistance: 0.2,
-      edgeResistance: 0.65,
-      zIndexBoost: false,
-      onDragStart: function (e) {
-        window.gsap.to(this.target, { scale: 1.05, duration: 0.2 });
-        xTo(e.clientX);
-        yTo(e.clientY);
-      },
-      onDrag: function (e) {
-        xTo(e.clientX);
-        yTo(e.clientY);
-      },
-      onDragEnd: function (e) {
-        window.gsap.to(this.target, { scale: 1, duration: 0.3 });
-        // Set final position after a small delay to ensure smooth transition
-        setTimeout(() => {
-          xTo(e.clientX);
-          yTo(e.clientY);
-        }, 50);
-      },
     });
   });
 }

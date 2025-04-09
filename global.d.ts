@@ -26,7 +26,6 @@ declare global {
     ScrollTrigger: typeof ScrollTrigger;
     TextPlugin: typeof TextPlugin;
     CustomEase: typeof CustomEase;
-    Draggable: typeof Draggable;
     SplitType: typeof SplitType;
     lenis: typeof Lenis;
   }
