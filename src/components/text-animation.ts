@@ -237,6 +237,13 @@ export class TextAnimator {
   }
 
   private setupHoverStagger(): void {
+    const mq = window.matchMedia('(min-width: 1100px) and (pointer: fine)');
+
+    if (!mq.matches) {
+      console.log('Hover stagger not set up on smaller screens');
+      return;
+    }
+
     document
       .querySelectorAll(`[${ATTR_NAME.HOVER_STAGGER}], [${ATTR_NAME.HOVER_STAGGER_TRIGGER}]`)
       .forEach((el) => {
