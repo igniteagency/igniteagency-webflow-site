@@ -1,8 +1,10 @@
+import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type SplitType from 'split-type';
 
 const DURATION_ATTR = 'data-duration';
 const STAGGER_ATTR = 'data-stagger';
 const TRIGGER_ATTR = 'data-trigger-start';
+const PREV_SECTION_TRIGGER_ATTR = 'data-prev-section-trigger';
 
 const ATTR_NAME = {
   LETTER_STAGGER: 'gsap-letter-stagger',
@@ -119,6 +121,15 @@ export class TextAnimator {
     this.setupHoverStagger();
   }
 
+  private getPreviousSection(element: HTMLElement): HTMLElement | null {
+    // Find the closest parent section
+    const parentSection = element.closest('section');
+    if (!parentSection) return null;
+
+    // Find the previous section
+    return parentSection.previousElementSibling as HTMLElement;
+  }
+
   private setupLetterStagger(): void {
     document.querySelectorAll(`[${ATTR_NAME.LETTER_STAGGER}]`).forEach((el) => {
       const element = el as HTMLElement;
@@ -132,18 +143,21 @@ export class TextAnimator {
 
       const stagger = this.getStaggerAttrValue(element, 0.03);
       const trigger = this.getTriggerAttrValue(element, 'center');
+      const usePrevSectionTrigger = element.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
+      const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
       window.gsap.set(typeSplit.chars, {
         y: '100%',
       });
+
       const animation = window.gsap.to(typeSplit.chars, {
         y: '0%',
         duration: this.getDurationAttrValue(element, 1),
         ease: 'expo.inOut',
         stagger: stagger,
         scrollTrigger: {
-          trigger: element,
-          start: `top ${trigger}`,
+          trigger: previousSectionEl || element,
+          start: usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
           invalidateOnRefresh: true,
         },
       });
@@ -165,20 +179,23 @@ export class TextAnimator {
 
       const duration = this.getDurationAttrValue(element, 0.3);
       const trigger = this.getTriggerAttrValue(element, '80%');
+      const usePrevSectionTrigger = element.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
+      const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
       lineSplit.lines?.forEach((line) => {
         window.gsap.set(line, {
           y: '100%',
           opacity: 0,
         });
+
         const animation = window.gsap.to(line, {
           y: '0%',
           opacity: 1,
           duration: duration,
           ease: 'expo.out',
           scrollTrigger: {
-            trigger: line,
-            start: `top ${trigger}`, // Start animation when line enters the bottom of the viewport
+            trigger: previousSectionEl || line,
+            start: usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
             toggleActions: 'play none none none',
           },
         });

@@ -14,7 +14,7 @@ import { initLenisSmoothScroll } from '$components/lenis';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { initNavigation } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
-import { textAnimation } from '$components/text';
+import { textAnimation } from '$components/text-animation';
 import { initializeVimeoPlayers } from '$components/vimeo-player';
 import { initBugHerd } from '$utils/bugherd-script';
 import { replaceCurrentYear } from '$utils/current-year';
