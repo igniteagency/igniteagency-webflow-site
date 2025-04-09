@@ -1,5 +1,3 @@
-import { SCRIPTS_LOADED_EVENT } from '../constants';
-
 /**
  * BlogProgressLine class to handle the TOC progress line functionality
  */
@@ -67,8 +65,3 @@ export function initBlogProgressLine(): void {
   const blogProgressLine = new BlogProgressLine();
   blogProgressLine.init();
 }
-
-// Initialize when all scripts are loaded
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  initBlogProgressLine();
-});
