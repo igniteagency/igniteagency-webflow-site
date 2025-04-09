@@ -1,56 +1,40 @@
 /**
- * Updates the count for each category based on filtered items
- */
-function updateCategoryCounts(categoryElements: NodeListOf<Element>, cmsFilter: FsFilter): void {
-  categoryElements.forEach((categoryElement) => {
-    const categoryName = categoryElement.textContent?.trim();
-    if (!categoryName) return;
-
-    // Find the sibling count span element
-    const countElement = categoryElement.nextElementSibling as HTMLElement;
-    if (!countElement) return;
-
-    // Get filtered items
-    const filteredItems = cmsFilter.getFilteredItems();
-
-    // Count items matching this category
-    const count = filteredItems.filter((item) => {
-      const itemCategories = item.props?.category;
-      return Array.isArray(itemCategories)
-        ? itemCategories.includes(categoryName)
-        : itemCategories === categoryName;
-    }).length;
-
-    // Update the count text
-    countElement.textContent = `(${count})`;
-  });
-}
-
-/**
  * Initialize the category count functionality
  */
-export function initCategoryCount(): void {
-  // Select all category filter elements
-  const categoryElements = document.querySelectorAll('[fs-cmsfilter-field="Category"]');
-  if (!categoryElements.length) return;
+export function initFilterCategoryCount(): void {
+  const CATEGORY_COUNT_SELECTOR = `[data-el="filter-category-count"]`;
 
-  // Wait for Finsweet CMS Filter to be available
-  const checkCmsFilter = () => {
-    if (window.FsAttributes?.cmsfilter?.filter) {
-      const cmsFilter = window.FsAttributes.cmsfilter.filter;
+  window.fsAttributes = window.fsAttributes || [];
+  window.fsAttributes.push([
+    'cmsfilter',
+    (filterInstances) => {
+      const [filterInstance] = filterInstances;
 
-      // Update counts initially
-      updateCategoryCounts(categoryElements, cmsFilter);
+      filterInstance.filtersData.forEach((filterData) => {
+        console.debug('filterData', filterData);
+        // Check if this filter has a category key (case insensitive)
+        const hasCategoryKey = filterData.filterKeys.find(
+          (key) => key.toLowerCase() === 'category'
+        );
 
-      // Listen for filter changes
-      cmsFilter.on('afterFilter', () => {
-        updateCategoryCounts(categoryElements, cmsFilter);
+        console.debug('hasCategoryKey', hasCategoryKey);
+
+        if (!hasCategoryKey) return;
+
+        // Loop through all elements in the category filter
+        filterData.elements.forEach((elementData) => {
+          // Find the sibling category count element
+          const filterElement = elementData.element as HTMLElement;
+          console.debug('filterElement', filterElement);
+          const countElement = filterElement.parentElement?.querySelector(CATEGORY_COUNT_SELECTOR);
+          console.debug('countElement', countElement);
+
+          if (countElement) {
+            // Update the count element with the results count
+            countElement.textContent = elementData.resultsCount.toString();
+          }
+        });
       });
-    } else {
-      // Check again in 100ms if not available
-      setTimeout(checkCmsFilter, 100);
-    }
-  };
-
-  checkCmsFilter();
+    },
+  ]);
 }
