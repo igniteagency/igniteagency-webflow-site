@@ -25,9 +25,7 @@ export function initFilterCategoryCount(): void {
         filterData.elements.forEach((elementData) => {
           // Find the sibling category count element
           const filterElement = elementData.element as HTMLElement;
-          console.debug('filterElement', filterElement);
           const countElement = filterElement.parentElement?.querySelector(CATEGORY_COUNT_SELECTOR);
-          console.debug('countElement', countElement);
 
           if (countElement) {
             // Update the count element with the results count
