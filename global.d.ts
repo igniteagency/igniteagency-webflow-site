@@ -28,6 +28,7 @@ declare global {
     CustomEase: typeof CustomEase;
     SplitType: typeof SplitType;
     lenis: typeof Lenis;
+    debounce: typeof debounce;
   }
 
   // Extend `querySelector` and `querySelectorAll` function to stop the nagging of converting `Element` to `HTMLElement` all the time

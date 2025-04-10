@@ -115,8 +115,7 @@ export class Navigation {
       );
     };
 
-    // Use Lenis scroll event instead
-    this.lenis.on('scroll', (lenis: Lenis) => {
+    const debouncedScrollHandler = window.debounce((lenis: Lenis) => {
       if (this.isNavOpen()) {
         return;
       }
@@ -126,7 +125,10 @@ export class Navigation {
       } else {
         animateNav(-100);
       }
-    });
+    }, 250);
+
+    // Use Lenis scroll event instead
+    this.lenis.on('scroll', debouncedScrollHandler);
   }
 
   /**
