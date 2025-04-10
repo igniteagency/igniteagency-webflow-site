@@ -23,7 +23,7 @@ export class RainEmojis {
 
   private readonly config: RainEmojisConfig = {
     objectSizeHeightBased: window.innerHeight * 0.1,
-    objectSizeWidthBased: window.innerWidth * 0.06,
+    objectSizeWidthBased: window.innerWidth * 0.08,
     colliderScale: 0.8,
     rainDuration: 10000,
     rainIntervalMin: 50,
@@ -45,7 +45,13 @@ export class RainEmojis {
       return;
     }
 
+    this.updateWallMargin();
     this.setupIntersectionObserver();
+  }
+
+  private updateWallMargin(): void {
+    const emojiWidth = this.config.objectSizeWidthBased * this.config.colliderScale;
+    this.config.wallMargin = Math.max(emojiWidth, window.innerWidth * 0.05);
   }
 
   private setupIntersectionObserver(): void {
@@ -82,21 +88,24 @@ export class RainEmojis {
       },
     });
 
-    // Create boundaries
-    this.createBoundaries();
-
-    // Setup mouse interaction
-    this.setupMouseInteraction();
-
-    // Setup window resize handler
-    this.setupResizeHandler();
-
-    // Start the engine and renderer
-    Matter.Runner.run((this.runner = Matter.Runner.create()), this.engine);
-    Matter.Render.run(this.render);
-
+    this.initializeComponents();
     this.isInitialized = true;
     this.startRain();
+  }
+
+  private initializeComponents(): void {
+    this.updateConfiguration();
+    this.createBoundaries();
+    this.setupMouseInteraction();
+    this.setupResizeHandler();
+
+    if (!this.engine || !this.render) return;
+
+    if (!this.runner) {
+      this.runner = Matter.Runner.create();
+    }
+    Matter.Runner.run(this.runner, this.engine);
+    Matter.Render.run(this.render);
   }
 
   private createBoundaries(): void {
@@ -186,54 +195,79 @@ export class RainEmojis {
   private setupResizeHandler(): void {
     if (!this.render || !this.engine) return;
 
-    window.addEventListener('resize', () => {
+    const onResize = () => {
       if (!this.render || !this.engine) return;
 
+      // Update canvas size
       this.render.canvas.width = window.innerWidth;
       this.render.canvas.height = window.innerHeight;
 
-      this.config.objectSizeHeightBased = window.innerHeight * 0.12;
-      this.config.objectSizeWidthBased = window.innerWidth * 0.06;
+      // Recalculate configuration
+      this.updateConfiguration();
 
-      // Update ground and walls positions
-      const bodies = this.engine.world.bodies;
-      bodies.forEach((body) => {
-        if (body.isStatic) {
-          if (body.position.x === window.innerWidth / 2) {
-            Matter.Body.setPosition(body, {
-              x: window.innerWidth / 2,
-              y: window.innerHeight,
-            });
-          } else if (body.position.x === window.innerWidth - this.config.wallMargin / 2) {
-            Matter.Body.setPosition(body, {
-              x: window.innerWidth - this.config.wallMargin / 2,
-              y: window.innerHeight / 2,
-            });
-          }
-        }
-      });
-    });
+      // Clear the world and reinitialize components if needed
+      this.reinitializeComponents();
+
+      // Restart the rain effect
+      this.restartRainEffect();
+    };
+
+    window.addEventListener('resize', onResize);
+  }
+
+  private updateConfiguration(): void {
+    this.config.objectSizeHeightBased = window.innerHeight * 0.1;
+    this.config.objectSizeWidthBased = window.innerWidth * 0.08;
+    this.updateWallMargin();
+  }
+
+  private reinitializeComponents(): void {
+    if (!this.engine) return;
+    Matter.World.clear(this.engine.world, false);
+    this.createBoundaries();
+    this.setupMouseInteraction();
+  }
+
+  private restartRainEffect(): void {
+    if (this.rainTimeout) {
+      window.clearTimeout(this.rainTimeout);
+      this.rainTimeout = null;
+    }
+    this.startRain();
+  }
+
+  private calculateMaxEmojis(): number {
+    const emojiWidth = this.config.objectSizeWidthBased * this.config.colliderScale;
+    const maxRows = 2;
+    const maxEmojisPerRow = Math.floor(window.innerWidth / emojiWidth);
+    return maxRows * maxEmojisPerRow;
   }
 
   private createObject(): void {
     if (!this.engine) return;
 
+    const currentEmojiCount = this.engine.world.bodies.length;
+    const maxEmojis = this.calculateMaxEmojis();
+
+    if (currentEmojiCount >= maxEmojis) return;
+
     const xPos =
       this.config.wallMargin + Math.random() * (window.innerWidth - 2 * this.config.wallMargin);
+
     const randomTexture = this.textures[Math.floor(Math.random() * this.textures.length)];
 
     const box = Matter.Bodies.circle(
       xPos,
       -100,
-      (this.config.objectSizeHeightBased / 2) * this.config.colliderScale,
+      (this.config.objectSizeWidthBased / 2) * this.config.colliderScale,
       {
         restitution: 0.6,
         friction: 0.1,
         render: {
           sprite: {
             texture: randomTexture,
-            xScale: this.config.objectSizeHeightBased / 100,
-            yScale: this.config.objectSizeHeightBased / 100,
+            xScale: this.config.objectSizeWidthBased / 100,
+            yScale: this.config.objectSizeWidthBased / 100,
           },
         },
       }

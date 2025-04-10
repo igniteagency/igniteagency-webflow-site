@@ -240,7 +240,10 @@ export class TextAnimator {
     const mq = window.matchMedia('(min-width: 1100px) and (pointer: fine)');
 
     if (!mq.matches) {
-      console.log('Hover stagger not set up on smaller screens');
+      window.IS_DEBUG_MODE &&
+        console.debug(
+          'Hover stagger not set up on screens smaller than 1100px or devices with a coarse pointer'
+        );
       return;
     }
 
