@@ -106,17 +106,12 @@ export class Navigation {
    * Initialize the nav hide/show functionality
    */
   private initNavHideShow(): void {
-    let animateNav = (yPercent: number) => {
-      this.navbar.animate(
-        {
-          transform: `translateY(${yPercent}%)`,
-        },
-        { duration: this.ANIMATION_DURATION * 1000, easing: 'ease-in-out' }
-      );
-    };
+    let animateNav = gsap.quickTo(this.navbar, 'yPercent', {
+      duration: this.ANIMATION_DURATION,
+      ease: this.ANIMATION_EASE,
+    });
 
-    // Use Lenis scroll event instead
-    this.lenis.on('scroll', (lenis: Lenis) => {
+    const scrollHandler = (lenis: Lenis) => {
       if (this.isNavOpen()) {
         return;
       }
@@ -126,7 +121,10 @@ export class Navigation {
       } else {
         animateNav(-100);
       }
-    });
+    };
+
+    // Use Lenis scroll event instead
+    this.lenis.on('scroll', scrollHandler);
   }
 
   /**
