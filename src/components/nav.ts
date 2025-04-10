@@ -142,7 +142,6 @@ export class Navigation {
       window.ScrollTrigger.create({
         trigger: trigger,
         start: 'top top',
-        markers: true,
         invalidateOnRefresh: true,
         onEnter: () => {
           window.IS_DEBUG_MODE && console.log('onEnter', trigger, theme);
