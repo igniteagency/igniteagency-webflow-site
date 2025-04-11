@@ -20,7 +20,7 @@ export function horizontalScroll() {
         end: () => '+=' + window.innerHeight * (sectionCount - 1),
         pin: true,
         invalidateOnRefresh: true,
-        snap: 1 / (sectionCount - 1),
+        // snap: 1 / (sectionCount - 1),
       },
     });
 
