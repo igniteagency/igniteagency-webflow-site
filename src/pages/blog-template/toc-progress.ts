@@ -30,7 +30,7 @@ class BlogProgressLine {
     this.updateProgressLine();
 
     // Update the progress line on scroll using lenis
-    window.lenis.on('scroll', () => this.updateProgressLine());
+    window.addEventListener('scroll', () => this.updateProgressLine());
   }
 
   /**
