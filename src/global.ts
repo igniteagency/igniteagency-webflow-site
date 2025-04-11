@@ -55,5 +55,11 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 
   replaceCurrentYear();
 
+  addScrollTimelinePolyfillScript();
+
   initBugHerd();
 });
+
+function addScrollTimelinePolyfillScript() {
+  window.loadExternalScript('https://flackr.github.io/scroll-timeline/dist/scroll-timeline.js');
+}
