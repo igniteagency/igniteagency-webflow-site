@@ -111,20 +111,23 @@ export class Navigation {
       ease: this.ANIMATION_EASE,
     });
 
-    const scrollHandler = (lenis: Lenis) => {
-      if (this.isNavOpen()) {
-        return;
-      }
+    window.ScrollTrigger.create({
+      start: 'top top',
+      end: 'max',
+      onUpdate: (self) => {
+        if (this.isNavOpen()) {
+          return;
+        }
 
-      if (lenis.direction === -1) {
-        animateNav(0);
-      } else {
-        animateNav(-100);
-      }
-    };
-
-    // Use Lenis scroll event instead
-    this.lenis.on('scroll', scrollHandler);
+        if (self.direction === 1) {
+          // Scrolling down
+          animateNav(-100);
+        } else if (self.direction === -1) {
+          // Scrolling up
+          animateNav(0);
+        }
+      },
+    });
   }
 
   /**
