@@ -76,9 +76,13 @@ function introScrubText() {
   // This is the main control for animation speed - adjust this multiplier to change overall speed
   if (totalChars > 0) {
     // Base height on character count - this makes longer paragraphs take more scroll distance
-    const SCROLL_MULTIPLIER = 30; // Lower = faster animation
-    const containerHeight = totalChars * SCROLL_MULTIPLIER;
-    (scrollContainer as HTMLElement).style.height = `${containerHeight}px`;
+    // const SCROLL_MULTIPLIER = 30; // Lower = faster animation
+    // const containerHeight = totalChars * SCROLL_MULTIPLIER;
+    // (scrollContainer as HTMLElement).style.height = `${containerHeight}px`;
+
+    // set scroll height on content container equal to the viewport height times the number of paragraphs
+    (scrollContainer.children[0] as HTMLElement).style.height =
+      `${paragraphWrappers.length * 100}vh`;
   }
 
   // Create main timeline for sequencing the paragraphs
