@@ -1,6 +1,12 @@
 import { HORIZONTAL_SCROLL_SELECTOR } from '$src/constants';
 
 export function horizontalScroll() {
+  // Check if it's a touch device
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // If it's a touch device, don't initialize horizontal scroll
+  if (isTouchDevice) return;
+
   const wrapper = document.querySelector(`${HORIZONTAL_SCROLL_SELECTOR}`) as HTMLElement | null;
   const sections = window.gsap.utils.toArray(
     `${HORIZONTAL_SCROLL_SELECTOR} > section`
