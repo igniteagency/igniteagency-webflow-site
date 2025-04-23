@@ -200,7 +200,7 @@ class Loader {
         .to(
           `.${LOADER_NUMBER_WRAPPER_CLASS}`,
           {
-            right: 'var(--loader-padding)',
+            right: 'min(5vw, 3rem)',
             duration: 2.0,
           },
           '<'
