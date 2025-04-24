@@ -9,7 +9,7 @@ import './dev/env';
 
 const LOCALHOST_BASE = 'http://localhost:3000/';
 const PRODUCTION_BASE =
-  'https://cdn.jsdelivr.net/gh/igniteagency/ignite-webflow-site-2024/dist/prod/';
+  'https://cdn.jsdelivr.net/gh/igniteagency/igniteagency-webflow-site/dist/prod/';
 
 window.JS_SCRIPTS = new Set();
 
