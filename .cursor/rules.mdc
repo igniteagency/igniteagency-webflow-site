@@ -3,86 +3,200 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Ignite Webflow Site 2024 Cursor Rules
+# Ignite Agency Webflow Site 2024 - Project Context
 
-# TypeScript Configuration
-ts.useExplicitAny = false
-ts.preferConstOverLet = true
-ts.preferEarlyReturn = true
-ts.useExplicitReturnType = true
-ts.useShorthandArrayType = true
-ts.useShorthandPropertyAssignment = true
-ts.organizeSortImports = true
+This is a Webflow project that uses a custom JavaScript loading mechanism to enhance the site's functionality. The project is hosted at: https://github.com/igniteagency/igniteagency-webflow-site
 
-# Code Structure and Style
-code.preferDefaultParameters = true
-code.useNullCoalescing = true
-code.useOptionalChaining = true
-code.useSwitchFallthrough = false
-code.useTrailingCommas = true
-code.maxLineLength = 100
-code.useBraces = true
-code.useConsistentSpacing = true
+## Key Files and Their Roles
 
-# Project-Specific Rules
-# Extract selectors to top of file for easy editing
-pattern.extractSelectors = "Place DOM selectors at the top of each file for easy editing"
+1. `README.md`: Contains comprehensive setup instructions, development workflow, and production deployment guidelines.
+2. `build.js`: Located in `/bin`, handles the build process using esbuild for both development and production environments.
+3. `entry.js`: The critical entry point script that must be included in Webflow's head section. It manages the dynamic loading of all other scripts.
+4. `src/global.ts`: Contains global TypeScript definitions and utilities.
+5. `src/constants.ts`: Defines project-wide constants including event names.
+6. `tsconfig.json`: TypeScript configuration for the project.
 
-# Global declarations (avoiding duplicate imports)
-pattern.globalLibraries = "Libraries exposed in global.ts should be accessed via window.X instead of importing directly"
+## Project Architecture
 
-# Performance optimization
-pattern.performanceOptimization = "Always opt for the most performant and simplified code implementation"
+### Script Loading Mechanism
+The project uses a sophisticated script loading system:
 
-# Animation standards
-pattern.animations = "Use GSAP for all animations with proper ease parameters and durations"
+1. The entry script (`entry.js`) is loaded first via jsDelivr CDN:
+   ```html
+   <script src="https://cdn.jsdelivr.net/gh/igniteagency/igniteagency-webflow-site/dist/prod/entry.js"></script>
+   ```
 
-# Event handling
-pattern.events = "Use the SCRIPTS_LOADED_EVENT from constants.ts for code that should run after all scripts load"
+2. Additional scripts are registered using `window.JS_SCRIPTS.add()`:
+   ```html
+   <script>
+     window.JS_SCRIPTS.add('path/to/script');
+   </script>
+   ```
 
-# DOM manipulation
-pattern.domManipulation = "Cache DOM elements and use typed assertions when selecting elements. Every querySelector is by default set as HTMLElement in `global.d.ts`"
+3. Scripts can be served from either:
+   - Production (jsDelivr CDN)
+   - Development (localhost:3000)
 
-# Error handling
-pattern.errorHandling = "Implement appropriate error handling and logging using console.debug"
+### Development Mode
+- Run `bun run dev` to start local server
+- Execute `window.setScriptsENV('dev')` in browser console for local development
+- Changes are hot-reloaded at localhost:3000
 
-# TypeScript organization
-ts.groupImports = [
-  { name: "Third-party libraries", match: "^[^$]" },
-  { name: "Components", match: "^\\$components" },
-  { name: "Constants and utils", match: "^\\$src" }
-]
+### Production Mode
+- Merging to `main` triggers automatic version tagging
+- Production files are served via jsDelivr CDN
+- Version bumps follow semver (use #major or #minor in commit messages)
 
-# Constants and naming conventions
-pattern.constants = "Use UPPERCASE for constants, camelCase for variables and functions, PascalCase for types"
+### Debug Mode
+- Use `window.DEBUG()` for debug logging
+- Toggle with `window.setDebugMode(true/false)`
+- Debug state persists in localStorage
 
-# Function structure
-pattern.functions = "Keep functions short and focused on a single responsibility"
+## Build System
 
-# Comment Guidelines
-pattern.comments = [
-  "Only add comments for complex logic that isn't immediately obvious",
-  "Avoid commenting self-explanatory code or function names",
-  "Use JSDoc comments only for public APIs and complex type definitions",
-  "Document 'why' not 'what' - the code should be self-documenting",
-  "Add comments for non-obvious performance considerations",
-  "Document any workarounds or temporary solutions with TODO comments"
-]
+The build process uses esbuild with the following configuration:
+- Entry points: All .ts files in src/, components/, and pages/
+- Output: Minified for production, sourcemapped for development
+- Target: ES2017 for production, ESNext for development
+- Tree shaking enabled
+- Builds to either dist/prod or dist/dev based on environment
 
-# Webflow Integration Rules
-pattern.webflowIntegration = [
-  "Use `webflow` MCP (Model Context Protocol) server for all Webflow site interactions",
-  "Don't ask for permission to fetch data using MCP",
-  "Always fetch latest site data before making updates",
-  "Confirm all update content changes with user before publishing",
-  "Use proper error handling for all Webflow API calls",
-  "Cache Webflow responses when appropriate to minimize API calls"
-]
+## Script Execution Order
 
-# Content Update Safety
-pattern.contentSafety = [
-  "Always preview changes before publishing to production",
-  "Confirm with user before pushing any content updates",
-  "Keep backup of content before making bulk updates",
-  "Log all content modifications for audit trail"
-]
+1. Scripts are loaded asynchronously
+2. A `SCRIPTS_LOADED_EVENT` is emitted when all scripts are ready
+3. Use the event listener for dependent code:
+   ```javascript
+   window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+     // Execute after all scripts are loaded
+   });
+   ```
+
+## Important Notes
+
+1. Repository must remain public for jsDelivr access
+2. jsDelivr purges tagged versions every 12 hours
+3. Manual purging available at jsdelivr.com/tools/purge
+4. Local development requires bun (or pnpm/npm as alternatives)
+5. Debug mode and script environment preferences are stored in localStorage
+
+## Best Practices
+
+1. Always test script loading in both dev and prod environments
+2. Use TypeScript for type safety
+3. Implement debug logging for critical operations
+4. Follow the established script registration pattern
+5. Test thoroughly before merging to main
+
+## Common Issues and Solutions
+
+1. Scripts not loading in dev mode:
+   - Verify localhost:3000 is running
+   - Check console for connection errors
+   - Verify script paths are correct
+
+2. Production updates not reflecting:
+   - Wait 10 minutes after new tag
+   - Use jsDelivr purge tool
+   - Verify merge to main was successful
+
+* * *
+
+## TypeScript Configuration
+
+*   `**ts.useExplicitAny**`: `false`
+
+*   `**ts.preferConstOverLet**`: `true`
+
+*   `**ts.preferEarlyReturn**`: `true`
+
+*   `**ts.useExplicitReturnType**`: `true`
+
+*   `**ts.useShorthandArrayType**`: `true`
+
+*   `**ts.useShorthandPropertyAssignment**`: `true`
+
+*   `**ts.organizeSortImports**`: `true`
+
+*   `**ts.groupImports**`:
+
+    1.  **Third‑party libraries** → `^[^$]`
+
+    2.  **Components** → `^\$components`
+
+    3.  **Constants & utils** → `^\$src`
+
+
+## Code Structure & Style
+
+*   Prefer **default parameters** and embrace **early returns** for readability.
+
+*   Use **null‑coalescing (**`**??**`**)** and **optional chaining (**`**?.**`**)**.
+
+*   **No switch fall‑through**; always cover all cases or add a `default`.
+
+*   Enforce **trailing commas**, **braces**, and consistent spacing.
+
+*   **Max line length**: `100`.
+
+
+## Project‑Specific Patterns
+
+| Category | Guideline |
+| --- | --- |
+| Selectors | Extract DOM selectors to the top of each file for quick edits. |
+| Globals | Shared libraries in global.ts are exposed via window.X; do not import them again. |
+| Performance | Always choose the most performant and simplest implementation. |
+| Animations | Leverage GSAP for all animations with clear ease and duration values. |
+| Events | Fire logic that depends on script loading with SCRIPTS_LOADED_EVENT from constants.ts. |
+| DOM Manipulation | Cache elements and use typed assertions—querySelector defaults to HTMLElement via global.d.ts. |
+| Error Handling | Use console.debug for granular logs and graceful degradations. |
+| Constants & Naming | UPPER_SNAKE for constants, camelCase for variables/functions, PascalCase for types. |
+| Functions | Keep them small & single‑purpose. |
+
+### Comment Guidelines
+
+1.  Comment **why**, not **what**—the code should be self‑explanatory. The default is to not add comments to obvious logic.
+
+2.  Only document **non‑obvious** logic or performance trade‑offs.
+
+3.  Reserve **JSDoc** for public APIs & complex types.
+
+4.  Mark temporary solutions with `**TODO:**`.
+
+
+## Webflow Integration Rules
+
+*   Use the `**webflow**` **MCP** server for all site interactions.
+
+*   No need to ask permission before fetching data via MCP.
+
+*   **Always fetch the latest site data** prior to mutations.
+
+*   Confirm **all content changes** with the user **before** publish.
+
+*   Provide robust **error handling** around Webflow API calls.
+
+*   **Cache** responses where sensible to reduce API chatter.
+
+
+## Content Safety
+
+*   **Preview** every change before publishing to production.
+
+*   Obtain user confirmation for **all** content pushes.
+
+*   Maintain a **backup** before bulk updates.
+
+*   **Log** every modification for an audit trail.
+
+
+* * *
+
+## GSAP CDN Note
+
+GSAP is loaded **directly from Webflow’s CDN**. This keeps bundles lean and ensures the library is available globally before our custom scripts execute. 🚀
+
+* * *
+
+> **Remember:** _Performance is the feature._
