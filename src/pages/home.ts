@@ -195,7 +195,7 @@ function setHorizontalScrollWrapperHeight() {
   const childrenElList = wrapperSectionEl.children;
 
   function setHeight() {
-    window.gsap.set(wrapperSectionEl, {
+    gsap.set(wrapperSectionEl, {
       height: () => {
         return Array.from(childrenElList).reduce((acc, child) => {
           return acc + (child as HTMLElement).offsetHeight;
@@ -208,8 +208,8 @@ function setHorizontalScrollWrapperHeight() {
   setHeight();
 
   // Create a resize observer to update height when window resizes
-  window.ScrollTrigger.addEventListener('refresh', () => {
-    window.gsap.delayedCall(0.05, () => {
+  ScrollTrigger.addEventListener('refresh', () => {
+    gsap.delayedCall(0.05, () => {
       setHeight();
     });
   });

@@ -1,4 +1,3 @@
-import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type SplitType from 'split-type';
 
 const DURATION_ATTR = 'data-duration';
@@ -146,11 +145,11 @@ export class TextAnimator {
       const usePrevSectionTrigger = element.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
       const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
-      window.gsap.set(typeSplit.chars, {
+      gsap.set(typeSplit.chars, {
         y: '100%',
       });
 
-      const animation = window.gsap.to(typeSplit.chars, {
+      const animation = gsap.to(typeSplit.chars, {
         y: '0%',
         duration: this.getDurationAttrValue(element, 1),
         ease: 'expo.inOut',
@@ -183,12 +182,12 @@ export class TextAnimator {
       const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
       lineSplit.lines?.forEach((line) => {
-        window.gsap.set(line, {
+        gsap.set(line, {
           y: '100%',
           opacity: 0,
         });
 
-        const animation = window.gsap.to(line, {
+        const animation = gsap.to(line, {
           y: '0%',
           opacity: 1,
           duration: duration,
@@ -215,10 +214,10 @@ export class TextAnimator {
 
       this.splitInstances.push(text);
 
-      window.gsap.set(text.chars, {
+      gsap.set(text.chars, {
         opacity: 0.2,
       });
-      const animation = window.gsap.to(text.chars, {
+      const animation = gsap.to(text.chars, {
         scrollTrigger: {
           trigger: element,
           start: 'top 60%',
@@ -272,7 +271,7 @@ export class TextAnimator {
             const duration = this.getDurationAttrValue(staggerElement, 0.8);
             const stagger = this.getStaggerAttrValue(staggerElement, 0.01);
 
-            const tl = window.gsap.timeline({ paused: true });
+            const tl = gsap.timeline({ paused: true });
             tl.to(split.chars, {
               yPercent: -100,
               duration: duration,
@@ -316,7 +315,7 @@ export class TextAnimator {
           const duration = this.getDurationAttrValue(element, 0.8);
           const stagger = this.getStaggerAttrValue(element, 0.01);
 
-          const tl = window.gsap.timeline({ paused: true });
+          const tl = gsap.timeline({ paused: true });
           tl.to(split.chars, {
             yPercent: -100,
             duration: duration,

@@ -1,4 +1,3 @@
-import { CustomEase } from 'gsap/CustomEase';
 import type Lenis from 'lenis';
 
 /**
@@ -66,13 +65,13 @@ export class Navigation {
       'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
     );
 
-    this.timeline = window.gsap.timeline();
+    this.timeline = gsap.timeline();
 
     // Create custom ease for animations
     CustomEase.create('main', '0.65, 0.01, 0.05, 0.99');
 
     // Set default GSAP settings
-    window.gsap.defaults({
+    gsap.defaults({
       ease: 'main',
       duration: 0.7,
     });
@@ -111,7 +110,7 @@ export class Navigation {
       ease: this.ANIMATION_EASE,
     });
 
-    window.ScrollTrigger.create({
+    ScrollTrigger.create({
       start: 'top top',
       end: 'max',
       onUpdate: (self) => {
@@ -140,7 +139,7 @@ export class Navigation {
         'data-wf--nav-color-trigger-theme-atom--theme'
       );
 
-      window.ScrollTrigger.create({
+      ScrollTrigger.create({
         trigger: trigger,
         start: 'top top',
         invalidateOnRefresh: true,
