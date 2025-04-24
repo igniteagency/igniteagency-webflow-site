@@ -10,9 +10,9 @@ This is a Webflow project that uses a custom JavaScript loading mechanism to enh
 ## Key Files and Their Roles
 
 1. `README.md`: Contains comprehensive setup instructions, development workflow, and production deployment guidelines.
-2. `build.js`: Located in `/bin`, handles the build process using esbuild for both development and production environments.
-3. `entry.js`: The critical entry point script that must be included in Webflow's head section. It manages the dynamic loading of all other scripts.
-4. `src/global.ts`: Contains global TypeScript definitions and utilities.
+2. `bin/build.js`: Handles the build process using esbuild for both development and production environments.
+3. `src/entry.ts`: The critical entry point script that must be included in Webflow's head section. It manages the dynamic loading of all other scripts.
+4. `global.d.ts`: Contains global TypeScript definitions and utilities. Always refer this file before importing any library to check if it's already loaded globally.
 5. `src/constants.ts`: Defines project-wide constants including event names.
 6. `tsconfig.json`: TypeScript configuration for the project.
 
