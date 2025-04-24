@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # Ignite Webflow Site 2024 Cursor Rules
 
 # TypeScript Configuration
@@ -66,7 +71,7 @@ pattern.comments = [
 
 # Webflow Integration Rules
 pattern.webflowIntegration = [
-  "Use `ignite-webflow-site` MCP (Model Context Protocol) server for all Webflow site interactions",,
+  "Use `webflow` MCP (Model Context Protocol) server for all Webflow site interactions",
   "Don't ask for permission to fetch data using MCP",
   "Always fetch latest site data before making updates",
   "Confirm all update content changes with user before publishing",
