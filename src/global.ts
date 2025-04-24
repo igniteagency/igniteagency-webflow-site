@@ -11,6 +11,7 @@ import { cursorMove } from '$components/cursor';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
 import { initLenisSmoothScroll } from '$components/lenis';
+import { initMarqueeScrollDirection } from '$components/marquee';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { initNavigation } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
@@ -49,6 +50,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   animateBook();
 
   initializeVimeoPlayers();
+
+  initMarqueeScrollDirection();
 
   footerSpacer();
   footerNextPageAnimation();
