@@ -23,34 +23,36 @@ window.debounce = debounce;
 initLenisSmoothScroll();
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  // textAnimation();
+  window.Webflow?.push(() => {
+    textAnimation();
 
-  cursorMove();
+    cursorMove();
 
-  initNavigation();
+    initNavigation();
 
-  horizontalScroll();
+    horizontalScroll();
 
-  testimonialCards();
+    testimonialCards();
 
-  mouseTrackImage();
+    mouseTrackImage();
 
-  animatedDetailsAccordions();
+    animatedDetailsAccordions();
 
-  animateBook();
+    animateBook();
 
-  initializeVimeoPlayers();
+    initializeVimeoPlayers();
 
-  initMarqueeScrollDirection();
+    initMarqueeScrollDirection();
 
-  footerSpacer();
-  footerNextPageAnimation();
+    footerSpacer();
+    footerNextPageAnimation();
 
-  replaceCurrentYear();
+    replaceCurrentYear();
 
-  addScrollTimelinePolyfillScript();
+    addScrollTimelinePolyfillScript();
 
-  initBugHerd();
+    initBugHerd();
+  });
 });
 
 function addScrollTimelinePolyfillScript() {

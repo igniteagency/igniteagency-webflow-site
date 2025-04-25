@@ -5,11 +5,13 @@ import { initRainEmojis } from '$components/home/rain-emojis';
 import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  setHorizontalScrollWrapperHeight();
-  showerConfetti();
-  initRainEmojis();
-  introScrubText();
-  setHeroSuperchargeMode();
+  window.Webflow?.push(() => {
+    setHorizontalScrollWrapperHeight();
+    showerConfetti();
+    initRainEmojis();
+    introScrubText();
+    setHeroSuperchargeMode();
+  });
 });
 
 function introScrubText() {
