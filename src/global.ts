@@ -23,7 +23,7 @@ window.debounce = debounce;
 initLenisSmoothScroll();
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  // textAnimation();
+  textAnimation();
 
   cursorMove();
 
