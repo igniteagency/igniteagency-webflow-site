@@ -39,7 +39,7 @@ function introScrubText() {
     });
   }
 
-  // Initialize SplitType for all paragraphs
+  // Initialize SplitText for all paragraphs
   const splitTexts: any[] = [];
   let totalChars = 0;
   let minCharsPerParagraph = 40; // Minimum character count for very short paragraphs
@@ -50,10 +50,10 @@ function introScrubText() {
     if (!paragraph) return;
 
     // Split the paragraph text into characters
-    const split = new window.SplitType(paragraph, { types: ['words', 'chars'], tagName: 'span' });
+    const split = new SplitText(paragraph, { type: 'words,chars', tag: 'span' });
 
     // Count characters for this paragraph
-    const chars = paragraph.querySelectorAll('.char');
+    const chars = split.chars;
     // Apply minimum character count for very short paragraphs
     const effectiveCharCount = Math.max(chars.length, minCharsPerParagraph);
 
@@ -102,7 +102,7 @@ function introScrubText() {
 
   // Create animations for each paragraph
   splitTexts.forEach(({ split, paragraph, wrapper, charCount, effectiveCharCount }, index) => {
-    const chars = paragraph.querySelectorAll('.char');
+    const chars = split.chars;
     const isLastParagraph = index === splitTexts.length - 1;
     const isFirstParagraph = index === 0;
 

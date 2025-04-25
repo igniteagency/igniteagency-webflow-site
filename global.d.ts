@@ -2,8 +2,8 @@ import type { Webflow } from '@finsweet/ts-utils';
 import type { gsap } from 'gsap';
 import type { CustomEase } from 'gsap/CustomEase';
 import type { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { SplitText } from 'gsap/SplitText';
 import type { TextPlugin } from 'gsap/TextPlugin';
-import type SplitType from 'split-type';
 
 import type { loadExternalScript } from '$utils/load-external-script';
 
@@ -15,6 +15,7 @@ declare global {
   ScrollTrigger: typeof ScrollTrigger;
   TextPlugin: typeof TextPlugin;
   CustomEase: typeof CustomEase;
+  SplitText: typeof SplitText;
 
   interface Window {
     JS_SCRIPTS: Set<string> | undefined;
@@ -32,7 +33,6 @@ declare global {
 
     loadExternalScript: typeof loadExternalScript;
 
-    SplitType: typeof SplitType;
     lenis: typeof Lenis;
 
     debounce: typeof debounce;
