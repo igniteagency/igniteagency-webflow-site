@@ -25,7 +25,7 @@ export function footerNextPageAnimation() {
   if (!children.length) return;
 
   // Create the ScrollTrigger animation
-  window.gsap.from(children, {
+  gsap.from(children, {
     yPercent: 100,
     duration: 1,
     ease: 'expo.inOut',
@@ -81,7 +81,7 @@ export function footerNextPageAnimation() {
         // Set a timer to start decaying the scroll value if no scroll occurs
         decayTimer = window.setTimeout(() => {
           // Create a decay animation that rapidly reduces the scroll value
-          decayAnimation = window.gsap.to(
+          decayAnimation = gsap.to(
             {},
             {
               duration: 0.5, // Faster decay
@@ -149,7 +149,7 @@ export function footerNextPageAnimation() {
       };
 
       // Create a GSAP timeline for progress animation (optional)
-      progressAnimation = window.gsap.timeline({ paused: true }).to(nextPageWrapper, {
+      progressAnimation = gsap.timeline({ paused: true }).to(nextPageWrapper, {
         // You can add any animation properties here
         // This is just a placeholder timeline that tracks progress
         duration: 1,
@@ -199,7 +199,7 @@ export function footerNextPageAnimation() {
             // Navigate to next page after threshold
             if (cumulativeScrollDistance >= scrollDistanceThreshold) {
               // Optional: Add a small delay for visual feedback to complete
-              window.gsap.delayedCall(0.2, () => {
+              gsap.delayedCall(0.2, () => {
                 window.location.href = targetHref;
               });
             } else {
@@ -272,7 +272,7 @@ export function footerNextPageAnimation() {
             // Navigate to next page after threshold
             if (cumulativeScrollDistance >= scrollDistanceThreshold) {
               // Optional: Add a small delay for visual feedback to complete
-              window.gsap.delayedCall(0.2, () => {
+              gsap.delayedCall(0.2, () => {
                 window.location.href = targetHref;
               });
             }

@@ -8,14 +8,12 @@ export function horizontalScroll() {
   if (isTouchDevice) return;
 
   const wrapper = document.querySelector(`${HORIZONTAL_SCROLL_SELECTOR}`) as HTMLElement | null;
-  const sections = window.gsap.utils.toArray(
-    `${HORIZONTAL_SCROLL_SELECTOR} > section`
-  ) as HTMLElement[];
+  const sections = gsap.utils.toArray(`${HORIZONTAL_SCROLL_SELECTOR} > section`) as HTMLElement[];
 
   if (wrapper && sections.length) {
     const sectionCount = sections.length;
 
-    window.gsap.to(sections, {
+    gsap.to(sections, {
       xPercent: -(100 * (sectionCount - 1)),
       duration: sectionCount,
       ease: 'none',
@@ -31,7 +29,7 @@ export function horizontalScroll() {
     });
 
     // Add a small animation to fade in the horizontal scroll section
-    window.gsap.fromTo(
+    gsap.fromTo(
       wrapper,
       {
         opacity: 0.95,
@@ -49,8 +47,8 @@ export function horizontalScroll() {
     );
 
     // Ensure ScrollTriggers are refreshed
-    window.gsap.delayedCall(2, () => {
-      window.ScrollTrigger.refresh();
+    gsap.delayedCall(2, () => {
+      ScrollTrigger.refresh();
     });
   }
 }

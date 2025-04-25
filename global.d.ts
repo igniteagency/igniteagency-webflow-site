@@ -1,4 +1,8 @@
 import type { Webflow } from '@finsweet/ts-utils';
+import type { gsap } from 'gsap';
+import type { CustomEase } from 'gsap/CustomEase';
+import type { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { TextPlugin } from 'gsap/TextPlugin';
 import type SplitType from 'split-type';
 
 import type { loadExternalScript } from '$utils/load-external-script';
@@ -6,6 +10,12 @@ import type { loadExternalScript } from '$utils/load-external-script';
 export type SCRIPTS_ENV = 'dev' | 'prod';
 
 declare global {
+  /* GSAP CDN scripts loaded by Webflow */
+  gsap: typeof gsap;
+  ScrollTrigger: typeof ScrollTrigger;
+  TextPlugin: typeof TextPlugin;
+  CustomEase: typeof CustomEase;
+
   interface Window {
     JS_SCRIPTS: Set<string> | undefined;
     Webflow: Webflow;
@@ -22,12 +32,9 @@ declare global {
 
     loadExternalScript: typeof loadExternalScript;
 
-    gsap: GSAP;
-    ScrollTrigger: typeof ScrollTrigger;
-    TextPlugin: typeof TextPlugin;
-    CustomEase: typeof CustomEase;
     SplitType: typeof SplitType;
     lenis: typeof Lenis;
+
     debounce: typeof debounce;
   }
 

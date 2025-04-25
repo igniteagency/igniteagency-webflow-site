@@ -21,7 +21,7 @@ class BlogProgressLine {
     if (!this.progressLine || !this.container) return;
 
     // Initial setup of GSAP animation
-    this.progressLineAnimation = window.gsap.quickTo(this.progressLine, 'height', {
+    this.progressLineAnimation = gsap.quickTo(this.progressLine, 'height', {
       duration: 0.5,
       ease: 'power2.out',
     });

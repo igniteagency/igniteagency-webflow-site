@@ -1,5 +1,5 @@
 export function mouseTrackImage() {
-  window.gsap.matchMedia().add(
+  gsap.matchMedia().add(
     // Set up a media query for devices with a fine pointer
     '(pointer: fine)',
     () => {
@@ -9,7 +9,7 @@ export function mouseTrackImage() {
 
         if (hoverMoveEl) {
           const inAnimation = () => {
-            window.gsap.to(hoverMoveEl, {
+            gsap.to(hoverMoveEl, {
               scale: 1,
               duration: 0.3,
               ease: 'power3.out',
@@ -17,7 +17,7 @@ export function mouseTrackImage() {
           };
 
           const outAnimation = () => {
-            window.gsap.to(hoverMoveEl, {
+            gsap.to(hoverMoveEl, {
               scale: 0,
               duration: 0.3,
               ease: 'power3.out',
@@ -29,11 +29,11 @@ export function mouseTrackImage() {
           const focusOutHandler = () => outAnimation();
 
           // Use quickTo for efficient mousemove handling
-          const quickToX = window.gsap.quickTo(hoverMoveEl, 'x', {
+          const quickToX = gsap.quickTo(hoverMoveEl, 'x', {
             duration: 0.3,
             ease: 'power3.out',
           });
-          const quickToY = window.gsap.quickTo(hoverMoveEl, 'y', {
+          const quickToY = gsap.quickTo(hoverMoveEl, 'y', {
             duration: 0.3,
             ease: 'power3.out',
           });

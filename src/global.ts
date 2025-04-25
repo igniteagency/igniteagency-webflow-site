@@ -1,9 +1,4 @@
 import debounce from 'debounce';
-import gsap from 'gsap';
-import { CustomEase } from 'gsap/CustomEase';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { TextPlugin } from 'gsap/TextPlugin';
-import SplitType from 'split-type';
 
 import { animatedDetailsAccordions } from '$components/accordions';
 import { animateBook } from '$components/book';
@@ -23,44 +18,41 @@ import '$utils/load-external-script';
 
 import { SCRIPTS_LOADED_EVENT } from './constants';
 
-window.gsap = gsap;
-window.ScrollTrigger = ScrollTrigger;
-window.CustomEase = CustomEase;
-window.gsap.registerPlugin(ScrollTrigger, TextPlugin, CustomEase);
-window.SplitType = SplitType;
 window.debounce = debounce;
 
 initLenisSmoothScroll();
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  textAnimation();
+  window.Webflow?.push(() => {
+    textAnimation();
 
-  cursorMove();
+    cursorMove();
 
-  initNavigation();
+    initNavigation();
 
-  horizontalScroll();
+    horizontalScroll();
 
-  testimonialCards();
+    testimonialCards();
 
-  mouseTrackImage();
+    mouseTrackImage();
 
-  animatedDetailsAccordions();
+    animatedDetailsAccordions();
 
-  animateBook();
+    animateBook();
 
-  initializeVimeoPlayers();
+    initializeVimeoPlayers();
 
-  initMarqueeScrollDirection();
+    initMarqueeScrollDirection();
 
-  footerSpacer();
-  footerNextPageAnimation();
+    footerSpacer();
+    footerNextPageAnimation();
 
-  replaceCurrentYear();
+    replaceCurrentYear();
 
-  addScrollTimelinePolyfillScript();
+    addScrollTimelinePolyfillScript();
 
-  initBugHerd();
+    initBugHerd();
+  });
 });
 
 function addScrollTimelinePolyfillScript() {

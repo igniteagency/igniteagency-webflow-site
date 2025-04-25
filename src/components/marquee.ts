@@ -3,7 +3,7 @@
 
 export function initMarqueeScrollDirection() {
   // Check if GSAP and ScrollTrigger are available
-  if (!window.gsap || !window.ScrollTrigger) {
+  if (!gsap || !ScrollTrigger) {
     console.error('GSAP or ScrollTrigger not loaded. Cannot initialize marquee effects.');
     return;
   }
