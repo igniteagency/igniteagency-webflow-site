@@ -1,6 +1,7 @@
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 
 import { showerConfetti } from '$components/home/confetti';
+import { delightSectionTransitions } from '$components/home/delight';
 import { initRainEmojis } from '$components/home/rain-emojis';
 import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
@@ -11,6 +12,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     initRainEmojis();
     introScrubText();
     setHeroSuperchargeMode();
+    delightSectionTransitions();
   });
 });
 
