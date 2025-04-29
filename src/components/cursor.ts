@@ -12,16 +12,16 @@ export function cursorMove() {
     yTo(e.clientY);
   });
 
-  TIP_LINKS.forEach((link) => {
-    let text = link.getAttribute('data-cursor');
+  // TIP_LINKS.forEach((link) => {
+  //   let text = link.getAttribute('data-cursor');
 
-    link.addEventListener('mouseenter', () => {
-      if (text !== null) {
-        gsap.to('.cursor p', {
-          text: text, // Utilises TextPlugin for text changes
-          duration: 0.8, // Smooth transition to the new text
-        });
-      }
-    });
-  });
+  //   link.addEventListener('mouseenter', () => {
+  //     if (text !== null) {
+  //       gsap.to('.cursor p', {
+  //         text: text, // Utilises TextPlugin for text changes
+  //         duration: 0.8, // Smooth transition to the new text
+  //       });
+  //     }
+  //   });
+  // });
 }
