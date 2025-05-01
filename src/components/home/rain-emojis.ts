@@ -17,6 +17,7 @@ export class RainEmojis {
   private render: Matter.Render | null = null;
   private runner: Matter.Runner | null = null;
   private mouseCollider: Matter.Body | null = null;
+  private ground: Matter.Body | null = null;
   private isInitialized = false;
   private observer: IntersectionObserver | null = null;
   private rainTimeout: number | null = null;
@@ -154,6 +155,8 @@ export class RainEmojis {
     );
 
     Matter.Composite.add(this.engine.world, [ground, leftWall, rightWall]);
+
+    this.ground = ground;
   }
 
   private setupMouseInteraction(): void {
@@ -276,13 +279,60 @@ export class RainEmojis {
     Matter.Composite.add(this.engine.world, box);
   }
 
-  private startRain(): void {
-    if (!this.isInitialized) return;
+  /** Recreates the floor body and adds it to the simulation */
+  public recreateFloor(): void {
+    if (this.engine && !this.ground) {
+      // Only recreate if it doesn't exist
+      this.ground = Matter.Bodies.rectangle(
+        window.innerWidth / 2,
+        window.innerHeight,
+        window.innerWidth,
+        60,
+        {
+          isStatic: true,
+          render: {
+            fillStyle: 'transparent',
+            visible: false,
+          },
+        }
+      );
+      Matter.Composite.add(this.engine.world, this.ground);
+      console.log('Matter.js floor recreated.');
+    } else if (this.ground) {
+      console.log('Floor already exists, not recreating.');
+    } else {
+      console.warn('Could not recreate floor: Engine missing.');
+    }
+  }
+
+  /** Starts the timed loop for creating new falling emojis */
+  public startRain(): void {
+    console.log('Attempting to start rain...');
+    // Clear any existing rain timeout before starting a new one
+    if (this.rainTimeout) {
+      console.log('Clearing existing rain timeout:', this.rainTimeout);
+      window.clearTimeout(this.rainTimeout);
+      this.rainTimeout = null;
+    }
+
+    if (!this.isInitialized || !this.engine) {
+      console.warn('Cannot start rain: Not initialized or engine missing.', {
+        isInitialized: this.isInitialized,
+        engineExists: !!this.engine,
+      });
+      return;
+    }
+    console.log('Starting emoji rain loop.');
 
     const endTime = Date.now() + this.config.rainDuration;
+    console.log(`Rain end time calculated: ${new Date(endTime).toLocaleTimeString()}`);
 
     const rainLoop = () => {
-      if (Date.now() > endTime) return;
+      if (Date.now() > endTime) {
+        console.log('Rain loop check: Time has ended.');
+        return;
+      }
+      console.log('Rain loop check: Time OK, creating object.');
 
       this.createObject();
 
@@ -294,6 +344,50 @@ export class RainEmojis {
     };
 
     rainLoop();
+  }
+
+  /** Stops the creation of new emojis */
+  public stopRain(): void {
+    if (this.rainTimeout) {
+      window.clearTimeout(this.rainTimeout);
+      this.rainTimeout = null;
+      console.log('Emoji rain stopped.');
+    }
+  }
+
+  /** Removes the floor body from the simulation */
+  public removeFloor(): void {
+    if (this.engine && this.ground) {
+      console.log('Attempting to remove floor. Runner enabled:', this.runner?.enabled);
+      Matter.Composite.remove(this.engine.world, this.ground);
+      this.ground = null; // Clear the reference
+      console.log('Matter.js floor removed.');
+
+      // Wake up all non-static bodies after removing the floor
+      const bodies = Matter.Composite.allBodies(this.engine.world);
+      bodies.forEach((body) => {
+        if (!body.isStatic) {
+          Matter.Sleeping.set(body, false);
+        }
+      });
+      console.log('Woke up all non-static bodies.');
+    } else {
+      console.warn('Could not remove floor: Engine or ground body missing.');
+    }
+  }
+
+  /** Removes all non-static bodies (emojis) from the world */
+  public clearDynamicBodies(): void {
+    if (this.engine) {
+      const bodies = Matter.Composite.allBodies(this.engine.world);
+      const dynamicBodies = bodies.filter((body) => !body.isStatic);
+      if (dynamicBodies.length > 0) {
+        Matter.Composite.remove(this.engine.world, dynamicBodies);
+        console.log(`Cleared ${dynamicBodies.length} dynamic bodies.`);
+      }
+    } else {
+      console.warn('Could not clear dynamic bodies: Engine missing.');
+    }
   }
 
   public destroy(): void {
