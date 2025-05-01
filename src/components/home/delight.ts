@@ -1,6 +1,9 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { createConfettiController } from './confetti';
+import { RainEmojis } from './rain-emojis';
+
 gsap.registerPlugin(ScrollTrigger);
 
 /**
@@ -46,6 +49,10 @@ function setupMouseTracking(
 }
 
 export function delightSectionTransitions() {
+  // --- Initialize Effects Controllers ---
+  const emojiRain = new RainEmojis();
+  const confettiController = createConfettiController('#canvas-target');
+
   const sectionWrapper = document.querySelector('.delight_section-wrapper') as HTMLElement | null;
   const stickyWrapper = document.querySelector('.delight_sticky-wrapper') as HTMLElement | null;
 
@@ -102,7 +109,7 @@ export function delightSectionTransitions() {
     '.cursor-image'
   ) as HTMLElement | null;
   const delightCursorWrap = delightCursorContent?.querySelector(
-    '.cursor-content_wrap'
+    '.cursor_content-wrap'
   ) as HTMLElement | null;
 
   const editCursorContent = stickyWrapper.querySelector(
@@ -110,7 +117,7 @@ export function delightSectionTransitions() {
   ) as HTMLElement | null;
   const editCursorImage = editCursorContent?.querySelector('.cursor-image') as HTMLElement | null;
   const editCursorWrap = editCursorContent?.querySelector(
-    '.cursor-content_wrap'
+    '.cursor_content-wrap'
   ) as HTMLElement | null;
 
   // --- Persistent Mouse Tracking Setup ---
@@ -146,20 +153,22 @@ export function delightSectionTransitions() {
   });
 
   // --- Initial States and Animations ---
+  // Set initial active section attribute
+  sectionWrapper.setAttribute('data-active-section', 'leads');
 
   // Set Initial States for Cursor Elements (Children Only)
   if (delightCursorImage) {
     gsap.set(delightCursorImage, { scale: 0, rotationZ: -50, transformOrigin: 'center center' });
   }
   if (delightCursorWrap) {
-    gsap.set(delightCursorWrap, { scale: 0, transformOrigin: 'center center' }); // Existing Y transform is preserved
+    gsap.set(delightCursorWrap, { scale: 0 }); // Existing Y transform is preserved
   }
 
   if (editCursorImage) {
     gsap.set(editCursorImage, { scale: 0, rotationZ: -50, transformOrigin: 'center center' });
   }
   if (editCursorWrap) {
-    gsap.set(editCursorWrap, { scale: 0, transformOrigin: 'center center' }); // Existing Y transform is preserved
+    gsap.set(editCursorWrap, { scale: 0 }); // Existing Y transform is preserved
   }
 
   // Ensure parent cursor elements are initially positioned (e.g., center or off-screen)
@@ -190,7 +199,7 @@ export function delightSectionTransitions() {
   // --- Transition Leads -> Delight (1 -> 2) ---
   const tl1 = gsap.timeline({
     paused: true,
-    defaults: { duration: 0.8, ease: EASE_TYPE }, // Note: Default duration might be overridden
+    defaults: { ease: EASE_TYPE }, // Simplified defaults
   });
 
   // Animate Out Leads Section
@@ -224,6 +233,11 @@ export function delightSectionTransitions() {
       },
       TEXT_OUT_OFFSET
     );
+  }
+
+  // Activate confetti listener when Delight section is considered fully visible
+  if (confettiController) {
+    tl1.call(confettiController.activate, [], '-=0.1'); // Activate slightly before end
   }
 
   // Animate In Delight Section
@@ -298,14 +312,35 @@ export function delightSectionTransitions() {
     start: scrollPerSection * 0.95, // Trigger slightly before the end of the first section's scroll distance
     end: scrollPerSection * 1.05, // Define a zone around the end of the first section's scroll
     onEnter: () => {
-      // Kill existing progress tweens on both timelines before starting new one
-      gsap.killTweensOf([tl1.progress, tl2.progress]);
-      gsap.to(tl1, { progress: 1, duration: tl1.duration(), ease: 'none' });
+      // Entering scroll zone from top (scrolling down)
+      console.log('ST1 onEnter: Stopping rain, removing floor, playing tl1');
+      // Update active section attribute
+      sectionWrapper.setAttribute('data-active-section', 'delight');
+      // Set Matter state immediately
+      if (emojiRain) {
+        emojiRain.stopRain();
+        emojiRain.removeFloor();
+      }
+      // Manage timeline animation
+      gsap.killTweensOf(tl1.progress); // Kill potential reverse tween
+      tl1.play();
     },
-    onLeaveBack: () => {
-      // Kill existing progress tweens on both timelines before starting new one
-      gsap.killTweensOf([tl1.progress, tl2.progress]);
-      gsap.to(tl1, { progress: 0, duration: tl1.duration(), ease: 'none' });
+    onEnterBack: () => {
+      // Entering scroll zone from bottom (scrolling up)
+      console.log('ST1 onEnterBack: Deactivating confetti, setting Matter state, reversing tl1');
+      // Update active section attribute
+      sectionWrapper.setAttribute('data-active-section', 'leads');
+      // Deactivate confetti immediately when scrolling up away from Delight
+      if (confettiController) confettiController.deactivate();
+      // Set Matter state immediately
+      if (emojiRain) {
+        emojiRain.clearDynamicBodies(); // Clear old emojis first
+        emojiRain.recreateFloor();
+        emojiRain.startRain();
+      }
+      // Manage timeline animation
+      gsap.killTweensOf(tl1.progress); // Kill potential play tween
+      tl1.reverse();
     },
     invalidateOnRefresh: true,
     markers: false, // Turn off markers
@@ -317,6 +352,11 @@ export function delightSectionTransitions() {
     paused: true,
     defaults: { duration: 0.8, ease: EASE_TYPE }, // Note: Default duration might be overridden
   });
+
+  // Deactivate confetti listener when Delight section starts animating out
+  if (confettiController) {
+    tl2.call(confettiController.deactivate, [], OUT_OFFSET);
+  }
 
   // Animate Out Delight Section (reuse headingDelight, otherTextDelight selectors)
   if (headingDelight) {
@@ -456,14 +496,19 @@ export function delightSectionTransitions() {
     start: scrollPerSection * 1.95, // Trigger slightly before the end of the second section's scroll distance
     end: scrollPerSection * 2.05, // Define a zone around the end of the second section's scroll
     onEnter: () => {
-      // Kill existing progress tweens on both timelines before starting new one
-      gsap.killTweensOf([tl1.progress, tl2.progress]);
-      gsap.to(tl2, { progress: 1, duration: tl2.duration(), ease: 'none' });
+      console.log('ST2 onEnter: Playing tl2');
+      // Update active section attribute
+      sectionWrapper.setAttribute('data-active-section', 'edit');
+      tl2.play();
     },
     onLeaveBack: () => {
-      // Kill existing progress tweens on both timelines before starting new one
-      gsap.killTweensOf([tl1.progress, tl2.progress]);
-      gsap.to(tl2, { progress: 0, duration: tl2.duration(), ease: 'none' });
+      // Entering scroll zone from bottom (scrolling up into Delight)
+      console.log('ST2 onLeaveBack: Activating confetti, reversing tl2');
+      // Update active section attribute
+      sectionWrapper.setAttribute('data-active-section', 'delight');
+      // Activate confetti immediately when scrolling back into Delight
+      if (confettiController) confettiController.activate();
+      tl2.reverse();
     },
     invalidateOnRefresh: true,
     markers: false, // Turn off markers
@@ -482,7 +527,15 @@ export function delightSectionTransitions() {
     splitInstances.length = 0; // Clear the array
     // Abort mouse tracking listener
     abortController.abort();
-    console.log('Delight transitions and persistent mouse tracking cleaned up.'); // Keep final cleanup log
+    // Destroy Matter.js instance
+    if (emojiRain) {
+      emojiRain.destroy();
+    }
+    // Destroy Confetti controller
+    if (confettiController) {
+      confettiController.destroy();
+    }
+    console.log('Delight transitions, mouse tracking, emoji rain, and confetti cleaned up.');
   };
 }
 
