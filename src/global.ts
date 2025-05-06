@@ -3,6 +3,7 @@ import debounce from 'debounce';
 import { animatedDetailsAccordions } from '$components/accordions';
 import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
+import { dialogInit } from '$components/dialog';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
 import { initLenisSmoothScroll } from '$components/lenis';
@@ -52,6 +53,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     addScrollTimelinePolyfillScript();
 
     initBugHerd();
+
+    dialogInit();
   });
 });
 
