@@ -13,13 +13,13 @@ export function animateBook() {
 
     // Select only the .book-container inside .w--tab-active
     const activeBookContainers = document.querySelectorAll<HTMLElement>(
-      '.w--tab-active .book-container'
+      '.w--tab-active .book_container'
     );
 
     // Iterate over active book containers and apply the styles
     activeBookContainers.forEach((bookContainer) => {
-      bookContainer.style.setProperty('--book-rotationY', `${rotationY}deg`);
-      bookContainer.style.setProperty('--book-rotationX', `${rotationX}deg`);
+      bookContainer.style.setProperty('--_book-rotationY', `${rotationY}deg`);
+      bookContainer.style.setProperty('--_book-rotationX', `${rotationX}deg`);
     });
   };
 
