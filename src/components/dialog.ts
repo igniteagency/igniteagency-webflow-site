@@ -38,5 +38,11 @@ export function dialogInit() {
         dialogEl.close();
       });
     });
+
+    dialogEl.addEventListener('click', (event) => {
+      if (event.target === dialogEl) {
+        dialogEl.close();
+      }
+    });
   });
 }
