@@ -200,7 +200,7 @@ class Loader {
         .to(
           `.${LOADER_NUMBER_WRAPPER_CLASS}`,
           {
-            right: 'min(5vw, 3rem)',
+            right: 0,
             duration: 2.0,
           },
           '<'
