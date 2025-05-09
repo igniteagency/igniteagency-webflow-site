@@ -7,6 +7,10 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 
 // Function to initialize custom floating hearts animation
 function initHeartsAnimation() {
+  const backgroundSpawnMultiplier = 7; // Target BG hearts per second (also for initial burst)
+  const foregroundSpawnMultiplier = 3; // Target FG hearts per second (also for initial burst)
+  const heartSpawnIntervalMs = 50; // Interval for spawning hearts during scroll
+
   // Create or use existing canvases - one behind content, one in front
   const createHeartCanvases = () => {
     // Background canvas (behind testimonial cards) - lower z-index
@@ -55,7 +59,7 @@ function initHeartsAnimation() {
   const fgCtx = foregroundCanvas.getContext('2d')!;
 
   // Client-requested heart emojis
-  const heartEmojis = ['💗', '💖', '💞', '💕', '❤️', '💓', '🩷', '❤️‍🔥', '❣️', '💜'];
+  const heartEmojis = ['💗', '💖', '❤️', '🩷'];
 
   // Heart layer types
   enum Layer {
@@ -188,6 +192,29 @@ function initHeartsAnimation() {
   const backgroundHearts: FloatingHeart[] = [];
   const foregroundHearts: FloatingHeart[] = [];
 
+  // Helper function to add a heart of a specific layer
+  function addHeartToLayer(layer: Layer) {
+    if (layer === Layer.BACKGROUND) {
+      backgroundHearts.push(new FloatingHeart(Layer.BACKGROUND));
+    } else {
+      foregroundHearts.push(new FloatingHeart(Layer.FOREGROUND));
+    }
+  }
+
+  // Function called at intervals to generate hearts
+  function generateHeartsAtInterval() {
+    // Ticks per second = 1000 / heartSpawnIntervalMs
+    const ticksPerSecond = 1000 / heartSpawnIntervalMs;
+
+    if (Math.random() < backgroundSpawnMultiplier / ticksPerSecond) {
+      addHeartToLayer(Layer.BACKGROUND);
+    }
+
+    if (Math.random() < foregroundSpawnMultiplier / ticksPerSecond) {
+      addHeartToLayer(Layer.FOREGROUND);
+    }
+  }
+
   // Animation function with timestamp for stable frame rate
   let lastTime = 0;
   let animationFrameId: number;
@@ -236,12 +263,15 @@ function initHeartsAnimation() {
   function startHeartCreation() {
     if (!heartCreationInterval) {
       // Create an initial burst of hearts when scrolling starts
-      for (let i = 0; i < 15; i++) {
-        createHeart();
+      for (let i = 0; i < backgroundSpawnMultiplier; i++) {
+        addHeartToLayer(Layer.BACKGROUND);
+      }
+      for (let i = 0; i < foregroundSpawnMultiplier; i++) {
+        addHeartToLayer(Layer.FOREGROUND);
       }
 
-      // Create hearts much more frequently (50ms instead of 200ms)
-      heartCreationInterval = window.setInterval(createHeart, 50);
+      // Create hearts based on multipliers and interval
+      heartCreationInterval = window.setInterval(generateHeartsAtInterval, heartSpawnIntervalMs);
 
       // Start animation if not already running
       if (!animationFrameId) {
@@ -259,16 +289,6 @@ function initHeartsAnimation() {
 
     // We don't stop the animation frame immediately to let existing hearts
     // continue floating up and out of view naturally
-  }
-
-  // Create new hearts at regular intervals
-  function createHeart() {
-    // 80% chance for background hearts, 20% chance for foreground hearts
-    if (Math.random() < 0.8) {
-      backgroundHearts.push(new FloatingHeart(Layer.BACKGROUND));
-    } else {
-      foregroundHearts.push(new FloatingHeart(Layer.FOREGROUND));
-    }
   }
 
   // Handle scroll events
