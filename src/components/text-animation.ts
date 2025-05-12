@@ -135,6 +135,7 @@ export class TextAnimator {
       let typeSplit = new SplitText(element, {
         type: 'words,lines,chars',
         tag: 'span',
+        mask: 'words',
       });
 
       this.splitInstances.push(typeSplit);
