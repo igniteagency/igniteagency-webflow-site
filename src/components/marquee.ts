@@ -41,7 +41,7 @@ export function initMarqueeScrollDirection() {
     const contentWidth = marqueeContent.offsetWidth;
     const requiredContentBlocks = Math.ceil(containerWidth / contentWidth);
     // Ensure at least 1 duplicate (2 total blocks), add more if needed to fill container
-    const dynamicDuplicateAmount = Math.max(1, requiredContentBlocks);
+    const dynamicDuplicateAmount = Math.max(1, requiredContentBlocks + 1);
 
     // Precompute styles for the scroll container
     marqueeScroll.style.marginLeft = `${scrollSpeedAttr * -1}%`;
