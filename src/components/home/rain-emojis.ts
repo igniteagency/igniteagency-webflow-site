@@ -18,7 +18,7 @@ export class RainEmojis {
   private runner: Matter.Runner | null = null;
   private mouseCollider: Matter.Body | null = null;
   private ground: Matter.Body | null = null;
-  private isInitialized = false;
+  public isInitialized = false;
   private observer: IntersectionObserver | null = null;
   private rainTimeout: number | null = null;
 
@@ -39,7 +39,7 @@ export class RainEmojis {
     'https://uploads-ssl.webflow.com/66260e4321c76d6302aa74e5/66cc2e5b406bb29f57b2daea_moneybag.png',
   ];
 
-  constructor() {
+  constructor(private autoStart: boolean = true) {
     this.canvas = document.querySelector<HTMLCanvasElement>('#matter-canvas-target');
     if (!this.canvas) {
       console.warn('Matter canvas not found for emoji rain');
@@ -91,7 +91,10 @@ export class RainEmojis {
 
     this.initializeComponents();
     this.isInitialized = true;
-    this.startRain();
+    // Only start rain automatically if autoStart is true
+    if (this.autoStart) {
+      this.startRain();
+    }
   }
 
   private initializeComponents(): void {
