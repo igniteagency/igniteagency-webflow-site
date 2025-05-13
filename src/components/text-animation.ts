@@ -141,7 +141,7 @@ export class TextAnimator {
       this.splitInstances.push(typeSplit);
 
       const stagger = this.getStaggerAttrValue(element, 0.03);
-      const trigger = this.getTriggerAttrValue(element, 'center');
+      const trigger = this.getTriggerAttrValue(element, 'bottom');
       const usePrevSectionTrigger = element.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
       const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
