@@ -20,17 +20,11 @@ export class TextAnimator {
   private splitInstances: SplitText[] = [];
   private animations: gsap.core.Animation[] = [];
   private elements: AnimationElement[] = [];
-  private isRefreshing: boolean = false;
-  private _resizeTimeout: number | null = null;
   private static instance: TextAnimator | null = null;
   private abortController: AbortController;
 
   private constructor() {
     this.abortController = new AbortController();
-
-    // Create and start the ResizeObserver immediately
-    // const resizeObserver = new ResizeObserver(this.handleResize.bind(this));
-    // resizeObserver.observe(document.body);
   }
 
   /**
@@ -53,40 +47,23 @@ export class TextAnimator {
     this.setupAnimations();
   }
 
+  private setupAnimations(): void {
+    if (window.IS_DEBUG_MODE) {
+      console.debug('Setting up text split data attribute animations');
+    }
+
+    this.setupLetterStagger();
+    this.setupLineStagger();
+    this.setupScrubText();
+    this.setupHoverStagger();
+  }
+
   public destroy(): void {
     // Abort all event listeners
     this.abortController.abort();
 
     // Clear all animations and split text
     this.clearAnimations();
-  }
-
-  // private handleResize(): void {
-  //   // Skip if already refreshing
-  //   if (this.isRefreshing) return;
-
-  //   // Debounce resize events
-  //   if (this._resizeTimeout) {
-  //     window.clearTimeout(this._resizeTimeout);
-  //     this._resizeTimeout = null;
-  //   }
-
-  //   this._resizeTimeout = window.setTimeout(() => {
-  //     if (this.isRefreshing) return;
-
-  //     try {
-  //       this.isRefreshing = true;
-  //       this.refresh();
-  //     } finally {
-  //       this.isRefreshing = false;
-  //       this._resizeTimeout = null;
-  //     }
-  //   }, 500);
-  // }
-
-  private refresh(): void {
-    this.destroy();
-    this.init();
   }
 
   private clearAnimations(): void {
@@ -111,14 +88,6 @@ export class TextAnimator {
     this.splitInstances = [];
   }
 
-  private setupAnimations(): void {
-    console.debug('Setting up text split data attribute animations');
-    this.setupLetterStagger();
-    this.setupLineStagger();
-    this.setupScrubText();
-    this.setupHoverStagger();
-  }
-
   private getPreviousSection(element: HTMLElement): HTMLElement | null {
     // Find the closest parent section
     const parentSection = element.closest('section');
@@ -129,73 +98,69 @@ export class TextAnimator {
   }
 
   private setupLetterStagger(): void {
-    document.querySelectorAll(`[${ATTR_NAME.LETTER_STAGGER}]`).forEach((el) => {
-      const element = el as HTMLElement;
-
-      let typeSplit = new SplitText(element, {
-        type: 'words,lines,chars',
-        tag: 'span',
-      });
-
-      this.splitInstances.push(typeSplit);
-
+    document.querySelectorAll(`[${ATTR_NAME.LETTER_STAGGER}]`).forEach((element) => {
       const stagger = this.getStaggerAttrValue(element, 0.03);
-      const trigger = this.getTriggerAttrValue(element, 'center');
+      const trigger = this.getTriggerAttrValue(element, 'bottom');
       const usePrevSectionTrigger = element.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
       const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(element) : null;
 
-      gsap.set(typeSplit.chars, {
-        y: '100%',
-      });
+      let typeSplit = new SplitText(element, {
+        type: 'words,lines,chars',
+        mask: 'words',
+        autoSplit: true,
+        onSplit: (self: SplitText) => {
+          gsap.set(self.chars, {
+            y: '100%',
+          });
 
-      const animation = gsap.to(typeSplit.chars, {
-        y: '0%',
-        duration: this.getDurationAttrValue(element, 1),
-        ease: 'expo.inOut',
-        stagger: stagger,
-        scrollTrigger: {
-          trigger: previousSectionEl || element,
-          start: usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
-          invalidateOnRefresh: true,
+          return gsap.to(self.chars, {
+            y: '0%',
+            duration: this.getDurationAttrValue(element, 1),
+            ease: 'expo.inOut',
+            stagger: stagger,
+            scrollTrigger: {
+              trigger: previousSectionEl || element,
+              start:
+                usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
+              invalidateOnRefresh: true,
+            },
+            onComplete: () => typeSplit.revert(),
+          });
         },
       });
-
-      this.animations.push(animation);
     });
   }
 
   private setupLineStagger(): void {
     document.querySelectorAll(`[${ATTR_NAME.LINE_STAGGER}]`).forEach((el) => {
-      let lineSplit = new SplitText(el, {
-        type: 'lines',
-        tag: 'span',
-      });
-
-      this.splitInstances.push(lineSplit);
-
       const duration = this.getDurationAttrValue(el, 0.3);
       const trigger = this.getTriggerAttrValue(el, '80%');
       const usePrevSectionTrigger = el.hasAttribute(PREV_SECTION_TRIGGER_ATTR);
       const previousSectionEl = usePrevSectionTrigger ? this.getPreviousSection(el) : null;
 
-      lineSplit.lines?.forEach((line) => {
-        gsap.set(line, {
-          y: '100%',
-          opacity: 0,
-        });
+      let lineSplit = new SplitText(el, {
+        type: 'lines',
+        mask: 'lines',
+        onSplit: (self: SplitText) => {
+          gsap.set(self.lines, {
+            y: '100%',
+            opacity: 0,
+          });
 
-        const animation = gsap.to(line, {
-          y: '0%',
-          opacity: 1,
-          duration: duration,
-          ease: 'expo.out',
-          scrollTrigger: {
-            trigger: previousSectionEl || line,
-            start: usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
-            toggleActions: 'play none none none',
-          },
-        });
-        this.animations.push(animation);
+          return gsap.to(self.lines, {
+            y: '0%',
+            opacity: 1,
+            stagger: duration,
+            ease: 'expo.out',
+            scrollTrigger: {
+              trigger: previousSectionEl || el,
+              start:
+                usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
+              toggleActions: 'play none none none',
+            },
+            onComplete: () => self.revert(),
+          });
+        },
       });
     });
   }
@@ -204,29 +169,29 @@ export class TextAnimator {
     document.querySelectorAll(`[${ATTR_NAME.SCRUB_TEXT}]`).forEach((el) => {
       const text = new SplitText(el, {
         type: 'chars,words',
-        tag: 'span',
+        autoSplit: true,
+        onSplit: (self: SplitText) => {
+          gsap.set(self.chars, {
+            opacity: 0.2,
+          });
+
+          return gsap.to(self.chars, {
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 60%',
+              end: 'bottom 30%',
+              scrub: true,
+              markers: false,
+              invalidateOnRefresh: true,
+            },
+            opacity: 1,
+            stagger: 0.1,
+            duration: 1,
+          });
+        },
       });
 
       this.splitInstances.push(text);
-
-      gsap.set(text.chars, {
-        opacity: 0.2,
-      });
-      const animation = gsap.to(text.chars, {
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 60%',
-          end: 'bottom 30%',
-          scrub: true,
-          markers: false,
-          invalidateOnRefresh: true,
-        },
-        opacity: 1,
-        stagger: 0.1,
-        duration: 1,
-      });
-
-      this.animations.push(animation);
     });
   }
 
@@ -253,15 +218,15 @@ export class TextAnimator {
           if (staggerElements.length === 0) return;
 
           const animations = Array.from(staggerElements).map((staggerEl) => {
+            const duration = this.getDurationAttrValue(staggerEl, 0.8);
+            const stagger = this.getStaggerAttrValue(staggerEl, 0.01);
+
             const split = new SplitText(staggerEl, {
               type: 'words,chars',
-              tag: 'span',
+              mask: 'words',
             });
 
             this.splitInstances.push(split);
-
-            const duration = this.getDurationAttrValue(staggerEl, 0.8);
-            const stagger = this.getStaggerAttrValue(staggerEl, 0.01);
 
             const tl = gsap.timeline({ paused: true });
             tl.to(split.chars, {
@@ -299,7 +264,7 @@ export class TextAnimator {
           // For direct stagger elements without a parent trigger
           const split = new SplitText(el, {
             type: 'words,chars',
-            tag: 'span',
+            mask: 'words',
           });
 
           this.splitInstances.push(split);
@@ -351,9 +316,10 @@ export class TextAnimator {
   }
 }
 
-// Export original function for backward compatibility
+// Export original function
 export function textAnimation() {
   const animator = TextAnimator.getInstance();
-  animator.init();
-  return animator;
+  document.fonts.ready.then(() => {
+    animator.init();
+  });
 }

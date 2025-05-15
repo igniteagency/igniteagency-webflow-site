@@ -50,7 +50,7 @@ function setupMouseTracking(
 
 export function delightSectionTransitions() {
   // --- Initialize Effects Controllers ---
-  const emojiRain = new RainEmojis();
+  // const emojiRain = new RainEmojis(false);
   const confettiController = createConfettiController('#canvas-target');
 
   const sectionWrapper = document.querySelector('.delight_section-wrapper') as HTMLElement | null;
@@ -95,6 +95,9 @@ export function delightSectionTransitions() {
 
   // Abort controller for cleaning up listeners (now just for the main mouse listener)
   const abortController = new AbortController();
+
+  // Store all ScrollTrigger instances for cleanup
+  const scrollTriggers: ScrollTrigger[] = [];
 
   // Assign sections to named variables
   const sectionLeads = sections[0]; // Section 1
@@ -306,6 +309,27 @@ export function delightSectionTransitions() {
     ); // Align with other text?
   }
 
+  // --- Initial Rain Start Trigger ---
+  // Trigger rain only when the first section hits the top the first time
+  const stInitialRain = ScrollTrigger.create({
+    trigger: sectionLeads,
+    start: 'top top', // When the top of sectionLeads hits the top of the viewport
+    onEnter: () => {
+      console.log('Initial rain start trigger entered.');
+      if (emojiRain && emojiRain.isInitialized) {
+        // Ensure emojiRain is initialized
+        emojiRain.startRain();
+      } else {
+        console.warn('Tried to start rain, but emojiRain not initialized yet.');
+        // Optionally, set a flag or re-check later if initialization is delayed
+      }
+    },
+    once: true, // Only trigger this once
+    id: 'delight-initial-rain-start',
+    markers: false, // Turn off markers
+  });
+  scrollTriggers.push(stInitialRain); // Add to cleanup array
+
   // --- Transition 1 -> 2 ScrollTrigger Setup ---
   const st1 = ScrollTrigger.create({
     trigger: sectionWrapper,
@@ -346,6 +370,7 @@ export function delightSectionTransitions() {
     markers: false, // Turn off markers
     id: 'delight-leads-delight',
   });
+  scrollTriggers.push(st1); // Add to cleanup array
 
   // --- Transition Delight -> Edit (2 -> 3) ---
   const tl2 = gsap.timeline({
@@ -514,14 +539,19 @@ export function delightSectionTransitions() {
     markers: false, // Turn off markers
     id: 'delight-delight-edit',
   });
+  scrollTriggers.push(st2); // Add to cleanup array
 
   // Cleanup function
   return () => {
     // Kill timelines and ScrollTriggers
     tl1.kill();
     tl2.kill();
-    st1.kill();
-    st2.kill();
+    // st1.kill(); // Removed individual kills
+    // st2.kill(); // Removed individual kills
+    // stInitialRain.kill(); // Removed individual kills
+    scrollTriggers.forEach((st) => st.kill()); // Kill all stored ScrollTriggers
+    scrollTriggers.length = 0; // Clear the array
+
     // Revert SplitText instances
     splitInstances.forEach((split) => split.revert());
     splitInstances.length = 0; // Clear the array
