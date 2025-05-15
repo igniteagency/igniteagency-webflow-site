@@ -1,6 +1,3 @@
-// import gsap from 'gsap';
-// import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
 export function initMarqueeScrollDirection() {
   // Check if GSAP and ScrollTrigger are available
   if (!gsap || !ScrollTrigger) {
