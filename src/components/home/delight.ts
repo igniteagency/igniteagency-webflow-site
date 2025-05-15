@@ -50,7 +50,7 @@ function setupMouseTracking(
 
 export function delightSectionTransitions() {
   // --- Initialize Effects Controllers ---
-  const emojiRain = new RainEmojis(false);
+  // const emojiRain = new RainEmojis(false);
   const confettiController = createConfettiController('#canvas-target');
 
   const sectionWrapper = document.querySelector('.delight_section-wrapper') as HTMLElement | null;
