@@ -208,7 +208,7 @@ export function delightSectionTransitions() {
   // Animate Out Leads Section
   const headingLeads = sectionLeads.querySelector('.heading-style-h1');
   if (headingLeads) {
-    const split = new SplitText(headingLeads, { type: 'words,chars', tag: 'span' });
+    const split = new SplitText(headingLeads, { type: 'words,chars' });
     gsap.set(split.words, { overflow: 'hidden', display: 'inline-block' });
     gsap.set(split.chars, { display: 'inline-block' });
     splitInstances.push(split);
@@ -246,7 +246,7 @@ export function delightSectionTransitions() {
   // Animate In Delight Section
   const headingDelight = sectionDelight.querySelector('.heading-style-h1');
   if (headingDelight) {
-    const split = new SplitText(headingDelight, { type: 'words,chars', tag: 'span' });
+    const split = new SplitText(headingDelight, { type: 'words,chars' });
     gsap.set(split.words, { overflow: 'hidden', display: 'inline-block' });
     gsap.set(split.chars, { display: 'inline-block', yPercent: 100 });
     splitInstances.push(split);
@@ -439,7 +439,7 @@ export function delightSectionTransitions() {
   // Animate In Edit Section
   const headingEdit = sectionEdit.querySelector('.heading-style-h1');
   if (headingEdit) {
-    const split = new SplitText(headingEdit, { type: 'words,chars', tag: 'span' });
+    const split = new SplitText(headingEdit, { type: 'words,chars' });
     gsap.set(split.words, { overflow: 'hidden', display: 'inline-block' });
     gsap.set(split.chars, { display: 'inline-block', yPercent: 100 });
     splitInstances.push(split);
