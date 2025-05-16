@@ -1,6 +1,3 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
 import { createConfettiController } from './confetti';
 import { RainEmojis } from './rain-emojis';
 
@@ -50,7 +47,7 @@ function setupMouseTracking(
 
 export function delightSectionTransitions() {
   // --- Initialize Effects Controllers ---
-  // const emojiRain = new RainEmojis(false);
+  const emojiRain = new RainEmojis(false);
   const confettiController = createConfettiController('#canvas-target');
 
   const sectionWrapper = document.querySelector('.delight_section-wrapper') as HTMLElement | null;
