@@ -1,6 +1,3 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
 // Assuming SplitText is used
 import { createConfettiController } from './confetti';
 import { RainEmojis } from './rain-emojis';
