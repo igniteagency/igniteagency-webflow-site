@@ -11,6 +11,10 @@ interface RainEmojisConfig {
   mouseColliderSize: number;
 }
 
+/**
+ * TODO: add logic to cleanup when going out of view; drop from the bottom of screen
+ */
+
 export class RainEmojis {
   private canvas: HTMLCanvasElement | null = null;
   private engine: Matter.Engine | null = null;

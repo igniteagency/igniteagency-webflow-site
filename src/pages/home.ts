@@ -5,6 +5,7 @@ import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   window.Webflow?.push(() => {
+    leadMagnetMauticForm();
     setHorizontalScrollWrapperHeight();
     introScrubText();
     setHeroSuperchargeMode();
@@ -213,4 +214,72 @@ function setHorizontalScrollWrapperHeight() {
       setHeight();
     });
   });
+}
+
+function leadMagnetMauticForm() {
+  const FORM_NAME = 'ignitewebsiteleadmagnetform';
+
+  const DIALOG_SELECTOR = 'dialog[data-el="form-dialog"][open]';
+  const SUCCESS_MESSAGE_SELECTOR = '[data-form-el="success-message"]';
+  const ERROR_MESSAGE_SELECTOR = '[data-form-el="error-message"]';
+
+  if (typeof MauticFormCallback == 'undefined') {
+    window.MauticFormCallback = {};
+  }
+
+  window.MauticFormCallback[FORM_NAME] = {
+    onResponse: function (response) {
+      console.debug('Mautic form callback', { response });
+      const dialogEl = document.querySelector<HTMLDialogElement>(DIALOG_SELECTOR);
+      const formEl = dialogEl?.querySelector('form');
+      if (!dialogEl || !formEl) {
+        console.error('Current form element not found in mautic response callback', { response });
+        return;
+      }
+
+      const successEl = dialogEl.querySelector(SUCCESS_MESSAGE_SELECTOR);
+      const errorEl = dialogEl.querySelector(ERROR_MESSAGE_SELECTOR);
+
+      if (response.success) {
+        console.debug({ successEl });
+        if (successEl) {
+          formEl.style.display = 'none';
+          successEl.style.display = 'block';
+        }
+
+        // close the dialog in 5 sec
+        setTimeout(() => {
+          dialogEl.close();
+        }, 5000);
+      }
+
+      if (response.errorMessage) {
+        // show error state
+        if (errorEl) {
+          errorEl.style.display = 'block';
+        }
+      }
+
+      return true; // prevent any Mautic based action like redirect
+    },
+  };
+
+  /** This section is only needed once per page if manually copying **/
+  if (typeof MauticSDKLoaded == 'undefined') {
+    window.MauticSDKLoaded = true;
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://m.igniteagency.com/media/js/mautic-form.js?vd43a7f62';
+    script.onload = function () {
+      MauticSDK.onLoad();
+    };
+    head.appendChild(script);
+    window.MauticDomain = 'https://m.igniteagency.com';
+    window.MauticLang = {
+      submittingMessage: 'Please wait...',
+    };
+  } else if (typeof MauticSDK != 'undefined') {
+    MauticSDK.onLoad();
+  }
 }
