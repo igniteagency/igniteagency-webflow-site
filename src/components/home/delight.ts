@@ -61,11 +61,11 @@ export function delightSectionTransitions() {
     return () => {};
   }
 
-  const sections = gsap.utils.toArray<HTMLElement>(':scope > .section_delight_test', stickyWrapper);
+  const sections = gsap.utils.toArray<HTMLElement>(':scope > .section_delight_new', stickyWrapper);
 
   if (sections.length < 3) {
     console.error(
-      'Expected at least 3 direct children .section_delight_test elements inside .delight_sticky-wrapper. Found:',
+      'Expected at least 3 direct children .section_delight_new elements inside .delight_sticky-wrapper. Found:',
       sections.length
     );
     return () => {};
