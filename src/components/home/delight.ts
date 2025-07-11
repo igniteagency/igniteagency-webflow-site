@@ -134,6 +134,11 @@ export function delightSectionTransitions() {
     signal: abortController.signal,
   });
 
+  // Query for the new element in the delight section
+  const delightTapPrompt = sectionDelight.querySelector(
+    '.delight_tap-prompt'
+  ) as HTMLElement | null;
+
   // --- Initial States and Animations ---
   sectionWrapper.setAttribute('data-active-section', 'leads');
   if (delightCursorImage)
@@ -142,6 +147,9 @@ export function delightSectionTransitions() {
   if (editCursorImage)
     gsap.set(editCursorImage, { scale: 0, rotationZ: -50, transformOrigin: 'center center' });
   if (editCursorWrap) gsap.set(editCursorWrap, { scale: 0 });
+  if (delightTapPrompt) {
+    gsap.set(delightTapPrompt, { scale: 0, rotation: 30, transformOrigin: 'center center' });
+  }
   const initialX = window.innerWidth / 2;
   const initialY = window.innerHeight / 2;
   if (delightCursorContent) gsap.set(delightCursorContent, { x: initialX, y: initialY });
@@ -212,6 +220,10 @@ export function delightSectionTransitions() {
     );
   }
 
+  if (delightTapPrompt) {
+    tl1.to(delightTapPrompt, { scale: 1, rotation: 0, duration: TEXT_DURATION }, TEXT_IN_OFFSET);
+  }
+
   if (delightCursorImage) {
     tl1.fromTo(
       delightCursorImage,
@@ -247,6 +259,10 @@ export function delightSectionTransitions() {
       { scale: 0, opacity: 0, stagger: TEXT_STAGGER, duration: TEXT_DURATION },
       TEXT_OUT_OFFSET
     );
+  }
+
+  if (delightTapPrompt) {
+    tl2.to(delightTapPrompt, { scale: 0, rotation: 30, duration: TEXT_DURATION }, TEXT_OUT_OFFSET);
   }
 
   if (delightCursorImage) {
@@ -346,8 +362,8 @@ export function delightSectionTransitions() {
     // Ensure pinST exists for progress logging
     const st1 = ScrollTrigger.create({
       trigger: sectionWrapper,
-      start: () => totalScrollDurationForPin / 3 - 2, // 2px zone around 1/3
-      end: () => totalScrollDurationForPin / 3 + 2,
+      start: () => (pinST ? pinST.start + totalScrollDurationForPin / 3 - 2 : 0), // 2px zone around 1/3
+      end: () => (pinST ? pinST.start + totalScrollDurationForPin / 3 + 2 : 0),
       markers: { startColor: 'green', endColor: 'green', indent: 40 },
       id: 'delight-leads-delight',
       onEnter: () => {
@@ -386,8 +402,8 @@ export function delightSectionTransitions() {
     // Ensure pinST exists
     const st2 = ScrollTrigger.create({
       trigger: sectionWrapper,
-      start: () => (totalScrollDurationForPin * 2) / 3 - 2, // 2px zone around 2/3
-      end: () => (totalScrollDurationForPin * 2) / 3 + 2,
+      start: () => (pinST ? pinST.start + (totalScrollDurationForPin * 2) / 3 - 2 : 0), // 2px zone around 2/3
+      end: () => (pinST ? pinST.start + (totalScrollDurationForPin * 2) / 3 + 2 : 0),
       markers: { startColor: 'orange', endColor: 'orange', indent: 80 },
       id: 'delight-delight-edit',
       onEnter: () => {
