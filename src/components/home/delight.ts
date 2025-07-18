@@ -13,7 +13,6 @@ export const delightSectionsConfig: DelightSectionConfig[] = [
   {
     name: 'leads',
     effectNames: ['emojiRain'],
-    cursorSelector: '#cursor-leads.cursor-content',
   },
   {
     name: 'delight',
@@ -34,11 +33,9 @@ class CursorController {
   private cursorContentEl: HTMLElement | null;
   private section: HTMLElement;
   private abort: AbortController;
-  private sectionBounds: DOMRect;
   private cursorXTo: gsap.QuickToFunc;
   private cursorYTo: gsap.QuickToFunc;
-  private cursorContentXTo: gsap.QuickToFunc;
-  private cursorContentYTo: gsap.QuickToFunc;
+  private listenersAttached = false;
   constructor(section: HTMLElement, stickyWrapper: HTMLElement, cursorSelector?: string | null) {
     this.section = section;
     this.cursorEl = cursorSelector
@@ -50,51 +47,56 @@ class CursorController {
         ) as HTMLElement | null)
       : null;
     this.abort = new AbortController();
-    if (this.cursorEl) {
-      section.addEventListener('mousemove', this.handleMove, { signal: this.abort.signal });
-      section.addEventListener('mouseleave', this.hide, { signal: this.abort.signal });
-      section.addEventListener('mouseenter', this.show, { signal: this.abort.signal });
-    }
-    this.sectionBounds = section.getBoundingClientRect();
 
     this.cursorXTo = gsap.quickTo(this.cursorEl, 'x', {
-      duration: 0.4,
-      ease: 'power1.out',
+      duration: 0.03,
+      // ease: 'power1.out',
     });
     this.cursorYTo = gsap.quickTo(this.cursorEl, 'y', {
-      duration: 0.4,
-      ease: 'power1.out',
-    });
-    this.cursorContentXTo = gsap.quickTo(this.cursorContentEl, 'x', {
-      duration: 0.4,
-      ease: 'power1.out',
-    });
-    this.cursorContentYTo = gsap.quickTo(this.cursorContentEl, 'y', {
-      duration: 0.4,
-      ease: 'power1.out',
+      duration: 0.03,
+      // ease: 'power1.out',
     });
   }
   private handleMove = (event: MouseEvent) => {
     if (!this.cursorEl) return;
-    const x = event.clientX - this.sectionBounds.left;
-    const y = event.clientY - this.sectionBounds.top;
+    const x = event.clientX;
+    const y = event.clientY;
     this.cursorXTo(x);
     this.cursorYTo(y);
-    if (this.cursorContentEl) {
-      this.cursorContentXTo(x);
-      this.cursorContentYTo(y);
-    }
   };
   public hide = () => {
-    if (this.cursorEl)
-      gsap.to(this.cursorEl, { opacity: 0, scale: 0, rotationZ: -50, duration: 0.2 });
+    gsap.to([this.cursorEl, this.cursorContentEl], {
+      opacity: 0,
+      scale: 0,
+      rotationZ: -50,
+      duration: 0.2,
+    });
+    // Remove event listeners if attached
+    if (this.listenersAttached) {
+      this.section.removeEventListener('mousemove', this.handleMove);
+      this.listenersAttached = false;
+    }
   };
   public show = () => {
-    if (this.cursorEl)
-      gsap.to(this.cursorEl, { opacity: 1, scale: 1, rotationZ: 0, duration: 0.3 });
+    gsap.to([this.cursorEl, this.cursorContentEl], {
+      opacity: 1,
+      scale: 1,
+      rotationZ: 0,
+      duration: 0.3,
+    });
+    // Add event listeners if not already attached
+    if (!this.listenersAttached) {
+      this.section.addEventListener('mousemove', this.handleMove);
+      this.listenersAttached = true;
+    }
   };
   public destroy() {
     this.abort.abort();
+    // Clean up listeners if still attached
+    if (this.listenersAttached) {
+      this.section.removeEventListener('mousemove', this.handleMove);
+      this.listenersAttached = false;
+    }
   }
 }
 
@@ -273,6 +275,10 @@ export class DelightSectionAnimator {
           console.log('onEnter', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
           // --- EFFECTS: Reactivate for this section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -288,6 +294,10 @@ export class DelightSectionAnimator {
           console.log('onLeave', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
           // --- EFFECTS: Deactivate for this section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -303,6 +313,10 @@ export class DelightSectionAnimator {
           console.log('onEnterBack', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
           // --- EFFECTS: Reactivate for previous section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -316,6 +330,10 @@ export class DelightSectionAnimator {
         },
         onLeaveBack: () => {
           console.log('onLeaveBack', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
           // --- EFFECTS: Deactivate for previous section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -335,6 +353,7 @@ export class DelightSectionAnimator {
 
     // --- Initial States and Animations ---
     if (this.sectionWrapper) {
+      // NOTE: data-active-session is used as CSS selector for custom cursor styling
       this.sectionWrapper.setAttribute('data-active-section', this.config[0].name);
     }
     if (this.stickyWrapper) {
