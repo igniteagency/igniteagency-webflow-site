@@ -49,12 +49,12 @@ class CursorController {
     this.abort = new AbortController();
 
     this.cursorXTo = gsap.quickTo(this.cursorEl, 'x', {
-      duration: 0.03,
-      // ease: 'power1.out',
+      duration: 0.1,
+      ease: 'power1.out',
     });
     this.cursorYTo = gsap.quickTo(this.cursorEl, 'y', {
-      duration: 0.03,
-      // ease: 'power1.out',
+      duration: 0.1,
+      ease: 'power1.out',
     });
   }
   private handleMove = (event: MouseEvent) => {
