@@ -8,8 +8,15 @@ import './dev/debug';
 import './dev/env';
 
 const LOCALHOST_BASE = 'http://localhost:3000/';
-const PRODUCTION_BASE =
-  'https://cdn.jsdelivr.net/gh/igniteagency/igniteagency-webflow-site/dist/prod/';
+
+function getProductionBase(branch = '') {
+  const branchPrefix = '' === branch ? '' : `@${branch}`;
+  return `https://cdn.jsdelivr.net/gh/igniteagency/igniteagency-webflow-site${branchPrefix}/dist/prod/`;
+}
+
+const PRODUCTION_BASE = !window.location.hostname.includes('webflow.io')
+  ? getProductionBase()
+  : getProductionBase('dev');
 
 window.JS_SCRIPTS = new Set();
 
