@@ -4,6 +4,8 @@ interface ConfettiController {
   activate: () => void;
   deactivate: () => void;
   destroy: () => void;
+  exitEffect: () => void;
+  reenterEffect: () => void;
 }
 
 /**
@@ -42,7 +44,7 @@ export function createConfettiController(
     jsConfetti.addConfetti({
       emojis: ['😎', '⚡️', '🎉', '🌈', '👀', '🦄'],
       emojiSize: 100,
-      confettiNumber: 50,
+      confettiNumber: 30,
     });
   };
 
@@ -84,6 +86,14 @@ export function createConfettiController(
     jsConfetti = null;
   };
 
+  const exitEffect = () => {
+    deactivate();
+  };
+
+  const reenterEffect = () => {
+    activate();
+  };
+
   // Return the controller object
-  return { activate, deactivate, destroy };
+  return { activate, deactivate, destroy, exitEffect, reenterEffect };
 }
