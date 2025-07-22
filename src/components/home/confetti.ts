@@ -44,7 +44,7 @@ export function createConfettiController(
     jsConfetti.addConfetti({
       emojis: ['😎', '⚡️', '🎉', '🌈', '👀', '🦄'],
       emojiSize: 100,
-      confettiNumber: 50,
+      confettiNumber: 30,
     });
   };
 
