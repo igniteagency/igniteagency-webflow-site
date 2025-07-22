@@ -9,6 +9,16 @@ export interface DelightSectionConfig {
   cursorSelector?: string | null;
 }
 
+const LETTER_DURATION = 0.6;
+const LETTER_STAGGER = 0.03;
+const TEXT_DURATION = 0.5;
+const TEXT_STAGGER = 0.05;
+const EASE_TYPE = 'expo.inOut';
+const OUT_OFFSET = 0;
+const TEXT_OUT_OFFSET = 0.1;
+const IN_OFFSET = 0.3;
+const TEXT_IN_OFFSET = 0.4;
+
 export const delightSectionsConfig: DelightSectionConfig[] = [
   {
     name: 'leads',
@@ -140,15 +150,6 @@ export class DelightSectionAnimator {
     outTimeline: gsap.core.Timeline;
     headingSplit: SplitText | { words: HTMLElement | null; chars: HTMLElement | null };
   } {
-    const LETTER_DURATION = 0.6;
-    const LETTER_STAGGER = 0.03;
-    const TEXT_DURATION = 0.5;
-    const TEXT_STAGGER = 0.05;
-    const EASE_TYPE = 'expo.inOut';
-    const OUT_OFFSET = 0;
-    const TEXT_OUT_OFFSET = 0.1;
-    const IN_OFFSET = 0.3;
-    const TEXT_IN_OFFSET = 0.4;
     const inTimeline = gsap.timeline({ paused: true, defaults: { ease: EASE_TYPE } });
     const outTimeline = gsap.timeline({ paused: true, defaults: { ease: EASE_TYPE } });
     let headingSplit: SplitText | { words: HTMLElement | null; chars: HTMLElement | null } = {
@@ -156,29 +157,38 @@ export class DelightSectionAnimator {
       chars: null,
     };
     if (heading) {
-      headingSplit = new SplitText(heading, { type: 'words,chars', tag: 'span' });
-      if (!headingSplit) {
-        headingSplit = {
-          words: heading,
-          chars: heading,
-        };
-      }
-      gsap.set(headingSplit.words, { overflow: 'hidden', display: 'inline-block' });
-      gsap.set(headingSplit.chars, { display: 'inline-block', yPercent: 100 });
-      inTimeline.to(
-        headingSplit.chars,
-        { yPercent: 0, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
-        IN_OFFSET
-      );
-      outTimeline.to(
-        headingSplit.chars,
-        { yPercent: -100, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
-        OUT_OFFSET
-      );
-      if (heading.classList.contains('is-text-editable')) {
-        gsap.set(heading, { '--pseudo-opacity': 0 });
-        inTimeline.to(heading, { '--pseudo-opacity': 1, duration: TEXT_DURATION }, IN_OFFSET);
-        outTimeline.to(heading, { '--pseudo-opacity': 0, duration: TEXT_DURATION }, OUT_OFFSET);
+      if (!heading.isContentEditable) {
+        headingSplit = new SplitText(heading, { type: 'words,chars', tag: 'span' });
+        if (!headingSplit) {
+          headingSplit = {
+            words: heading,
+            chars: heading,
+          };
+        }
+        gsap.set(headingSplit.words, { overflow: 'hidden', display: 'inline-block' });
+        gsap.set(headingSplit.chars, { display: 'inline-block', yPercent: 100 });
+        inTimeline.to(
+          headingSplit.chars,
+          { yPercent: 0, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
+          IN_OFFSET
+        );
+        outTimeline.to(
+          headingSplit.chars,
+          { yPercent: -100, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
+          OUT_OFFSET
+        );
+      } else {
+        gsap.set(heading, { opacity: 0, '--pseudo-opacity': 0 });
+        inTimeline.to(
+          heading,
+          { opacity: 1, '--pseudo-opacity': 1, duration: TEXT_DURATION },
+          IN_OFFSET + 0.2
+        );
+        outTimeline.to(
+          heading,
+          { opacity: 0, '--pseudo-opacity': 0, duration: TEXT_DURATION },
+          OUT_OFFSET
+        );
       }
     }
     if (texts.length > 0) {

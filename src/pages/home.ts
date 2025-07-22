@@ -14,7 +14,6 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     document.fonts.ready.then(() => {
       const animator = new DelightSectionAnimator();
       animator.init();
-      console.debug('Delight section animator initialized');
     });
   } catch (error) {
     console.error('Error initializing delight section animator', error);
