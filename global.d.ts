@@ -36,6 +36,10 @@ declare global {
     lenis: typeof Lenis;
 
     debounce: typeof debounce;
+
+    // Three.js bolt component properties
+    hasRendered?: boolean;
+    ScrollTrigger: typeof ScrollTrigger;
   }
 
   // Extend `querySelector` and `querySelectorAll` function to stop the nagging of converting `Element` to `HTMLElement` all the time
