@@ -168,3 +168,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 - **Preview** every change before publishing to production
 - Maintain a **backup** before bulk updates
 - **Log** every modification for an audit trail
+
+## Project Memories and Notes
+
+- No need to run build, we can test without this step
