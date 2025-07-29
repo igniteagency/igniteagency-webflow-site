@@ -1,5 +1,6 @@
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 
+import '$components/home/bolt';
 import { delightSectionTransitions } from '$components/home/delight';
 import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
@@ -27,12 +28,7 @@ function introScrubText() {
   // Handle image animation
   if (imageWrapper) {
     gsap.to(imageWrapper, {
-      scrollTrigger: {
-        trigger: scrollContainer,
-        start: 'top 20%',
-        end: 'top top',
-        scrub: true,
-      },
+      scrollTrigger: { trigger: scrollContainer, start: 'top 20%', end: 'top top', scrub: true },
       scale: 0.8,
       opacity: 0.5,
     });
@@ -125,11 +121,7 @@ function introScrubText() {
     if (!isFirstParagraph) {
       paragraphTimeline.to(
         wrapper,
-        {
-          opacity: 1,
-          duration: progressPortion * FADE_IN_PROPORTION,
-          ease: 'power1.in',
-        },
+        { opacity: 1, duration: progressPortion * FADE_IN_PROPORTION, ease: 'power1.in' },
         0
       );
     }
@@ -140,10 +132,7 @@ function introScrubText() {
       {
         opacity: 1,
         duration: progressPortion * CHAR_ANIMATION_PROPORTION,
-        stagger: {
-          each: CHAR_STAGGER,
-          from: 'start',
-        },
+        stagger: { each: CHAR_STAGGER, from: 'start' },
         ease: 'none', // Linear ease for consistent character reveal
       },
       isFirstParagraph ? 0 : progressPortion * FADE_IN_PROPORTION // For first paragraph, start right away
@@ -152,9 +141,7 @@ function introScrubText() {
     // Hold at full visibility
     paragraphTimeline.to(
       {},
-      {
-        duration: progressPortion * HOLD_PROPORTION,
-      },
+      { duration: progressPortion * HOLD_PROPORTION },
       progressPortion *
         (isFirstParagraph
           ? CHAR_ANIMATION_PROPORTION
@@ -165,11 +152,7 @@ function introScrubText() {
     if (!isLastParagraph) {
       paragraphTimeline.to(
         wrapper,
-        {
-          opacity: 0,
-          duration: progressPortion * FADE_OUT_PROPORTION,
-          ease: 'power1.out',
-        },
+        { opacity: 0, duration: progressPortion * FADE_OUT_PROPORTION, ease: 'power1.out' },
         progressPortion *
           (isFirstParagraph
             ? CHAR_ANIMATION_PROPORTION + HOLD_PROPORTION
@@ -276,9 +259,7 @@ function leadMagnetMauticForm() {
     };
     head.appendChild(script);
     window.MauticDomain = 'https://m.igniteagency.com';
-    window.MauticLang = {
-      submittingMessage: 'Please wait...',
-    };
+    window.MauticLang = { submittingMessage: 'Please wait...' };
   } else if (typeof MauticSDK != 'undefined') {
     MauticSDK.onLoad();
   }
