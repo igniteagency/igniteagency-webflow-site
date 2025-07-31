@@ -21,7 +21,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 
   // Camera
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 5;
+  camera.position.z = 3.5;
 
   // Mouse position tracking
   const mouse = new THREE.Vector2();
@@ -143,7 +143,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   // Material parameters to control
   const materialParams = {
     roughness: 0.01,
-    envMapIntensity: 0.7, // Increase environment intensity
+    envMapIntensity: 0.8, // Increase environment intensity
   };
 
   // Environment rotation parameters (in degrees now)
@@ -189,8 +189,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     0.4,
     0.85
   );
-  bloomPass.threshold = 0.4; // Adjust threshold for physical material
-  bloomPass.strength = 1.3; // Adjust strength
+  bloomPass.threshold = 0.73; // Adjust threshold for physical material
+  bloomPass.strength = 1; // Adjust strength
   bloomPass.radius = 1; // Adjust radius
 
   // Color overlay pass
@@ -317,28 +317,31 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     }
   );
 
-  function buildScene(): void {
-    // Load SVG data
-    const svgData = `<svg width="47" height="164" viewBox="0 0 47 164" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M3.82956 0.839229C3.57839 0.328028 2.80464 0.567309 2.88591 1.13105L13.678 75.9958C13.7214 76.2972 13.4876 76.5671 13.1831 76.5671H1.06043C0.690294 76.5671 0.448468 76.9553 0.611639 77.2875L42.6881 162.959C42.9394 163.47 43.7137 163.23 43.6317 162.666L32.7564 87.9406C32.7125 87.639 32.9464 87.3686 33.2512 87.3686H45.5414C45.9115 87.3686 46.1534 86.9803 45.9901 86.6481L3.82956 0.839229Z" fill="white"/>
-</svg>`;
+  // Store SVG data and shape globally for regeneration
+  const svgData = `<svg width="45" height="161" viewBox="0 0 45 161" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M2.81272 0.418996C2.6871 0.163431 2.30027 0.283109 2.34092 0.564963L13.0797 75.0285C13.1015 75.1792 12.9846 75.3142 12.8323 75.3142H0.401385C0.216297 75.3142 0.0953853 75.5084 0.177007 75.6745L41.8922 160.574C42.0179 160.83 42.4051 160.71 42.364 160.428L31.5409 86.092C31.5189 85.9412 31.6359 85.806 31.7883 85.806H44.3824C44.5675 85.806 44.6884 85.6118 44.6067 85.4457L2.81272 0.418996Z" fill="black"/>
+</svg>
+`;
+  let shape: THREE.Shape;
 
+  // Extrude settings - made global for GUI control
+  const extrudeSettings = {
+    steps: 2,
+    depth: 11,
+    bevelEnabled: true,
+    bevelThickness: 2,
+    bevelSize: 1,
+    bevelOffset: 0,
+    bevelSegments: 16, // Increased segments for smoother bevel shading
+  };
+
+  function buildScene(): void {
     try {
       const loader = new SVGLoader();
       const data = loader.parse(svgData);
       const path = data.paths[0];
       const shapes = SVGLoader.createShapes(path);
-      const shape = shapes[0];
-
-      const extrudeSettings = {
-        steps: 2,
-        depth: 10,
-        bevelEnabled: true,
-        bevelThickness: 4,
-        bevelSize: 2,
-        bevelOffset: 0,
-        bevelSegments: 16, // Increased segments for smoother bevel shading
-      };
+      shape = shapes[0];
 
       const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
       geometry.center();
@@ -346,6 +349,60 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
       const scaleFactor = 0.02;
       geometry.scale(scaleFactor, -scaleFactor, scaleFactor);
       geometry.rotateX(Math.PI);
+
+      // Add extrude settings to GUI after geometry is created (only if GUI enabled)
+      if (ENABLE_GUI && gui) {
+        const extrudeFolder = gui.addFolder('Extrude Settings');
+
+        extrudeFolder
+          .add(extrudeSettings, 'steps', 1, 10, 1)
+          .name('Steps')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'depth', 1, 30)
+          .name('Depth')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'bevelEnabled')
+          .name('Bevel Enabled')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'bevelThickness', 0, 10)
+          .name('Bevel Thickness')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'bevelSize', 0, 10)
+          .name('Bevel Size')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'bevelOffset', -5, 5)
+          .name('Bevel Offset')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+
+        extrudeFolder
+          .add(extrudeSettings, 'bevelSegments', 1, 32, 1)
+          .name('Bevel Segments')
+          .onChange(() => {
+            regenerateGeometry();
+          });
+      }
 
       // --- Physical Material attempting to layer effects ---
       const material = new THREE.MeshPhysicalMaterial({
@@ -367,6 +424,25 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     } catch (error) {
       console.error('Error building the scene:', error);
     }
+  }
+
+  // Function to regenerate geometry when extrude settings change
+  function regenerateGeometry(): void {
+    if (!bolt || !shape) return;
+
+    // Dispose of the old geometry to prevent memory leaks
+    bolt.geometry.dispose();
+
+    // Create new geometry with updated settings
+    const newGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    newGeometry.center();
+
+    const scaleFactor = 0.02;
+    newGeometry.scale(scaleFactor, -scaleFactor, scaleFactor);
+    newGeometry.rotateX(Math.PI);
+
+    // Update the bolt's geometry
+    bolt.geometry = newGeometry;
   }
 
   // Handle window resize
