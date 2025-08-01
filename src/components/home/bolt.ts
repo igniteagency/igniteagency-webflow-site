@@ -143,7 +143,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   // Material parameters to control
   const materialParams = {
     roughness: 0.01,
-    envMapIntensity: 0.8, // Increase environment intensity
+    envMapIntensity: 1.3, // Increase environment intensity
   };
 
   // Environment rotation parameters (in degrees now)
@@ -189,8 +189,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     0.4,
     0.85
   );
-  bloomPass.threshold = 0.73; // Adjust threshold for physical material
-  bloomPass.strength = 1; // Adjust strength
+  bloomPass.threshold = 0.85; // Adjust threshold for physical material
+  bloomPass.strength = 0.56; // Adjust strength
   bloomPass.radius = 1; // Adjust radius
 
   // Color overlay pass
@@ -299,7 +299,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   );
 
   textureLoader.load(
-    'https://cdn.prod.website-files.com/66260e4321c76d6302aa74e5/6888330ec0c777db9ab94299_matcap4.png',
+    'https://cdn.prod.website-files.com/66260e4321c76d6302aa74e5/688c5dca05b526050a93354c_crystal_matcap-desat%20(1).png',
     (texture: THREE.Texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
 
