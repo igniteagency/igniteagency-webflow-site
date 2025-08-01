@@ -1,18 +1,26 @@
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 
 import '$components/home/bolt';
-import { delightSectionTransitions } from '$components/home/delight';
+import { DelightSectionAnimator } from '$components/home/delight';
 import { setHeroSuperchargeMode } from '$components/home/supercharge';
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  window.Webflow?.push(() => {
-    leadMagnetMauticForm();
-    setHorizontalScrollWrapperHeight();
-    introScrubText();
-    setHeroSuperchargeMode();
-    delightSectionTransitions();
-  });
+  // window.Webflow?.push(() => {
+  leadMagnetMauticForm();
+  setHorizontalScrollWrapperHeight();
+  introScrubText();
+  setHeroSuperchargeMode();
+
+  try {
+    document.fonts.ready.then(() => {
+      const animator = new DelightSectionAnimator();
+      animator.init();
+    });
+  } catch (error) {
+    console.error('Error initializing delight section animator', error);
+  }
 });
+// });
 
 function introScrubText() {
   // Select all paragraph wrappers and the scroll container
