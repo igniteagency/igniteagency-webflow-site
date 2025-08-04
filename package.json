@@ -13,9 +13,11 @@
   },
   "devDependencies": {
     "@finsweet/eslint-config": "^2.0.7",
-    "@finsweet/tsconfig": "^1.4.2",
     "@finsweet/ts-utils": "^0.40.0",
+    "@finsweet/tsconfig": "^1.4.2",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/matter-js": "^0.19.8",
+    "@types/three": "^0.178.1",
     "@types/vimeo__player": "^2.18.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
@@ -29,15 +31,16 @@
     "path": "^0.12.7",
     "prettier": "^3.5.3",
     "tiny-glob": "^0.2.9",
-    "typescript": "^5.8.3",
-    "@types/matter-js": "^0.19.8"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@vimeo/player": "^2.27.1",
     "debounce": "^2.2.0",
     "js-confetti": "^0.12.0",
     "lenis": "^1.3.3",
+    "lil-gui": "^0.20.0",
     "matter-js": "^0.20.0",
-    "swiper": "^11.2.6"
+    "swiper": "^11.2.6",
+    "three": "^0.178.0"
   }
 }
