@@ -1,6 +1,5 @@
 import { SCRIPTS_LOADED_EVENT } from 'src/constants';
 
-import '$components/home/bolt';
 import { DelightSectionAnimator } from '$components/home/delight';
 import { setHeroSuperchargeMode } from '$components/home/supercharge';
 

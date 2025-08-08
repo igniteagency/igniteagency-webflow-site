@@ -13,14 +13,18 @@ import { SCRIPTS_LOADED_EVENT } from '$src/constants';
 // GUI Control - set to true to enable GUI for development
 const ENABLE_GUI = false;
 
-// Initialize when scripts are loaded
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+// Function to create a bolt instance for a specific container
+function createBoltInstance(containerId: string, options: { enableScrollTrigger?: boolean } = {}): void {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
   // Scene
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000); // Keep background black
 
-  // Camera
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  // Camera - adjust aspect ratio based on container size
+  const containerRect = container.getBoundingClientRect();
+  const camera = new THREE.PerspectiveCamera(75, containerRect.width / containerRect.height, 0.1, 1000);
   camera.position.z = 3.5;
 
   // Mouse position tracking
@@ -32,7 +36,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
 
   // Scroll-based rotation parameters
   const scrollParams = {
-    active: true, // Whether scroll rotation is active
+    active: options.enableScrollTrigger ?? true, // Whether scroll rotation is active
     rotationFactor: 1.0, // Number of full rotations (1.0 = one full rotation)
     mouseTrackingFactor: 0.3, // How much mouse tracking affects rotation during scroll (0-1)
   };
@@ -40,26 +44,35 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   // Store the current scroll-driven rotation
   let scrollRotationY = 0;
 
-  // Track mouse movement
+  // Track mouse movement - only when mouse is over the container
   function onMouseMove(event: MouseEvent): void {
-    // Calculate normalized device coordinates (-1 to +1)
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -((event.clientY / window.innerHeight) * 2 - 1); // Negative because Y is upside down
+    const rect = container.getBoundingClientRect();
+    const isOverContainer = 
+      event.clientX >= rect.left && 
+      event.clientX <= rect.right && 
+      event.clientY >= rect.top && 
+      event.clientY <= rect.bottom;
 
-    // Scale mouse coordinates to rotation values within limits
-    targetRotation.x = -mouse.y * rotationLimit; // Invert Y rotation for correct mapping
-    targetRotation.y = mouse.x * rotationLimit;
+    if (isOverContainer) {
+      // Calculate normalized coordinates relative to the container
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+
+      // Scale mouse coordinates to rotation values within limits
+      targetRotation.x = -mouse.y * rotationLimit;
+      targetRotation.y = mouse.x * rotationLimit;
+    }
   }
 
   window.addEventListener('mousemove', onMouseMove, false);
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(containerRect.width, containerRect.height);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
-  document.getElementById('three-container')!.appendChild(renderer.domElement);
+  container.appendChild(renderer.domElement);
 
   // Controls
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -449,10 +462,11 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   window.addEventListener('resize', onWindowResize, false);
 
   function onWindowResize(): void {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const newRect = container.getBoundingClientRect();
+    camera.aspect = newRect.width / newRect.height;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(newRect.width, newRect.height);
+    composer.setSize(newRect.width, newRect.height);
   }
 
   // Setup GSAP ScrollTrigger for rotation
@@ -550,5 +564,16 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
         window.ScrollTrigger.refresh();
       });
     scrollFolder.add(scrollParams, 'mouseTrackingFactor', 0, 1).name('Mouse Effect During Scroll');
+  }
+}
+
+// Initialize when scripts are loaded
+window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+  // Create bolt instance for homepage
+  createBoltInstance('three-container');
+  
+  // Create bolt instance for menu only on desktop (768px and above)
+  if (window.innerWidth >= 768) {
+    createBoltInstance('menu-bolt', { enableScrollTrigger: false });
   }
 });
