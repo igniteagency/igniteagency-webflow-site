@@ -572,6 +572,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   // Create bolt instance for homepage
   createBoltInstance('three-container');
   
-  // Create bolt instance for menu (without scroll trigger)
-  createBoltInstance('menu-bolt', { enableScrollTrigger: false });
+  // Create bolt instance for menu only on desktop (768px and above)
+  if (window.innerWidth >= 768) {
+    createBoltInstance('menu-bolt', { enableScrollTrigger: false });
+  }
 });
