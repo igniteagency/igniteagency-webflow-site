@@ -58,7 +58,7 @@ export class Navigation {
     this.fadeTargets = this.navWrap.querySelectorAll('[data-menu-fade]');
     this.menuButton = document.querySelector('.menu-button') as HTMLElement;
     this.menuButtonTexts = this.menuButton.querySelectorAll('p');
-    this.bolt = this.navWrap.querySelectorAll('.menu-bolt');
+    this.bolt = this.navWrap.querySelectorAll('#menu-bolt');
 
     // All focusable elements within the menu
     this.focusableElements = this.navWrap.querySelectorAll(
@@ -284,6 +284,7 @@ export class Navigation {
       .to(this.overlay, { autoAlpha: 0 })
       .to(this.menu, { xPercent: 120 }, '<')
       .to(this.menuButtonTexts, { yPercent: 0 }, '<')
+      .to(this.bolt, { scale: 0 }, '<')
       .set(this.navWrap, { visibility: 'hidden', opacity: 0 });
   }
 }
