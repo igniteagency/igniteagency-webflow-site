@@ -6,7 +6,7 @@ import { cursorMove } from '$components/cursor';
 import { dialogInit } from '$components/dialog';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
 import { horizontalScroll } from '$components/horizontal-scroll';
-import { initLenisSmoothScroll } from '$components/lenis';
+// import { initLenisSmoothScroll } from '$components/lenis';
 import { initMarqueeScrollDirection } from '$components/marquee';
 import { mouseTrackImage } from '$components/mouse-track-img';
 import { initNavigation } from '$components/nav';
@@ -21,7 +21,13 @@ import { SCRIPTS_LOADED_EVENT } from './constants';
 
 window.debounce = debounce;
 
-initLenisSmoothScroll();
+// initLenisSmoothScroll();
+
+ScrollSmoother.create({
+  smooth: 1,
+  effects: true,
+  content: '.main-wrapper',
+});
 
 window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   window.Webflow?.push(() => {
