@@ -1,7 +1,6 @@
 import type { Webflow } from '@finsweet/ts-utils';
 import type { gsap } from 'gsap';
 import type { CustomEase } from 'gsap/CustomEase';
-import type { ScrollSmoother } from 'gsap/ScrollSmoother';
 import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { SplitText } from 'gsap/SplitText';
 import type { TextPlugin } from 'gsap/TextPlugin';
@@ -17,7 +16,6 @@ declare global {
   TextPlugin: typeof TextPlugin;
   CustomEase: typeof CustomEase;
   SplitText: typeof SplitText;
-  ScrollSmoother: typeof ScrollSmoother;
 
   interface Window {
     JS_SCRIPTS: Set<string> | undefined;
