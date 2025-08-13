@@ -18,6 +18,8 @@ const PRODUCTION_BASE = !window.location.hostname.includes('webflow.io')
   ? getProductionBase()
   : getProductionBase('dev');
 
+window.SCRIPT_BASE = window.SCRIPTS_ENV === 'dev' ? LOCALHOST_BASE : PRODUCTION_BASE;
+
 window.JS_SCRIPTS = new Set();
 
 const SCRIPT_LOAD_PROMISES: Array<Promise<unknown>> = [];
@@ -39,8 +41,6 @@ function addJS() {
 }
 
 function appendScripts() {
-  const BASE = window.SCRIPTS_ENV === 'dev' ? LOCALHOST_BASE : PRODUCTION_BASE;
-
   window.JS_SCRIPTS?.forEach((url) => {
     const script = document.createElement('script');
     script.src = BASE + url;

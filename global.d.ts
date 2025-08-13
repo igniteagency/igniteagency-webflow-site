@@ -24,6 +24,8 @@ declare global {
     SCRIPTS_ENV: ENV;
     setScriptsENV(env: ENV): void;
 
+    SCRIPT_BASE: string;
+
     IS_DEBUG_MODE: boolean;
     setDebugMode(mode: boolean): void;
     /**
