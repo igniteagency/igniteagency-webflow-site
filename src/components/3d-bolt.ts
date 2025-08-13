@@ -8,13 +8,14 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-import { SCRIPTS_LOADED_EVENT } from '$src/constants';
-
 // GUI Control - set to true to enable GUI for development
 const ENABLE_GUI = false;
 
 // Function to create a bolt instance for a specific container
-function createBoltInstance(containerId: string, options: { enableScrollTrigger?: boolean } = {}): void {
+function createBoltInstance(
+  containerId: string,
+  options: { enableScrollTrigger?: boolean } = {}
+): void {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -24,7 +25,12 @@ function createBoltInstance(containerId: string, options: { enableScrollTrigger?
 
   // Camera - adjust aspect ratio based on container size
   const containerRect = container.getBoundingClientRect();
-  const camera = new THREE.PerspectiveCamera(75, containerRect.width / containerRect.height, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    containerRect.width / containerRect.height,
+    0.1,
+    1000
+  );
   camera.position.z = 3.5;
 
   // Mouse position tracking
@@ -47,10 +53,10 @@ function createBoltInstance(containerId: string, options: { enableScrollTrigger?
   // Track mouse movement - only when mouse is over the container
   function onMouseMove(event: MouseEvent): void {
     const rect = container.getBoundingClientRect();
-    const isOverContainer = 
-      event.clientX >= rect.left && 
-      event.clientX <= rect.right && 
-      event.clientY >= rect.top && 
+    const isOverContainer =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
       event.clientY <= rect.bottom;
 
     if (isOverContainer) {
@@ -568,10 +574,10 @@ function createBoltInstance(containerId: string, options: { enableScrollTrigger?
 }
 
 // Initialize when scripts are loaded
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
+window.Webflow?.push(() => {
   // Create bolt instance for homepage
   createBoltInstance('three-container');
-  
+
   // Create bolt instance for menu only on desktop (768px and above)
   if (window.innerWidth >= 768) {
     createBoltInstance('menu-bolt', { enableScrollTrigger: false });
