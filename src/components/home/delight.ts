@@ -137,13 +137,13 @@ export class DelightSectionAnimator {
       ? gsap.utils.toArray<HTMLElement>(':scope > .section_delight_new', this.stickyWrapper)
       : [];
     this.abortController = new AbortController();
-    
+
     // Cache commonly used elements upfront
     this.cacheElements();
-    
+
     // Setup viewport resize handler
     this.setupResizeHandler();
-    
+
     // Defer effect registry initialization until needed
     this.effectRegistry = {};
   }
@@ -152,7 +152,7 @@ export class DelightSectionAnimator {
     this.sections.forEach((section, index) => {
       const heading = section.querySelector('.heading-style-h1');
       const texts = section.querySelectorAll('.text-style-subtitle, .text-size-large');
-      
+
       this.cachedElements.set(`heading-${index}`, heading);
       this.cachedElements.set(`texts-${index}`, texts);
     });
@@ -165,7 +165,7 @@ export class DelightSectionAnimator {
 
     window.addEventListener('resize', debouncedResize, {
       signal: this.abortController.signal,
-      passive: true
+      passive: true,
     });
   }
 
@@ -179,8 +179,8 @@ export class DelightSectionAnimator {
   }
 
   private setupFallbackHeadingAnimation(
-    heading: HTMLElement, 
-    inTimeline: gsap.core.Timeline, 
+    heading: HTMLElement,
+    inTimeline: gsap.core.Timeline,
     outTimeline: gsap.core.Timeline
   ): void {
     gsap.set(heading, { opacity: 0, '--pseudo-opacity': 0 });
@@ -195,7 +195,6 @@ export class DelightSectionAnimator {
       OUT_OFFSET
     );
   }
-
 
   // Modular timeline creation
   private createSectionTimelines(
@@ -217,16 +216,16 @@ export class DelightSectionAnimator {
       if (!heading.isContentEditable) {
         try {
           headingSplit = new SplitText(heading, { type: 'words,chars', tag: 'span' });
-          
+
           // Batch GSAP operations for better performance
           const chars = headingSplit.chars;
           const words = headingSplit.words;
-          
+
           if (chars && words) {
             // Batch GSAP operations for better performance
             gsap.set(words, { overflow: 'hidden', display: 'inline-block' });
             gsap.set(chars, { display: 'inline-block', yPercent: 100 });
-            
+
             inTimeline.to(
               chars,
               { yPercent: 0, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
@@ -294,14 +293,14 @@ export class DelightSectionAnimator {
       const config = this.config[i];
       const heading = this.cachedElements.get(`heading-${i}`) as HTMLElement | null;
       const texts = this.cachedElements.get(`texts-${i}`) as NodeListOf<HTMLElement>;
-      
+
       const { inTimeline, outTimeline, headingSplit } = this.createSectionTimelines(
         section,
         heading,
         texts
       );
       this.splitInstances.push(headingSplit instanceof SplitText ? headingSplit : null);
-      
+
       let cursorController: CursorController | null = null;
       if (config.cursorSelector) {
         cursorController = new CursorController(
@@ -347,7 +346,7 @@ export class DelightSectionAnimator {
         },
         id: `delight-section-${sectionName}`,
         onEnter: () => {
-          console.log('onEnter', config.name);
+          window.IS_DEBUG_MODE && console.debug('onEnter', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
           // Set pointer-events for all sections, only the active one gets 'auto'
@@ -368,7 +367,7 @@ export class DelightSectionAnimator {
           cursorController?.show();
         },
         onLeave: () => {
-          console.log('onLeave', config.name);
+          window.IS_DEBUG_MODE && console.debug('onLeave', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
           // Set pointer-events for all sections, only the active one gets 'auto'
@@ -389,7 +388,7 @@ export class DelightSectionAnimator {
           cursorController?.hide();
         },
         onEnterBack: () => {
-          console.log('onEnterBack', config.name);
+          window.IS_DEBUG_MODE && console.debug('onEnterBack', config.name);
           if (this.sectionWrapper)
             this.sectionWrapper.setAttribute('data-active-section', config.name);
           // Set pointer-events for all sections, only the active one gets 'auto'
@@ -410,7 +409,7 @@ export class DelightSectionAnimator {
           cursorController?.show();
         },
         onLeaveBack: () => {
-          console.log('onLeaveBack', config.name);
+          window.IS_DEBUG_MODE && console.debug('onLeaveBack', config.name);
           // Set pointer-events for all sections, only the active one gets 'auto'
           this.sections.forEach((section, idx) => {
             section.style.pointerEvents = idx === i ? 'auto' : 'none';

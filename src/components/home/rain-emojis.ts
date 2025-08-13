@@ -304,9 +304,9 @@ export class RainEmojis {
         }
       );
       Matter.Composite.add(this.engine.world, this.ground);
-      console.debug('Matter.js floor recreated.');
+      window.IS_DEBUG_MODE && console.debug('Matter.js floor recreated.');
     } else if (this.ground) {
-      console.debug('Floor already exists, not recreating.');
+      window.IS_DEBUG_MODE && console.debug('Floor already exists, not recreating.');
     } else {
       console.warn('Could not recreate floor: Engine missing.');
     }
@@ -314,10 +314,10 @@ export class RainEmojis {
 
   /** Starts the timed loop for creating new falling emojis */
   public startRain(): void {
-    console.debug('Attempting to start rain...');
+    window.IS_DEBUG_MODE && console.debug('Attempting to start rain...');
     // Clear any existing rain timeout before starting a new one
     if (this.rainTimeout) {
-      console.debug('Clearing existing rain timeout:', this.rainTimeout);
+      window.IS_DEBUG_MODE && console.debug('Clearing existing rain timeout:', this.rainTimeout);
       window.clearTimeout(this.rainTimeout);
       this.rainTimeout = null;
     }
@@ -329,17 +329,18 @@ export class RainEmojis {
       });
       return;
     }
-    console.debug('Starting emoji rain loop.');
+    window.IS_DEBUG_MODE && console.debug('Starting emoji rain loop.');
 
     const endTime = Date.now() + this.config.rainDuration;
-    console.debug(`Rain end time calculated: ${new Date(endTime).toLocaleTimeString()}`);
+    window.IS_DEBUG_MODE &&
+      console.debug(`Rain end time calculated: ${new Date(endTime).toLocaleTimeString()}`);
 
     const rainLoop = () => {
       if (Date.now() > endTime) {
-        console.debug('Rain loop check: Time has ended.');
+        window.IS_DEBUG_MODE && console.debug('Rain loop check: Time has ended.');
         return;
       }
-      // console.debug('Rain loop check: Time OK, creating object.');
+      // window.IS_DEBUG_MODE && console.debug('Rain loop check: Time OK, creating object.');
 
       this.createObject();
 
@@ -358,17 +359,18 @@ export class RainEmojis {
     if (this.rainTimeout) {
       window.clearTimeout(this.rainTimeout);
       this.rainTimeout = null;
-      console.debug('Emoji rain stopped.');
+      window.IS_DEBUG_MODE && console.debug('Emoji rain stopped.');
     }
   }
 
   /** Removes the floor body from the simulation */
   public removeFloor(): void {
     if (this.engine && this.ground) {
-      console.debug('Attempting to remove floor. Runner enabled:', this.runner?.enabled);
+      window.IS_DEBUG_MODE &&
+        console.debug('Attempting to remove floor. Runner enabled:', this.runner?.enabled);
       Matter.Composite.remove(this.engine.world, this.ground);
       this.ground = null; // Clear the reference
-      console.debug('Matter.js floor removed.');
+      window.IS_DEBUG_MODE && console.debug('Matter.js floor removed.');
 
       // Wake up all non-static bodies after removing the floor
       const bodies = Matter.Composite.allBodies(this.engine.world);
@@ -377,7 +379,7 @@ export class RainEmojis {
           Matter.Sleeping.set(body, false);
         }
       });
-      console.debug('Woke up all non-static bodies.');
+      window.IS_DEBUG_MODE && console.debug('Woke up all non-static bodies.');
     } else {
       console.warn('Could not remove floor: Engine or ground body missing.');
     }
@@ -390,7 +392,7 @@ export class RainEmojis {
       const dynamicBodies = bodies.filter((body) => !body.isStatic);
       if (dynamicBodies.length > 0) {
         Matter.Composite.remove(this.engine.world, dynamicBodies);
-        console.debug(`Cleared ${dynamicBodies.length} dynamic bodies.`);
+        window.IS_DEBUG_MODE && console.debug(`Cleared ${dynamicBodies.length} dynamic bodies.`);
       }
     } else {
       console.warn('Could not clear dynamic bodies: Engine missing.');
