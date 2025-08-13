@@ -11,10 +11,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
   setHeroSuperchargeMode();
 
   try {
-    document.fonts.ready.then(() => {
-      const animator = new DelightSectionAnimator();
-      animator.init();
-    });
+    initDelightSectionLazily();
   } catch (error) {
     console.error('Error initializing delight section animator', error);
   }
@@ -270,4 +267,38 @@ function leadMagnetMauticForm() {
   } else if (typeof MauticSDK != 'undefined') {
     MauticSDK.onLoad();
   }
+}
+
+function initDelightSectionLazily() {
+  const delightWrapper = document.querySelector('.delight_section-wrapper');
+  
+  if (!delightWrapper) {
+    console.warn('Delight section wrapper not found, skipping lazy initialization');
+    return;
+  }
+
+  // Create intersection observer to detect when user approaches the delight section
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // User is approaching the delight section, initialize it
+          observer.unobserve(entry.target); // Stop observing once initialized
+          
+          document.fonts.ready.then(() => {
+            const animator = new DelightSectionAnimator();
+            animator.init();
+            window.DEBUG('Delight section initialized lazily');
+          });
+        }
+      });
+    },
+    {
+      // Start initializing when section is 1 viewport height away from viewport
+      rootMargin: `${window.innerHeight}px 0px ${window.innerHeight}px 0px`,
+      threshold: 0
+    }
+  );
+
+  observer.observe(delightWrapper);
 }

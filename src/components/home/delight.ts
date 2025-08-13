@@ -125,6 +125,9 @@ export class DelightSectionAnimator {
     outTimeline: gsap.core.Timeline;
     cursorController: CursorController | null;
   }> = [];
+  private cachedElements: Map<string, Element | NodeListOf<Element> | null> = new Map();
+  private isInitialized: boolean = false;
+  private cachedViewportHeight: number = window.innerHeight;
 
   constructor(config: DelightSectionConfig[] = delightSectionsConfig) {
     this.config = config;
@@ -134,15 +137,69 @@ export class DelightSectionAnimator {
       ? gsap.utils.toArray<HTMLElement>(':scope > .section_delight_new', this.stickyWrapper)
       : [];
     this.abortController = new AbortController();
-    this.effectRegistry = {
-      confetti: createConfettiController('#canvas-target'),
-      emojiRain: new RainEmojis(false),
-    };
+    
+    // Cache commonly used elements upfront
+    this.cacheElements();
+    
+    // Setup viewport resize handler
+    this.setupResizeHandler();
+    
+    // Defer effect registry initialization until needed
+    this.effectRegistry = {};
   }
+
+  private cacheElements(): void {
+    this.sections.forEach((section, index) => {
+      const heading = section.querySelector('.heading-style-h1');
+      const texts = section.querySelectorAll('.text-style-subtitle, .text-size-large');
+      
+      this.cachedElements.set(`heading-${index}`, heading);
+      this.cachedElements.set(`texts-${index}`, texts);
+    });
+  }
+
+  private setupResizeHandler(): void {
+    const debouncedResize = window.debounce(() => {
+      this.cachedViewportHeight = window.innerHeight;
+    }, 100);
+
+    window.addEventListener('resize', debouncedResize, {
+      signal: this.abortController.signal,
+      passive: true
+    });
+  }
+
+  private initializeEffects(): void {
+    if (Object.keys(this.effectRegistry).length === 0) {
+      this.effectRegistry = {
+        confetti: createConfettiController('#canvas-target'),
+        emojiRain: new RainEmojis(false),
+      };
+    }
+  }
+
+  private setupFallbackHeadingAnimation(
+    heading: HTMLElement, 
+    inTimeline: gsap.core.Timeline, 
+    outTimeline: gsap.core.Timeline
+  ): void {
+    gsap.set(heading, { opacity: 0, '--pseudo-opacity': 0 });
+    inTimeline.to(
+      heading,
+      { opacity: 1, '--pseudo-opacity': 1, duration: TEXT_DURATION },
+      IN_OFFSET + 0.2
+    );
+    outTimeline.to(
+      heading,
+      { opacity: 0, '--pseudo-opacity': 0, duration: TEXT_DURATION },
+      OUT_OFFSET
+    );
+  }
+
 
   // Modular timeline creation
   private createSectionTimelines(
-    section: HTMLElement,
+    _section: HTMLElement,
     heading: HTMLElement | null,
     texts: NodeListOf<HTMLElement>
   ): {
@@ -156,39 +213,38 @@ export class DelightSectionAnimator {
       words: null,
       chars: null,
     };
-    if (heading) {
+    if (heading && heading.textContent?.trim()) {
       if (!heading.isContentEditable) {
-        headingSplit = new SplitText(heading, { type: 'words,chars', tag: 'span' });
-        if (!headingSplit) {
-          headingSplit = {
-            words: heading,
-            chars: heading,
-          };
+        try {
+          headingSplit = new SplitText(heading, { type: 'words,chars', tag: 'span' });
+          
+          // Batch GSAP operations for better performance
+          const chars = headingSplit.chars;
+          const words = headingSplit.words;
+          
+          if (chars && words) {
+            // Batch GSAP operations for better performance
+            gsap.set(words, { overflow: 'hidden', display: 'inline-block' });
+            gsap.set(chars, { display: 'inline-block', yPercent: 100 });
+            
+            inTimeline.to(
+              chars,
+              { yPercent: 0, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
+              IN_OFFSET
+            );
+            outTimeline.to(
+              chars,
+              { yPercent: -100, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
+              OUT_OFFSET
+            );
+          }
+        } catch (error) {
+          console.warn('SplitText failed for heading, using fallback animation', error);
+          headingSplit = { words: heading, chars: heading };
+          this.setupFallbackHeadingAnimation(heading, inTimeline, outTimeline);
         }
-        gsap.set(headingSplit.words, { overflow: 'hidden', display: 'inline-block' });
-        gsap.set(headingSplit.chars, { display: 'inline-block', yPercent: 100 });
-        inTimeline.to(
-          headingSplit.chars,
-          { yPercent: 0, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
-          IN_OFFSET
-        );
-        outTimeline.to(
-          headingSplit.chars,
-          { yPercent: -100, stagger: LETTER_STAGGER, duration: LETTER_DURATION },
-          OUT_OFFSET
-        );
       } else {
-        gsap.set(heading, { opacity: 0, '--pseudo-opacity': 0 });
-        inTimeline.to(
-          heading,
-          { opacity: 1, '--pseudo-opacity': 1, duration: TEXT_DURATION },
-          IN_OFFSET + 0.2
-        );
-        outTimeline.to(
-          heading,
-          { opacity: 0, '--pseudo-opacity': 0, duration: TEXT_DURATION },
-          OUT_OFFSET
-        );
+        this.setupFallbackHeadingAnimation(heading, inTimeline, outTimeline);
       }
     }
     if (texts.length > 0) {
@@ -208,6 +264,12 @@ export class DelightSectionAnimator {
   }
 
   public init() {
+    // Prevent double initialization
+    if (this.isInitialized) {
+      window.DEBUG('DelightSectionAnimator already initialized, skipping');
+      return;
+    }
+
     if (!this.sectionWrapper || !this.stickyWrapper) {
       console.error(
         'Required wrapper elements (.delight_section-wrapper, .delight_sticky-wrapper) not found.'
@@ -222,17 +284,24 @@ export class DelightSectionAnimator {
       return;
     }
 
-    // --- Setup per section ---
+    this.isInitialized = true;
+
+    // Initialize effects only when needed
+    this.initializeEffects();
+
+    // --- Setup per section using cached elements ---
     this.sections.forEach((section, i) => {
       const config = this.config[i];
-      const heading = section.querySelector('.heading-style-h1');
-      const texts = section.querySelectorAll('.text-style-subtitle, .text-size-large');
+      const heading = this.cachedElements.get(`heading-${i}`) as HTMLElement | null;
+      const texts = this.cachedElements.get(`texts-${i}`) as NodeListOf<HTMLElement>;
+      
       const { inTimeline, outTimeline, headingSplit } = this.createSectionTimelines(
         section,
         heading,
         texts
       );
       this.splitInstances.push(headingSplit instanceof SplitText ? headingSplit : null);
+      
       let cursorController: CursorController | null = null;
       if (config.cursorSelector) {
         cursorController = new CursorController(
@@ -245,7 +314,7 @@ export class DelightSectionAnimator {
     });
 
     // --- Pinning and ScrollTriggers ---
-    const scrollPerSection = window.innerHeight;
+    const scrollPerSection = this.cachedViewportHeight;
     const totalScrollDurationForPin = this.sections.length * scrollPerSection;
     let pinST: ScrollTrigger | null = null;
     if (this.sectionWrapper && this.stickyWrapper) {
@@ -262,14 +331,10 @@ export class DelightSectionAnimator {
     const sectionScrollLength = totalScrollDurationForPin / this.sections.length;
 
     // play first section in timeline
-    this.sectionControllers[0].inTimeline.play(100);
+    this.sectionControllers[0].inTimeline.play();
 
     this.config.forEach((config, i) => {
-      const isLastSection = i === this.sections.length - 1;
-      const isFirstSection = i === 0;
-
       const sectionName = config.name;
-      const { inTimeline, outTimeline, cursorController } = this.sectionControllers[i];
       const st = ScrollTrigger.create({
         trigger: this.sectionWrapper,
         start: () => {
@@ -297,6 +362,8 @@ export class DelightSectionAnimator {
             }
           });
           // Play IN timeline
+          const { inTimeline, cursorController } = this.sectionControllers[i];
+          const isFirstSection = i === 0;
           if (!isFirstSection) inTimeline.play(0);
           cursorController?.show();
         },
@@ -316,6 +383,8 @@ export class DelightSectionAnimator {
             }
           });
           // Play OUT timeline
+          const { outTimeline, cursorController } = this.sectionControllers[i];
+          const isLastSection = i === this.sections.length - 1;
           if (!isLastSection) outTimeline.play(0);
           cursorController?.hide();
         },
@@ -335,6 +404,8 @@ export class DelightSectionAnimator {
             }
           });
           // Play IN timeline
+          const { inTimeline, cursorController } = this.sectionControllers[i];
+          const isLastSection = i === this.sections.length - 1;
           if (!isLastSection) inTimeline.play(0);
           cursorController?.show();
         },
@@ -352,6 +423,8 @@ export class DelightSectionAnimator {
             }
           });
           // Play OUT timeline
+          const { outTimeline, cursorController } = this.sectionControllers[i];
+          const isFirstSection = i === 0;
           if (!isFirstSection) outTimeline.play(0);
           cursorController?.hide();
         },
