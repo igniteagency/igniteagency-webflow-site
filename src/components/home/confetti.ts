@@ -34,7 +34,8 @@ export function createConfettiController(
     if (!jsConfetti) {
       // Initialize on first click if not already done by activate
       try {
-        console.log('Initializing JSConfetti on demand for canvas:', canvasEl);
+        window.IS_DEBUG_MODE &&
+          console.debug('Initializing JSConfetti on demand for canvas:', canvasEl);
         jsConfetti = new JSConfetti({ canvas: canvasEl });
       } catch (error) {
         console.error('Error initializing JSConfetti', { error }, { canvasEl });
@@ -52,7 +53,8 @@ export function createConfettiController(
     // Initialize confetti instance proactively if not already done
     if (!jsConfetti) {
       try {
-        console.log('Initializing JSConfetti proactively for canvas:', canvasEl);
+        window.IS_DEBUG_MODE &&
+          console.debug('Initializing JSConfetti proactively for canvas:', canvasEl);
         jsConfetti = new JSConfetti({ canvas: canvasEl });
       } catch (error) {
         console.error('Error initializing JSConfetti', { error }, { canvasEl });
@@ -61,17 +63,17 @@ export function createConfettiController(
     }
 
     if (!isListenerActive) {
-      console.log('Activating confetti click listener.');
+      window.IS_DEBUG_MODE && console.debug('Activating confetti click listener.');
       canvasEl.addEventListener('click', showConfetti);
       isListenerActive = true;
     } else {
-      console.log('Confetti listener already active.');
+      window.IS_DEBUG_MODE && console.debug('Confetti listener already active.');
     }
   };
 
   const deactivate = () => {
     if (isListenerActive) {
-      console.log('Deactivating confetti click listener.');
+      window.IS_DEBUG_MODE && console.debug('Deactivating confetti click listener.');
       canvasEl.removeEventListener('click', showConfetti);
       isListenerActive = false;
     } else {
@@ -80,7 +82,7 @@ export function createConfettiController(
   };
 
   const destroy = () => {
-    console.log('Destroying confetti controller.');
+    window.IS_DEBUG_MODE && console.debug('Destroying confetti controller.');
     deactivate(); // Ensure listener is removed
     // js-confetti doesn't have an explicit destroy, cleanup is mainly listener removal
     jsConfetti = null;
