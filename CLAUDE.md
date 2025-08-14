@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Webflow project that uses a custom JavaScript loading mechanism to enhance the site's functionality. The project is hosted at: https://github.com/igniteagency/igniteagency-webflow-site
 
+**Think carefully and only action the specific task I have given you with the most concise and elegant solution that changes as little code as possible.**
+
 ## Development Commands
 
 - **Development server**: `bun run dev` - Starts local development server on localhost:3000 with live reloading

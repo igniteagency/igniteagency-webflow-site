@@ -1,5 +1,3 @@
-import { SCRIPTS_LOADED_EVENT } from '$src/constants';
-
 import { LOADER_SESSION_STORAGE_KEY } from './constants';
 
 // Loader class constants
@@ -12,12 +10,6 @@ const LOADER_CENTER_BOLT_WRAP_CLASS = 'home-loader_center-bolt-wrap';
 const LOADER_CENTER_BOLT_PATH_CLASS = 'home-loader_center-bolt-path';
 const BOLT_CLONE_GROUP_CLASS = 'bolt-clone-group';
 
-// Initialize the loader when scripts are loaded
-window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
-  const loader = new Loader();
-  loader.init();
-});
-
 /**
  * Loader class that handles the animation and display of the loader
  */
@@ -29,16 +21,31 @@ class Loader {
   private originalPath: Element | null;
   private duplicates: Element[] = [];
   private loaderTimeline: gsap.core.Timeline | null = null;
+  private cachedElements: Map<string, Element | null> = new Map();
+  private viewportMetrics: {
+    width: number;
+    height: number;
+    diagonal: number;
+    baseScale: number;
+  } | null = null;
 
   constructor() {
-    // Initialize elements
+    // Cache all DOM elements upfront
     this.loaderElement = document.querySelector(`.${LOADER_CLASS}`);
     this.originalSvg = document.querySelector(
       `.${LOADER_CENTER_BOLT_CLASS}`
     ) as SVGSVGElement | null;
     this.boltContainer = document.querySelector(`.${LOADER_CENTER_BOLT_WRAP_CLASS}`);
-    this.originalGroup = null;
-    this.originalPath = null;
+    this.originalGroup = this.originalSvg?.querySelector('g') || null;
+    this.originalPath =
+      this.originalSvg?.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`) || null;
+
+    // Cache frequently accessed elements
+    this.cachedElements.set('numberEl', document.querySelector(`.${LOADER_NUMBER_TEXT_CLASS}`));
+    this.cachedElements.set('cursorBackground', document.querySelector('.cursor_background'));
+
+    // Pre-calculate viewport metrics
+    this.calculateViewportMetrics();
   }
 
   /**
@@ -50,7 +57,6 @@ class Loader {
 
     // If loader has been shown before in this session, hide it immediately and return
     if (isLoaderShown === 'true' && this.loaderElement) {
-      // this.loaderElement.style.display = 'none';
       return;
     }
 
@@ -59,88 +65,77 @@ class Loader {
   }
 
   /**
-   * Setup the loader animation
+   * Setup the loader animation with optimized sequencing
    */
   private setupLoaderAnimation(): void {
-    // GSAP Loader Animation Sequence
-    // Main timeline
+    // Create optimized main timeline
     this.loaderTimeline = gsap.timeline({
       defaults: {
-        duration: 2.5, // Default duration for animations
-        ease: 'power4.inOut', // Default easing for animations
+        duration: 2.5,
+        ease: 'power4.inOut',
       },
+      // Enable performance optimization
+      autoRemoveChildren: true,
     });
 
-    // Setup bolt clones
+    // Setup operations in sequence for optimal performance
     this.setupBoltClones();
-
-    // Setup number animation
     this.setupNumberAnimation();
-
-    // Setup bolt animation
     this.setupBoltAnimation();
-
-    // Setup final transition
     this.setupFinalTransition();
 
     // Start the animation
     this.loaderTimeline.play();
-
-    // Mark that the loader has been shown for this session
     sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
-    console.debug('Loader animation initialized and started');
+    window.IS_DEBUG_MODE && console.debug('Loader animation initialized and started');
+  }
+
+  /**
+   * Pre-calculate viewport metrics for performance
+   */
+  private calculateViewportMetrics(): void {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const viewportDiagonal = Math.sqrt(
+      viewportWidth * viewportWidth + viewportHeight * viewportHeight
+    );
+
+    if (this.originalSvg) {
+      const boltRect = this.originalSvg.getBoundingClientRect();
+      const baseScale = (viewportDiagonal / Math.max(boltRect.width, boltRect.height)) * 33;
+
+      this.viewportMetrics = {
+        width: viewportWidth,
+        height: viewportHeight,
+        diagonal: viewportDiagonal,
+        baseScale,
+      };
+    }
   }
 
   /**
    * Setup bolt clones for animation
    */
   private setupBoltClones(): void {
-    if (!this.originalSvg || !this.boltContainer) return;
+    if (!this.originalSvg || !this.boltContainer || !this.originalGroup || !this.viewportMetrics)
+      return;
 
-    // Get the original group
-    this.originalGroup = this.originalSvg.querySelector('g');
-
-    if (!this.originalGroup) return; // Safety check
-
-    // Get the original path for later fill animation
-    this.originalPath = this.originalSvg.querySelector(`.${LOADER_CENTER_BOLT_PATH_CLASS}`);
-
-    // Calculate scale needed to ensure elements are off-screen
-    // Get viewport dimensions
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // Get the bolt container dimensions
-    const boltRect = this.originalSvg.getBoundingClientRect();
-    const boltWidth = boltRect.width;
-    const boltHeight = boltRect.height;
-
-    // Calculate the diagonal length of the viewport
-    const viewportDiagonal = Math.sqrt(
-      viewportWidth * viewportWidth + viewportHeight * viewportHeight
-    );
-
-    // Calculate scale needed to make the bolt larger than the viewport diagonal
-    // Adding a safety factor to ensure it's completely off-screen
-    const baseScale = (viewportDiagonal / Math.max(boltWidth, boltHeight)) * 33;
-
-    // Create clones of the group and add them to the original SVG
+    // Create clones using DocumentFragment for better performance
     const totalDuplicates = 25;
-    for (let i = 1; i <= totalDuplicates; i++) {
-      // Clone the group with all its nested structure
-      const groupClone = this.originalGroup.cloneNode(true) as SVGGElement;
+    const fragment = document.createDocumentFragment();
 
-      // Add classes for styling and identification
+    for (let i = 1; i <= totalDuplicates; i++) {
+      const groupClone = this.originalGroup.cloneNode(true) as SVGGElement;
       groupClone.classList.add(BOLT_CLONE_GROUP_CLASS);
       groupClone.id = `${BOLT_CLONE_GROUP_CLASS}-${i}`;
 
-      // Add the cloned group to the original SVG
-      this.originalSvg.appendChild(groupClone);
-
-      // Store the group for animation
+      fragment.appendChild(groupClone);
       this.duplicates.push(groupClone);
     }
+
+    // Single DOM append operation
+    this.originalSvg.appendChild(fragment);
 
     // Create a collection with original first, then all duplicates
     const allBoltGroups = [this.originalGroup, ...this.duplicates];
@@ -152,10 +147,10 @@ class Loader {
 
     // Initial setup for all bolt groups (large scale, rotated 90 degrees) - HAPPENS IMMEDIATELY
     gsap.set(allBoltGroups, {
-      scale: (index) => baseScale + index * 0.4, // Dynamic scale based on viewport size
+      scale: (index) => this.viewportMetrics!.baseScale + index * 0.4,
       rotation: 90,
-      transformOrigin: 'center center', // Consistent transform origin
-      svgOrigin: 'center center', // SVG-specific origin setting
+      transformOrigin: 'center center',
+      svgOrigin: 'center center',
     });
 
     // Ensure the original path has no fill initially
@@ -173,11 +168,12 @@ class Loader {
   private setupNumberAnimation(): void {
     if (!this.loaderTimeline) return;
 
+    const numberEl = this.cachedElements.get('numberEl');
+    if (!numberEl) return;
+
     // Create a number animation timeline
     const numberTimeline = gsap.timeline();
-    const numberEl = document.querySelector(`.${LOADER_NUMBER_TEXT_CLASS}`);
-
-    if (numberEl) {
+    {
       const numberValue = { val: 0 };
 
       // 1. Number Animation (0% to 100% with movement and scaling)
@@ -261,10 +257,10 @@ class Loader {
       if (clonePath) allBoltPaths.push(clonePath);
     });
 
-    // Get the computed value of the brand color from an existing element
-    const cursorBackground = document.querySelector('.cursor_background');
+    // Get the computed value of the brand color from cached element
+    const cursorBackground = this.cachedElements.get('cursorBackground');
     const brandRedColor = cursorBackground
-      ? getComputedStyle(cursorBackground).backgroundColor
+      ? getComputedStyle(cursorBackground as Element).backgroundColor
       : '#ff0000';
 
     // Scale up all bolts and transition to red
@@ -347,22 +343,18 @@ class Loader {
     // Create a master timeline for all path animations
     const pathAnimationTimeline = gsap.timeline();
 
-    // Calculate expansion amount based on screen size
-    const screenWidth = window.innerWidth;
-    const isPortrait = window.innerHeight > screenWidth;
-
-    // Use more aggressive expansion for mobile devices
+    // Use pre-calculated viewport metrics for expansion
+    const { width: screenWidth, height: screenHeight } = this.viewportMetrics!;
+    const isPortrait = screenHeight > screenWidth;
     const expansionAmount = isPortrait ? screenWidth * 1.5 : screenWidth / 2;
 
-    // Add path animations with no stagger
-    visibleBoltPaths.forEach((path) => {
-      if (path) {
-        const pathTl = this.createPathExpandAnimation(path, expansionAmount, 1);
-        if (pathTl) {
-          pathAnimationTimeline.add(pathTl, 0);
-        }
-      }
-    });
+    // Batch path animations for better performance
+    const pathAnimations = visibleBoltPaths
+      .filter((path) => path)
+      .map((path) => this.createPathExpandAnimation(path!, expansionAmount, 1))
+      .filter((tl): tl is gsap.core.Timeline => tl !== null);
+
+    pathAnimations.forEach((tl) => pathAnimationTimeline.add(tl, 0));
 
     // Add the path animation timeline to the bolt timeline
     boltTimeline.add(pathAnimationTimeline, '>'); // Small delay after stacking
@@ -372,23 +364,51 @@ class Loader {
   }
 
   /**
-   * Create path expand animation for SVG paths
+   * Create optimized path expand animation using cached data
    */
   private createPathExpandAnimation(
     pathElement: Element,
     maxOffset = 10,
     duration = 1.2
   ): gsap.core.Timeline | null {
-    // Get the original path data
     const originalPathData = pathElement.getAttribute('d');
     if (!originalPathData) return null;
 
-    // Parse the path data to extract points
-    // This is a simplified approach - in a real implementation, you'd need a more robust path parser
-    const pathCommands = originalPathData.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
-    const originalPoints: { command: string; x: number; y: number; isAbsolute: boolean }[] = [];
+    // Cache parsed path data to avoid repeated parsing
+    const cacheKey = `path-${pathElement.id || 'default'}`;
+    let originalPoints = this.cachedElements.get(cacheKey) as any[] | null;
 
-    // Parse each command in the path
+    if (!originalPoints) {
+      originalPoints = this.parsePathData(originalPathData);
+      this.cachedElements.set(cacheKey, originalPoints as any);
+    }
+
+    // Use optimized animation state with fewer calculations
+    const state = { offset: 0 };
+    const midpoint = Math.floor(originalPoints.length / 2);
+
+    return gsap.timeline().to(state, {
+      offset: maxOffset,
+      duration,
+      ease: 'power4.inOut',
+      onUpdate: () =>
+        this.updatePathElement(
+          pathElement,
+          originalPoints,
+          state.offset,
+          midpoint,
+          originalPathData
+        ),
+    });
+  }
+
+  /**
+   * Parse SVG path data into reusable point array
+   */
+  private parsePathData(pathData: string): any[] {
+    const pathCommands = pathData.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
+    const points: any[] = [];
+
     pathCommands.forEach((cmd) => {
       const command = cmd.charAt(0);
       const isAbsolute = command === command.toUpperCase();
@@ -398,110 +418,62 @@ class Loader {
         .split(/[\s,]+/)
         .map(parseFloat);
 
-      // Handle different command types (M, L, H, V, Z, etc.)
       switch (command.toUpperCase()) {
-        case 'M': // Move to
-        case 'L': // Line to
+        case 'M':
+        case 'L':
           for (let i = 0; i < values.length; i += 2) {
-            originalPoints.push({
-              command: command,
-              x: values[i],
-              y: values[i + 1],
-              isAbsolute,
-            });
+            points.push({ command, x: values[i], y: values[i + 1], isAbsolute });
           }
           break;
-        case 'H': // Horizontal line
-          values.forEach((x) => {
-            originalPoints.push({
-              command: command,
-              x,
-              y: 0, // Y doesn't change for H command
-              isAbsolute,
-            });
-          });
+        case 'H':
+          values.forEach((x) => points.push({ command, x, y: 0, isAbsolute }));
           break;
-        case 'V': // Vertical line
-          values.forEach((y) => {
-            originalPoints.push({
-              command: command,
-              x: 0, // X doesn't change for V command
-              y,
-              isAbsolute,
-            });
-          });
+        case 'V':
+          values.forEach((y) => points.push({ command, x: 0, y, isAbsolute }));
           break;
-        case 'Z': // Close path
-          originalPoints.push({
-            command: command,
-            x: 0,
-            y: 0,
-            isAbsolute: true,
-          });
+        case 'Z':
+          points.push({ command, x: 0, y: 0, isAbsolute: true });
           break;
-        // Add more cases for other SVG path commands as needed
       }
     });
 
-    // Create animation state object
-    const state = { offset: 0 };
+    return points;
+  }
 
-    // Create update function for this specific path
-    const update = () => {
-      const offset = state.offset;
+  /**
+   * Optimized path element update with minimal string operations
+   */
+  private updatePathElement(
+    element: Element,
+    points: any[],
+    offset: number,
+    midpoint: number,
+    originalData: string
+  ): void {
+    if (offset === 0) {
+      element.setAttribute('d', originalData);
+      return;
+    }
 
-      // Apply offsets to create the animation effect
-      // For the first half of points, move left/up
-      // For the second half, move right/down
-      const midpoint = Math.floor(originalPoints.length / 2);
+    let newPathData = '';
+    points.forEach((point, index) => {
+      const direction = index < midpoint ? -1 : 1;
+      const xOffset = direction * offset;
+      let newX = point.x;
 
-      let newPathData = '';
+      if (point.command.toUpperCase() !== 'Z' && point.command.toUpperCase() !== 'V') {
+        newX = point.x + xOffset;
+      }
 
-      originalPoints.forEach((point, index) => {
-        // Determine direction of offset based on point position
-        const direction = index < midpoint ? -1 : 1;
-        const xOffset = direction * offset;
-
-        // Apply offset based on command type
-        let newX = point.x;
-        let newY = point.y;
-
-        if (point.command.toUpperCase() !== 'Z') {
-          if (point.command.toUpperCase() !== 'V') {
-            newX = point.x + xOffset;
-          }
-        }
-
-        // Build the new path data
-        if (point.command.toUpperCase() === 'M') {
-          newPathData += `M${newX} ${newY}`;
-        } else if (point.command.toUpperCase() === 'L') {
-          newPathData += `L${newX} ${newY}`;
-        } else if (point.command.toUpperCase() === 'H') {
-          newPathData += `H${newX}`;
-        } else if (point.command.toUpperCase() === 'V') {
-          newPathData += `V${newY}`;
-        } else if (point.command.toUpperCase() === 'Z') {
-          newPathData += 'Z';
-        }
-      });
-
-      // Update the path element with new data
-      pathElement.setAttribute('d', newPathData);
-    };
-
-    // Create a timeline for this path animation
-    const pathTl = gsap.timeline();
-
-    // Add animation to the timeline
-    pathTl.to(state, {
-      offset: maxOffset,
-      duration: duration,
-      ease: 'power4.inOut',
-      onUpdate: update,
+      const cmd = point.command.toUpperCase();
+      if (cmd === 'M') newPathData += `M${newX} ${point.y}`;
+      else if (cmd === 'L') newPathData += `L${newX} ${point.y}`;
+      else if (cmd === 'H') newPathData += `H${newX}`;
+      else if (cmd === 'V') newPathData += `V${point.y}`;
+      else if (cmd === 'Z') newPathData += 'Z';
     });
 
-    return pathTl;
+    element.setAttribute('d', newPathData);
   }
 
   /**
@@ -536,4 +508,6 @@ class Loader {
   }
 }
 
-export default Loader;
+// Initialize the loader instantly
+const loader = new Loader();
+loader.init();
