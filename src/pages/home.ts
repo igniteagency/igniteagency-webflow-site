@@ -265,7 +265,7 @@ function initDelightSectionLazily() {
           document.fonts.ready.then(() => {
             const animator = new DelightSectionAnimator();
             animator.init();
-            window.DEBUG('Delight section initialized lazily');
+            window.IS_DEBUG_MODE && console.debug('Delight section initialized lazily');
           });
         }
       });

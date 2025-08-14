@@ -161,6 +161,8 @@ export class DelightSectionAnimator {
   private setupResizeHandler(): void {
     const debouncedResize = window.debounce(() => {
       this.cachedViewportHeight = window.innerHeight;
+      // Refresh ScrollTrigger calculations after resize
+      ScrollTrigger.refresh();
     }, 100);
 
     window.addEventListener('resize', debouncedResize, {
@@ -313,21 +315,21 @@ export class DelightSectionAnimator {
     });
 
     // --- Pinning and ScrollTriggers ---
-    const scrollPerSection = this.cachedViewportHeight;
-    const totalScrollDurationForPin = this.sections.length * scrollPerSection;
+    const scrollPerSection = () => window.innerHeight;
+    const totalScrollDurationForPin = () => this.sections.length * scrollPerSection();
     let pinST: ScrollTrigger | null = null;
     if (this.sectionWrapper && this.stickyWrapper) {
       pinST = ScrollTrigger.create({
         trigger: this.sectionWrapper,
-        pin: this.stickyWrapper,
+        // pin: this.stickyWrapper,
         start: 'top top',
-        end: () => `+=${totalScrollDurationForPin}`,
+        end: () => `+=${totalScrollDurationForPin()}`,
         id: 'delight-main-pin',
         invalidateOnRefresh: true,
+        // pinReparent: false,
       });
       if (pinST) this.scrollTriggers.push(pinST);
     }
-    const sectionScrollLength = totalScrollDurationForPin / this.sections.length;
 
     // play first section in timeline
     this.sectionControllers[0].inTimeline.play();
@@ -338,11 +340,11 @@ export class DelightSectionAnimator {
         trigger: this.sectionWrapper,
         start: () => {
           if (!pinST) return 0;
-          return pinST.start + sectionScrollLength * i;
+          return pinST.start + scrollPerSection() * i;
         },
         end: () => {
           if (!pinST) return 0;
-          return pinST.start + sectionScrollLength * (i + 1);
+          return pinST.start + scrollPerSection() * (i + 1);
         },
         id: `delight-section-${sectionName}`,
         onEnter: () => {
@@ -353,6 +355,15 @@ export class DelightSectionAnimator {
           this.sections.forEach((section, idx) => {
             section.style.pointerEvents = idx === i ? 'auto' : 'none';
           });
+
+          // Complete any running timelines from other sections
+          this.sectionControllers.forEach((ctrl, idx) => {
+            if (idx !== i) {
+              if (ctrl.inTimeline.isActive()) ctrl.inTimeline.progress(1);
+              // if (ctrl.outTimeline.isActive()) ctrl.outTimeline.progress(1);
+            }
+          });
+
           // --- EFFECTS: Reactivate for this section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -374,6 +385,7 @@ export class DelightSectionAnimator {
           this.sections.forEach((section, idx) => {
             section.style.pointerEvents = idx === i ? 'auto' : 'none';
           });
+
           // --- EFFECTS: Deactivate for this section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -395,6 +407,15 @@ export class DelightSectionAnimator {
           this.sections.forEach((section, idx) => {
             section.style.pointerEvents = idx === i ? 'auto' : 'none';
           });
+
+          // Complete any running timelines from other sections
+          this.sectionControllers.forEach((ctrl, idx) => {
+            if (idx !== i) {
+              if (ctrl.inTimeline.isActive()) ctrl.inTimeline.progress(1);
+              // if (ctrl.outTimeline.isActive()) ctrl.outTimeline.progress(1);
+            }
+          });
+
           // --- EFFECTS: Reactivate for previous section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
@@ -414,6 +435,7 @@ export class DelightSectionAnimator {
           this.sections.forEach((section, idx) => {
             section.style.pointerEvents = idx === i ? 'auto' : 'none';
           });
+
           // --- EFFECTS: Deactivate for previous section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
