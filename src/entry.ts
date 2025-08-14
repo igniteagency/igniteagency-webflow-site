@@ -43,7 +43,7 @@ function addJS() {
 function appendScripts() {
   window.JS_SCRIPTS?.forEach((url) => {
     const script = document.createElement('script');
-    script.src = BASE + url;
+    script.src = window.SCRIPT_BASE + url;
     script.defer = true;
 
     const promise = new Promise((resolve, reject) => {
