@@ -17,11 +17,11 @@ export class LenisSmoothScroll {
    * Use the getInstance() method instead
    */
   private constructor() {
-    // Add Lenis CSS to head
-    this.addLenisCSS();
-
     // Initialize Lenis only on devices with fine pointer control
     gsap.matchMedia().add('(pointer: fine)', () => {
+      // Add Lenis CSS to head
+      this.addLenisCSS();
+      
       // Initialize Lenis
       this.initLenis();
 
