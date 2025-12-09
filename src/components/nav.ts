@@ -24,7 +24,7 @@ export class Navigation {
   private colorTriggers: NodeListOf<HTMLElement>;
 
   private readonly ANIMATION_DURATION: number = 0.5; // Duration in seconds
-  private readonly ANIMATION_EASE: string = 'power4.inOut'; // Easing function
+  private readonly ANIMATION_EASE: string = 'power2.out'; // Easing function
   private readonly OVERFLOW_HIDDEN_CLASS: string = 'overflow-hidden';
   private readonly TEXT_COLOR_ALTERNATE_CLASS: string = 'text-color-alternate';
 
