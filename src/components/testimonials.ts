@@ -1,7 +1,15 @@
-export function testimonialCards() {
+export interface TestimonialOptions {
+  componentSelector?: string;
+  cardSelector?: string;
+}
+
+export function testimonialCards(options: TestimonialOptions = {}) {
+  const componentSelector = options.componentSelector || '[data-el="fly-cards-component"], .testimonials_component';
+  const cardSelector = options.cardSelector || '[data-el="fly-card"], .testimonials_card';
+
   // Select all testimonial CARDS
-  const CARDS: Element[] = gsap.utils.toArray('.testimonials_card');
-  const COMPONENT: Element | null = document.querySelector('.testimonials_component');
+  const CARDS: Element[] = gsap.utils.toArray(cardSelector);
+  const COMPONENT: Element | null = document.querySelector(componentSelector);
 
   if (COMPONENT) {
     // Calculate the total scroll distance needed
@@ -37,4 +45,10 @@ export function testimonialCards() {
       });
     });
   }
+}
+
+// Expose globally
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).testimonialCards = testimonialCards;
 }
