@@ -107,6 +107,9 @@ export class TextAnimator {
       let typeSplit = new SplitText(element, {
         type: 'words,lines,chars',
         mask: 'words',
+        linesClass: 'split-line',
+        wordsClass: 'split-word',
+        charsClass: 'split-letter',
         autoSplit: true,
         onSplit: (self: SplitText) => {
           gsap.set(self.chars, {
@@ -124,7 +127,7 @@ export class TextAnimator {
                 usePrevSectionTrigger && previousSectionEl ? 'bottom bottom' : `top ${trigger}`,
               invalidateOnRefresh: true,
             },
-            onComplete: () => typeSplit.revert(),
+             onComplete: () => typeSplit.revert(),
           });
         },
       });
@@ -141,6 +144,9 @@ export class TextAnimator {
       let lineSplit = new SplitText(el, {
         type: 'lines',
         mask: 'lines',
+        linesClass: 'split-line',
+        wordsClass: 'split-word',
+        charsClass: 'split-letter',
         onSplit: (self: SplitText) => {
           gsap.set(self.lines, {
             y: '100%',
@@ -169,6 +175,9 @@ export class TextAnimator {
     document.querySelectorAll(`[${ATTR_NAME.SCRUB_TEXT}]`).forEach((el) => {
       const text = new SplitText(el, {
         type: 'chars,words',
+        linesClass: 'split-line',
+        wordsClass: 'split-word',
+        charsClass: 'split-letter',
         autoSplit: true,
         onSplit: (self: SplitText) => {
           gsap.set(self.chars, {
@@ -224,6 +233,9 @@ export class TextAnimator {
             const split = new SplitText(staggerEl, {
               type: 'words,chars',
               mask: 'words',
+              linesClass: 'split-line',
+              wordsClass: 'split-word',
+              charsClass: 'split-letter',
             });
 
             this.splitInstances.push(split);
@@ -265,6 +277,9 @@ export class TextAnimator {
           const split = new SplitText(el, {
             type: 'words,chars',
             mask: 'words',
+            linesClass: 'split-line',
+            wordsClass: 'split-word',
+            charsClass: 'split-letter',
           });
 
           this.splitInstances.push(split);
