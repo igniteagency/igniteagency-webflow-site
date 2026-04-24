@@ -5,6 +5,7 @@ import { animateBook } from '$components/book';
 import { cursorMove } from '$components/cursor';
 import { dialogInit } from '$components/dialog';
 import { footerSpacer, footerNextPageAnimation } from '$components/footer';
+import { initHeartsAnimation } from '$components/hearts';
 import { horizontalScroll } from '$components/horizontal-scroll';
 import { initLenisSmoothScroll } from '$components/lenis';
 import { initMarqueeScrollDirection } from '$components/marquee';
@@ -54,6 +55,8 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     initBugHerd();
 
     dialogInit();
+
+    initHeartsAnimation();
   });
 });
 
