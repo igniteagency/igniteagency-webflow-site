@@ -10,6 +10,7 @@ import { horizontalScroll } from '$components/horizontal-scroll';
 import { initLenisSmoothScroll } from '$components/lenis';
 import { initMarqueeScrollDirection } from '$components/marquee';
 import { mouseTrackImage } from '$components/mouse-track-img';
+import { initIntroScrubText } from '$components/intro-scrub';
 import { initNavigation } from '$components/nav';
 import { testimonialCards } from '$components/testimonials';
 import { textAnimation } from '$components/text-animation';
@@ -57,6 +58,7 @@ window.addEventListener(SCRIPTS_LOADED_EVENT, () => {
     dialogInit();
 
     initHeartsAnimation();
+    initIntroScrubText();
   });
 });
 
