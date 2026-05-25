@@ -124,7 +124,6 @@ export class DelightSectionAnimator {
     inTimeline: gsap.core.Timeline;
     outTimeline: gsap.core.Timeline;
     cursorController: CursorController | null;
-    animationTargets: Element[];
   }> = [];
   private cachedElements: Map<string, Element | NodeListOf<Element> | null> = new Map();
   private isInitialized: boolean = false;
@@ -312,18 +311,7 @@ export class DelightSectionAnimator {
           config.cursorSelector
         );
       }
-      const splitChars =
-        headingSplit instanceof SplitText && headingSplit.chars ? headingSplit.chars : [];
-      const fallbackHeading =
-        !(headingSplit instanceof SplitText) && headingSplit.chars ? [headingSplit.chars] : [];
-      const animationTargets = [...splitChars, ...fallbackHeading, ...Array.from(texts)];
-
-      this.sectionControllers.push({
-        inTimeline,
-        outTimeline,
-        cursorController,
-        animationTargets,
-      });
+      this.sectionControllers.push({ inTimeline, outTimeline, cursorController });
     });
 
     // --- Pinning and ScrollTriggers ---
@@ -346,55 +334,6 @@ export class DelightSectionAnimator {
     // play first section in timeline
     this.sectionControllers[0].inTimeline.play();
 
-    const activateSection = (activeIndex: number, options: { animateIn?: boolean } = {}) => {
-      const activeConfig = this.config[activeIndex];
-      if (!activeConfig || !this.sectionWrapper) return;
-
-      this.sectionWrapper.setAttribute('data-active-section', activeConfig.name);
-
-      this.sections.forEach((section, idx) => {
-        section.style.pointerEvents = idx === activeIndex ? 'auto' : 'none';
-      });
-
-      this.sectionControllers.forEach((ctrl, idx) => {
-        gsap.killTweensOf(ctrl.animationTargets);
-        ctrl.inTimeline.pause();
-        ctrl.outTimeline.pause();
-
-        if (idx === activeIndex) {
-          ctrl.outTimeline.progress(0).pause();
-          if (options.animateIn) {
-            ctrl.inTimeline.restart(true);
-          } else {
-            ctrl.inTimeline.progress(1).pause();
-          }
-          ctrl.cursorController?.show();
-        } else {
-          ctrl.inTimeline.progress(0).pause();
-          ctrl.outTimeline.progress(1).pause();
-          ctrl.cursorController?.hide();
-        }
-      });
-    };
-
-    const deactivateSection = (sectionIndex: number) => {
-      const config = this.config[sectionIndex];
-      const controller = this.sectionControllers[sectionIndex];
-      if (!config || !controller) return;
-
-      config.effectNames.forEach((effectName) => {
-        const effect = this.effectRegistry[effectName];
-        if (effect && effect.exitEffect) {
-          effect.exitEffect();
-        }
-      });
-
-      gsap.killTweensOf(controller.animationTargets);
-      controller.inTimeline.pause();
-      controller.outTimeline.restart(true);
-      controller.cursorController?.hide();
-    };
-
     this.config.forEach((config, i) => {
       const sectionName = config.name;
       const st = ScrollTrigger.create({
@@ -410,33 +349,105 @@ export class DelightSectionAnimator {
         id: `delight-section-${sectionName}`,
         onEnter: () => {
           window.IS_DEBUG_MODE && console.debug('onEnter', config.name);
-          activateSection(i, { animateIn: i !== 0 });
+          if (this.sectionWrapper)
+            this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
+
+          // Complete any running timelines from other sections
+          this.sectionControllers.forEach((ctrl, idx) => {
+            if (idx !== i) {
+              if (ctrl.inTimeline.isActive()) ctrl.inTimeline.progress(1);
+              // if (ctrl.outTimeline.isActive()) ctrl.outTimeline.progress(1);
+            }
+          });
+
+          // --- EFFECTS: Reactivate for this section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
             if (effect && effect.reenterEffect) {
               effect.reenterEffect();
             }
           });
+          // Play IN timeline
+          const { inTimeline, cursorController } = this.sectionControllers[i];
+          const isFirstSection = i === 0;
+          if (!isFirstSection) inTimeline.play(0);
+          cursorController?.show();
         },
         onLeave: () => {
           window.IS_DEBUG_MODE && console.debug('onLeave', config.name);
+          if (this.sectionWrapper)
+            this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
+
+          // --- EFFECTS: Deactivate for this section ---
+          config.effectNames.forEach((effectName) => {
+            const effect = this.effectRegistry[effectName];
+            if (effect && effect.exitEffect) {
+              effect.exitEffect();
+            }
+          });
+          // Play OUT timeline
+          const { outTimeline, cursorController } = this.sectionControllers[i];
           const isLastSection = i === this.sections.length - 1;
-          if (!isLastSection) deactivateSection(i);
+          if (!isLastSection) outTimeline.play(0);
+          cursorController?.hide();
         },
         onEnterBack: () => {
           window.IS_DEBUG_MODE && console.debug('onEnterBack', config.name);
-          activateSection(i, { animateIn: i !== this.sections.length - 1 });
+          if (this.sectionWrapper)
+            this.sectionWrapper.setAttribute('data-active-section', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
+
+          // Complete any running timelines from other sections
+          this.sectionControllers.forEach((ctrl, idx) => {
+            if (idx !== i) {
+              if (ctrl.inTimeline.isActive()) ctrl.inTimeline.progress(1);
+              // if (ctrl.outTimeline.isActive()) ctrl.outTimeline.progress(1);
+            }
+          });
+
+          // --- EFFECTS: Reactivate for previous section ---
           config.effectNames.forEach((effectName) => {
             const effect = this.effectRegistry[effectName];
             if (effect && effect.reenterEffect) {
               effect.reenterEffect();
             }
           });
+          // Play IN timeline
+          const { inTimeline, cursorController } = this.sectionControllers[i];
+          const isLastSection = i === this.sections.length - 1;
+          if (!isLastSection) inTimeline.play(0);
+          cursorController?.show();
         },
         onLeaveBack: () => {
           window.IS_DEBUG_MODE && console.debug('onLeaveBack', config.name);
+          // Set pointer-events for all sections, only the active one gets 'auto'
+          this.sections.forEach((section, idx) => {
+            section.style.pointerEvents = idx === i ? 'auto' : 'none';
+          });
+
+          // --- EFFECTS: Deactivate for previous section ---
+          config.effectNames.forEach((effectName) => {
+            const effect = this.effectRegistry[effectName];
+            if (effect && effect.exitEffect) {
+              effect.exitEffect();
+            }
+          });
+          // Play OUT timeline
+          const { outTimeline, cursorController } = this.sectionControllers[i];
           const isFirstSection = i === 0;
-          if (!isFirstSection) deactivateSection(i);
+          if (!isFirstSection) outTimeline.play(0);
+          cursorController?.hide();
         },
         invalidateOnRefresh: true,
         markers: window.IS_DEBUG_MODE,
