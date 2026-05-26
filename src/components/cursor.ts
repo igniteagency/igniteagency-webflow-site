@@ -4,8 +4,8 @@ const CURSOR = document.querySelectorAll('.cursor');
 export function cursorMove() {
   gsap.set(CURSOR, { xPercent: -50, yPercent: -50 });
 
-  let xTo = gsap.quickTo(CURSOR, 'x', { duration: 0.2, ease: 'power3' });
-  let yTo = gsap.quickTo(CURSOR, 'y', { duration: 0.2, ease: 'power3' });
+  let xTo = gsap.quickTo(CURSOR, 'x', { duration: 0.2, ease: 'power4.out' });
+  let yTo = gsap.quickTo(CURSOR, 'y', { duration: 0.2, ease: 'power4.out' });
 
   window.addEventListener('mousemove', (e) => {
     xTo(e.clientX);
