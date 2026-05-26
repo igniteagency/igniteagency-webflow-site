@@ -20,7 +20,11 @@ const PRODUCTION_BASE = !window.location.hostname.includes('webflow.io')
   ? getProductionBase()
   : getProductionBase('dev');
 
-window.SCRIPT_BASE = window.SCRIPTS_ENV === 'dev' ? LOCALHOST_BASE : PRODUCTION_BASE;
+function getScriptBase() {
+  return window.SCRIPTS_ENV === 'dev' ? LOCALHOST_BASE : PRODUCTION_BASE;
+}
+
+window.SCRIPT_BASE = getScriptBase();
 
 window.JS_SCRIPTS = new Set();
 
@@ -33,8 +37,6 @@ window.addEventListener('DOMContentLoaded', addJS);
  * Sets an object `window.isLocal` and adds all the set scripts using the `window.JS_SCRIPTS` Set
  */
 function addJS() {
-  console.debug(`Current mode: ${window.SCRIPTS_ENV}`);
-
   if (window.SCRIPTS_ENV === 'dev') {
     fetchLocalScripts();
   } else {
@@ -43,6 +45,9 @@ function addJS() {
 }
 
 function appendScripts() {
+  window.SCRIPT_BASE = getScriptBase();
+  console.log(`[Ignite scripts] Loading ${window.SCRIPTS_ENV.toUpperCase()} scripts from ${window.SCRIPT_BASE}`);
+
   window.JS_SCRIPTS?.forEach((url) => {
     const script = document.createElement('script');
     script.src = window.SCRIPT_BASE + url;
@@ -81,9 +86,11 @@ function fetchLocalScripts() {
         console.error({ response });
         throw new Error('localhost response not ok');
       }
+
+      console.log(`[Ignite scripts] DEV server connected at ${LOCALHOST_BASE}`);
     })
     .catch(() => {
-      console.error('localhost not resolved. Switching to production');
+      console.warn('[Ignite scripts] DEV server unavailable. Loading production scripts instead.');
       window.setScriptsENV('prod');
     })
     .finally(() => {
