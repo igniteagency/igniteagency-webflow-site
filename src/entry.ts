@@ -26,7 +26,7 @@ function getScriptBase() {
 
 window.SCRIPT_BASE = getScriptBase();
 
-window.JS_SCRIPTS = new Set();
+window.JS_SCRIPTS = window.JS_SCRIPTS || new Set();
 
 const SCRIPT_LOAD_PROMISES: Array<Promise<unknown>> = [];
 

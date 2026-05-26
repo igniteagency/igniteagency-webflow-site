@@ -217,6 +217,7 @@ export class Navigation {
    */
   private openNav(): void {
     this.navWrap.setAttribute('data-nav', 'open');
+    this.initMenuBolt();
 
     // Add overflow-hidden class to body to prevent scrolling
     this.body.classList.add(this.OVERFLOW_HIDDEN_CLASS);
@@ -286,6 +287,24 @@ export class Navigation {
       .to(this.menuButtonTexts, { yPercent: 0 }, '<')
       .to(this.bolt, { scale: 0 }, '<')
       .set(this.navWrap, { visibility: 'hidden', opacity: 0 });
+  }
+
+  private initMenuBolt(): void {
+    if (!this.bolt.length || window.innerWidth < 768) return;
+
+    if (window.initMenuBolt) {
+      window.initMenuBolt();
+      return;
+    }
+
+    window
+      .loadExternalScript('components/3d-bolt.js')
+      .then(() => {
+        window.initMenuBolt?.();
+      })
+      .catch((error) => {
+        console.error('Failed to load menu bolt', error);
+      });
   }
 }
 

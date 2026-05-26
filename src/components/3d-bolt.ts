@@ -17,6 +17,9 @@ type GuiController = {
   onChange: (...args: any[]) => GuiController;
 };
 
+let homeBoltInitialized = false;
+let menuBoltInitialized = false;
+
 // Function to create a bolt instance for a specific container
 function createBoltInstance(
   containerId: string,
@@ -576,13 +579,29 @@ function createBoltInstance(
   }
 }
 
+function initHomeBolt(): void {
+  if (homeBoltInitialized) return;
+
+  const container = document.getElementById('three-container');
+  if (!container) return;
+
+  homeBoltInitialized = true;
+  createBoltInstance('three-container');
+}
+
+function initMenuBolt(): void {
+  if (menuBoltInitialized || window.innerWidth < 768) return;
+
+  const container = document.getElementById('menu-bolt');
+  if (!container) return;
+
+  menuBoltInitialized = true;
+  createBoltInstance('menu-bolt', { enableScrollTrigger: false });
+}
+
+window.initMenuBolt = initMenuBolt;
+
 // Initialize when scripts are loaded
 window.Webflow?.push(() => {
-  // Create bolt instance for homepage
-  createBoltInstance('three-container');
-
-  // Create bolt instance for menu only on desktop (768px and above)
-  if (window.innerWidth >= 768) {
-    createBoltInstance('menu-bolt', { enableScrollTrigger: false });
-  }
+  initHomeBolt();
 });

@@ -36,6 +36,7 @@ declare global {
 
     loadExternalScript: typeof loadExternalScript;
     DelightSectionAnimator?: typeof DelightSectionAnimator;
+    initMenuBolt?: () => void;
 
     lenis: typeof Lenis;
 
