@@ -182,9 +182,6 @@ export class Navigation {
 
     // Toggle menu open / close depending on its current state
     this.menuToggles.forEach((toggle) => {
-      toggle.addEventListener('pointerenter', () => this.initMenuBolt(), { once: true });
-      toggle.addEventListener('focusin', () => this.initMenuBolt(), { once: true });
-
       toggle.addEventListener('click', () => {
         this.state = this.navWrap.getAttribute('data-nav') || 'closed';
         if (this.state === 'open') {
@@ -220,7 +217,6 @@ export class Navigation {
    */
   private openNav(): void {
     this.navWrap.setAttribute('data-nav', 'open');
-    this.initMenuBolt();
 
     // Add overflow-hidden class to body to prevent scrolling
     this.body.classList.add(this.OVERFLOW_HIDDEN_CLASS);
@@ -260,7 +256,7 @@ export class Navigation {
         { autoAlpha: 1, yPercent: 0, stagger: 0.04 },
         '<+=0.2'
       )
-      .fromTo(this.bolt, { scale: 0 }, { scale: 1 }, '<+=0.2');
+      .call(() => this.revealMenuBolt());
   }
 
   /**
@@ -292,15 +288,15 @@ export class Navigation {
       .set(this.navWrap, { visibility: 'hidden', opacity: 0 });
   }
 
-  private initMenuBolt(): void {
-    if (!this.bolt.length || window.innerWidth < 768) return;
+  private initMenuBolt(): Promise<void> {
+    if (!this.bolt.length || window.innerWidth < 768) return Promise.resolve();
 
     if (window.initMenuBolt) {
       window.initMenuBolt();
-      return;
+      return Promise.resolve();
     }
 
-    window
+    return window
       .loadExternalScript('components/3d-bolt.js')
       .then(() => {
         window.initMenuBolt?.();
@@ -308,6 +304,14 @@ export class Navigation {
       .catch((error) => {
         console.error('Failed to load menu bolt', error);
       });
+  }
+
+  private revealMenuBolt(): void {
+    this.initMenuBolt().then(() => {
+      if (!this.isNavOpen()) return;
+
+      gsap.fromTo(this.bolt, { scale: 0 }, { scale: 1 });
+    });
   }
 }
 
