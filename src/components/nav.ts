@@ -182,6 +182,9 @@ export class Navigation {
 
     // Toggle menu open / close depending on its current state
     this.menuToggles.forEach((toggle) => {
+      toggle.addEventListener('pointerenter', () => this.initMenuBolt(), { once: true });
+      toggle.addEventListener('focusin', () => this.initMenuBolt(), { once: true });
+
       toggle.addEventListener('click', () => {
         this.state = this.navWrap.getAttribute('data-nav') || 'closed';
         if (this.state === 'open') {
