@@ -74,13 +74,30 @@ class CursorController {
     this.cursorXTo(x);
     this.cursorYTo(y);
   };
-  public hide = () => {
-    gsap.to([this.cursorEl, this.cursorContentEl], {
-      opacity: 0,
-      scale: 0,
-      rotationZ: -50,
-      duration: 0.2,
-    });
+  private getCursorTargets(): HTMLElement[] {
+    return [this.cursorEl, this.cursorContentEl].filter(
+      (target): target is HTMLElement => Boolean(target)
+    );
+  }
+  public hide = (immediate = false) => {
+    const targets = this.getCursorTargets();
+
+    if (immediate) {
+      gsap.killTweensOf(targets);
+      gsap.set(targets, {
+        opacity: 0,
+        scale: 0,
+        rotationZ: -50,
+      });
+    } else {
+      gsap.to(targets, {
+        opacity: 0,
+        scale: 0,
+        rotationZ: -50,
+        duration: 0.2,
+        overwrite: 'auto',
+      });
+    }
     // Remove event listeners if attached
     if (this.listenersAttached) {
       this.section.removeEventListener('mousemove', this.handleMove);
@@ -88,11 +105,12 @@ class CursorController {
     }
   };
   public show = () => {
-    gsap.to([this.cursorEl, this.cursorContentEl], {
+    gsap.to(this.getCursorTargets(), {
       opacity: 1,
       scale: 1,
       rotationZ: 0,
       duration: 0.3,
+      overwrite: 'auto',
     });
     // Add event listeners if not already attached
     if (!this.listenersAttached) {
@@ -169,6 +187,10 @@ export class DelightSectionAnimator {
       signal: this.abortController.signal,
       passive: true,
     });
+  }
+
+  private hideAllCursors(immediate = false): void {
+    this.sectionControllers.forEach((ctrl) => ctrl.cursorController?.hide(immediate));
   }
 
   private initializeEffects(): void {
@@ -326,6 +348,8 @@ export class DelightSectionAnimator {
         end: () => `+=${totalScrollDurationForPin()}`,
         id: 'delight-main-pin',
         invalidateOnRefresh: true,
+        onLeave: () => this.hideAllCursors(true),
+        onLeaveBack: () => this.hideAllCursors(true),
         // pinReparent: false,
       });
       if (pinST) this.scrollTriggers.push(pinST);
