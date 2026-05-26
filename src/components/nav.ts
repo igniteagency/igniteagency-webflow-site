@@ -76,6 +76,10 @@ export class Navigation {
       duration: 0.7,
     });
 
+    gsap.set(this.menuLinks, {
+      transformOrigin: 'left bottom',
+    });
+
     // Initialize
     this.initMenu();
     this.initNavHideShow();
@@ -246,8 +250,8 @@ export class Navigation {
       )
       .fromTo(
         this.menuLinks,
-        { yPercent: 140, rotate: 10 },
-        { yPercent: 0, rotate: 0, stagger: 0.05 },
+        { yPercent: 140, rotation: 10, transformOrigin: 'left bottom' },
+        { yPercent: 0, rotation: 0, transformOrigin: 'left bottom', stagger: 0.05 },
         '<+=0.35'
       )
       .fromTo(
