@@ -526,3 +526,5 @@ export class DelightSectionAnimator {
     );
   }
 }
+
+window.DelightSectionAnimator = DelightSectionAnimator;

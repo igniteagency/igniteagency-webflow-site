@@ -1,4 +1,3 @@
-import GUI from 'lil-gui';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
@@ -10,6 +9,13 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 
 // GUI Control - set to true to enable GUI for development
 const ENABLE_GUI = false;
+type GuiController = {
+  add: (...args: any[]) => GuiController;
+  addColor: (...args: any[]) => GuiController;
+  addFolder: (...args: any[]) => GuiController;
+  name: (...args: any[]) => GuiController;
+  onChange: (...args: any[]) => GuiController;
+};
 
 // Function to create a bolt instance for a specific container
 function createBoltInstance(
@@ -18,13 +24,14 @@ function createBoltInstance(
 ): void {
   const container = document.getElementById(containerId);
   if (!container) return;
+  const containerEl = container;
 
   // Scene
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000); // Keep background black
 
   // Camera - adjust aspect ratio based on container size
-  const containerRect = container.getBoundingClientRect();
+  const containerRect = containerEl.getBoundingClientRect();
   const camera = new THREE.PerspectiveCamera(
     75,
     containerRect.width / containerRect.height,
@@ -52,7 +59,7 @@ function createBoltInstance(
 
   // Track mouse movement - only when mouse is over the container
   function onMouseMove(event: MouseEvent): void {
-    const rect = container.getBoundingClientRect();
+    const rect = containerEl.getBoundingClientRect();
     const isOverContainer =
       event.clientX >= rect.left &&
       event.clientX <= rect.right &&
@@ -78,7 +85,7 @@ function createBoltInstance(
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
-  container.appendChild(renderer.domElement);
+  containerEl.appendChild(renderer.domElement);
 
   // Controls
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -91,11 +98,7 @@ function createBoltInstance(
   scene.add(hemisphereLight);
 
   // Setup GUI (only if enabled)
-  let gui: GUI | undefined;
-  if (ENABLE_GUI) {
-    gui = new GUI();
-  }
-
+  let gui: GuiController | undefined;
   // Color Overlay Shader
   const ColorOverlayShader = {
     uniforms: {
@@ -468,7 +471,7 @@ function createBoltInstance(
   window.addEventListener('resize', onWindowResize, false);
 
   function onWindowResize(): void {
-    const newRect = container.getBoundingClientRect();
+    const newRect = containerEl.getBoundingClientRect();
     camera.aspect = newRect.width / newRect.height;
     camera.updateProjectionMatrix();
     renderer.setSize(newRect.width, newRect.height);

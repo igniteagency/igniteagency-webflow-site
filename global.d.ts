@@ -6,6 +6,7 @@ import type { SplitText } from 'gsap/SplitText';
 import type { TextPlugin } from 'gsap/TextPlugin';
 
 import type { loadExternalScript } from '$utils/load-external-script';
+import type { DelightSectionAnimator } from '$components/home/delight';
 
 export type SCRIPTS_ENV = 'dev' | 'prod';
 
@@ -34,6 +35,7 @@ declare global {
     DEBUG: (...args: any[]) => void;
 
     loadExternalScript: typeof loadExternalScript;
+    DelightSectionAnimator?: typeof DelightSectionAnimator;
 
     lenis: typeof Lenis;
 
