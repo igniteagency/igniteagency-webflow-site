@@ -77,6 +77,9 @@ export class Navigation {
     });
 
     gsap.set(this.menuLinks, {
+      autoAlpha: 0,
+      yPercent: 140,
+      rotation: 10,
       transformOrigin: 'left bottom',
     });
 
@@ -238,6 +241,13 @@ export class Navigation {
 
     this.timeline
       .clear()
+      .set(this.menuLinks, {
+        autoAlpha: 0,
+        yPercent: 140,
+        rotation: 10,
+        transformOrigin: 'left bottom',
+      })
+      .set(this.fadeTargets, { autoAlpha: 0, yPercent: 50 })
       .set(this.navWrap, { visibility: 'visible', opacity: 1 })
       .set(this.menu, { xPercent: 0 }, '<')
       .fromTo(this.menuButtonTexts, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
@@ -250,8 +260,8 @@ export class Navigation {
       )
       .fromTo(
         this.menuLinks,
-        { yPercent: 140, rotation: 10, transformOrigin: 'left bottom' },
-        { yPercent: 0, rotation: 0, transformOrigin: 'left bottom', stagger: 0.05 },
+        { autoAlpha: 0, yPercent: 140, rotation: 10, transformOrigin: 'left bottom' },
+        { autoAlpha: 1, yPercent: 0, rotation: 0, transformOrigin: 'left bottom', stagger: 0.05 },
         '<+=0.35'
       )
       .fromTo(
