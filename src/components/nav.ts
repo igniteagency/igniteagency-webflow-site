@@ -82,6 +82,11 @@ export class Navigation {
       rotation: 10,
       transformOrigin: 'left bottom',
     });
+    gsap.set(this.bolt, {
+      autoAlpha: 0,
+      scale: 0,
+      transformOrigin: 'center center',
+    });
 
     // Initialize
     this.initMenu();
@@ -248,6 +253,7 @@ export class Navigation {
         transformOrigin: 'left bottom',
       })
       .set(this.fadeTargets, { autoAlpha: 0, yPercent: 50 })
+      .set(this.bolt, { autoAlpha: 0, scale: 0, transformOrigin: 'center center' })
       .set(this.navWrap, { visibility: 'visible', opacity: 1 })
       .set(this.menu, { xPercent: 0 }, '<')
       .fromTo(this.menuButtonTexts, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
@@ -298,7 +304,7 @@ export class Navigation {
       .to(this.overlay, { autoAlpha: 0 })
       .to(this.menu, { xPercent: 120 }, '<')
       .to(this.menuButtonTexts, { yPercent: 0 }, '<')
-      .to(this.bolt, { scale: 0 }, '<')
+      .to(this.bolt, { autoAlpha: 0, scale: 0 }, '<')
       .set(this.navWrap, { visibility: 'hidden', opacity: 0 });
   }
 
@@ -324,7 +330,7 @@ export class Navigation {
     this.initMenuBolt().then(() => {
       if (!this.isNavOpen()) return;
 
-      gsap.fromTo(this.bolt, { scale: 0 }, { scale: 1 });
+      gsap.fromTo(this.bolt, { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1 });
     });
   }
 }
