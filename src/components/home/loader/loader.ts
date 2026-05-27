@@ -25,6 +25,7 @@ class Loader {
   private duplicates: Element[] = [];
   private loaderTimeline: gsap.core.Timeline | null = null;
   private cachedElements: Map<string, Element | null> = new Map();
+  private returningVisitorStartTime = 0;
   private viewportMetrics: {
     width: number;
     height: number;
@@ -84,7 +85,7 @@ class Loader {
 
     // Start the animation
     if (startFromCenterBolt) {
-      this.loaderTimeline.play(RETURNING_VISITOR_START_LABEL);
+      this.showLoaderAtCenterBolt();
     } else {
       this.loaderTimeline.play();
     }
@@ -372,6 +373,24 @@ class Loader {
       RETURNING_VISITOR_START_LABEL,
       boltTimelineStart + boltTimeline.labels[CENTER_RED_BOLT_LABEL]
     );
+    this.returningVisitorStartTime = this.loaderTimeline.labels[RETURNING_VISITOR_START_LABEL];
+  }
+
+  /**
+   * Ensure repeat views visibly start from the centered red bolt state.
+   */
+  private showLoaderAtCenterBolt(): void {
+    if (!this.loaderTimeline || !this.loaderElement) return;
+
+    gsap.set(this.loaderElement, {
+      autoAlpha: 1,
+      clearProps: 'display',
+      yPercent: 0,
+    });
+
+    this.loaderTimeline.pause(0);
+    this.loaderTimeline.seek(this.returningVisitorStartTime, false);
+    requestAnimationFrame(() => this.loaderTimeline?.play());
   }
 
   /**
