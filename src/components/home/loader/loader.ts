@@ -11,6 +11,7 @@ const LOADER_CENTER_BOLT_PATH_CLASS = 'home-loader_center-bolt-path';
 const BOLT_CLONE_GROUP_CLASS = 'bolt-clone-group';
 const RETURNING_VISITOR_START_LABEL = 'returningVisitorStart';
 const CENTER_RED_BOLT_LABEL = 'centerRedBolt';
+const FALLBACK_BOLT_SIZE = 100;
 
 /**
  * Loader class that handles the animation and display of the loader
@@ -105,7 +106,8 @@ class Loader {
 
     if (this.originalSvg) {
       const boltRect = this.originalSvg.getBoundingClientRect();
-      const baseScale = (viewportDiagonal / Math.max(boltRect.width, boltRect.height)) * 33;
+      const boltSize = Math.max(boltRect.width, boltRect.height) || FALLBACK_BOLT_SIZE;
+      const baseScale = (viewportDiagonal / boltSize) * 33;
 
       this.viewportMetrics = {
         width: viewportWidth,
