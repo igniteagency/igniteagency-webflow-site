@@ -85,7 +85,7 @@ export class Navigation {
     });
     gsap.set(this.bolt, {
       autoAlpha: 0,
-      scale: 0,
+      scale: 1,
       transformOrigin: 'center center',
     });
 
@@ -254,7 +254,7 @@ export class Navigation {
         transformOrigin: 'left bottom',
       })
       .set(this.fadeTargets, { autoAlpha: 0, yPercent: 50 })
-      .set(this.bolt, { autoAlpha: 0, scale: 0, transformOrigin: 'center center' })
+      .set(this.bolt, { autoAlpha: 0, scale: 1, transformOrigin: 'center center' })
       .set(this.navWrap, { visibility: 'visible', opacity: 1 })
       .set(this.menu, { xPercent: 0 }, '<')
       .fromTo(this.menuButtonTexts, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
