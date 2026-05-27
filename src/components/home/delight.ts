@@ -18,6 +18,7 @@ const OUT_OFFSET = 0;
 const TEXT_OUT_OFFSET = 0.1;
 const IN_OFFSET = 0.3;
 const TEXT_IN_OFFSET = 0.4;
+const CURSOR_STYLE_ID = 'delight-cursor-state-styles';
 
 export const delightSectionsConfig: DelightSectionConfig[] = [
   {
@@ -41,13 +42,16 @@ export const delightSectionsConfig: DelightSectionConfig[] = [
 class CursorController {
   private cursorEl: HTMLElement | null;
   private cursorContentEl: HTMLElement | null;
-  private section: HTMLElement;
+  private stickyWrapper: HTMLElement;
   private abort: AbortController;
   private cursorXTo: gsap.QuickToFunc;
   private cursorYTo: gsap.QuickToFunc;
-  private listenersAttached = false;
-  constructor(section: HTMLElement, stickyWrapper: HTMLElement, cursorSelector?: string | null) {
-    this.section = section;
+  private active = false;
+  private pointerInsideSticky = false;
+  private pointerVisible = false;
+  private lastPointer: { x: number; y: number } | null = null;
+  constructor(stickyWrapper: HTMLElement, cursorSelector?: string | null) {
+    this.stickyWrapper = stickyWrapper;
     this.cursorEl = cursorSelector
       ? (stickyWrapper.querySelector(cursorSelector) as HTMLElement | null)
       : null;
@@ -66,65 +70,74 @@ class CursorController {
       duration: 0.1,
       ease: 'power1.out',
     });
+
+    this.setupVisibilityState();
   }
-  private handleMove = (event: MouseEvent) => {
+  private handleMove = (event: PointerEvent) => {
     if (!this.cursorEl) return;
     const x = event.clientX;
     const y = event.clientY;
+
+    this.lastPointer = { x, y };
     this.cursorXTo(x);
     this.cursorYTo(y);
+    this.updatePointerInsideSticky(x, y);
+    this.syncVisibility();
   };
   private getCursorTargets(): HTMLElement[] {
-    return [this.cursorEl, this.cursorContentEl].filter(
-      (target): target is HTMLElement => Boolean(target)
+    return [this.cursorEl, this.cursorContentEl].filter((target): target is HTMLElement =>
+      Boolean(target)
     );
   }
-  public hide = (immediate = false) => {
-    const targets = this.getCursorTargets();
+  private setupVisibilityState(): void {
+    if (!this.cursorEl) return;
 
-    if (immediate) {
-      gsap.killTweensOf(targets);
-      gsap.set(targets, {
-        opacity: 0,
-        scale: 0,
-        rotationZ: -50,
-      });
-    } else {
-      gsap.to(targets, {
-        opacity: 0,
-        scale: 0,
-        rotationZ: -50,
-        duration: 0.2,
-        overwrite: 'auto',
-      });
-    }
-    // Remove event listeners if attached
-    if (this.listenersAttached) {
-      this.section.removeEventListener('mousemove', this.handleMove);
-      this.listenersAttached = false;
-    }
+    this.cursorEl.dataset.delightCursor = 'true';
+    this.cursorContentEl?.setAttribute('data-delight-cursor-content', 'true');
+
+    window.addEventListener('pointermove', this.handleMove, {
+      signal: this.abort.signal,
+      passive: true,
+    });
+    document.addEventListener('pointerleave', this.handlePointerExit, {
+      signal: this.abort.signal,
+    });
+    window.addEventListener('blur', this.handlePointerExit, {
+      signal: this.abort.signal,
+    });
+  }
+  private updatePointerInsideSticky(x: number, y: number): void {
+    const rect = this.stickyWrapper.getBoundingClientRect();
+    this.pointerInsideSticky =
+      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+  private handlePointerExit = () => {
+    this.pointerInsideSticky = false;
+    this.syncVisibility(true);
+  };
+  private syncVisibility(immediate = false): void {
+    const shouldShow = this.active && this.pointerInsideSticky && Boolean(this.lastPointer);
+    if (shouldShow === this.pointerVisible && !immediate) return;
+
+    this.pointerVisible = shouldShow;
+    this.getCursorTargets().forEach((target) => {
+      target.toggleAttribute('data-delight-cursor-visible', shouldShow);
+    });
+  }
+  public hide = (immediate = false) => {
+    void immediate;
+    this.active = false;
+    this.syncVisibility(true);
   };
   public show = () => {
-    gsap.to(this.getCursorTargets(), {
-      opacity: 1,
-      scale: 1,
-      rotationZ: 0,
-      duration: 0.3,
-      overwrite: 'auto',
-    });
-    // Add event listeners if not already attached
-    if (!this.listenersAttached) {
-      this.section.addEventListener('mousemove', this.handleMove);
-      this.listenersAttached = true;
+    this.active = true;
+    if (this.lastPointer) {
+      this.updatePointerInsideSticky(this.lastPointer.x, this.lastPointer.y);
     }
+    this.syncVisibility();
   };
   public destroy() {
     this.abort.abort();
-    // Clean up listeners if still attached
-    if (this.listenersAttached) {
-      this.section.removeEventListener('mousemove', this.handleMove);
-      this.listenersAttached = false;
-    }
   }
 }
 
@@ -191,6 +204,39 @@ export class DelightSectionAnimator {
 
   private hideAllCursors(immediate = false): void {
     this.sectionControllers.forEach((ctrl) => ctrl.cursorController?.hide(immediate));
+  }
+
+  private injectCursorStyles(): void {
+    if (document.getElementById(CURSOR_STYLE_ID)) return;
+
+    const style = document.createElement('style');
+    style.id = CURSOR_STYLE_ID;
+    style.textContent = `
+      [data-delight-cursor] {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+      }
+
+      [data-delight-cursor][data-delight-cursor-visible] {
+        opacity: 1;
+        visibility: visible;
+        transition-delay: 0s;
+      }
+
+      [data-delight-cursor-content] {
+        transform: scale(0) rotate(-50deg);
+        transform-origin: center center;
+        transition: transform 0.2s ease;
+      }
+
+      [data-delight-cursor-content][data-delight-cursor-visible] {
+        transform: scale(1) rotate(0deg);
+      }
+    `;
+
+    document.head.appendChild(style);
   }
 
   private initializeEffects(): void {
@@ -311,6 +357,7 @@ export class DelightSectionAnimator {
 
     // Initialize effects only when needed
     this.initializeEffects();
+    this.injectCursorStyles();
 
     // --- Setup per section using cached elements ---
     this.sections.forEach((section, i) => {
@@ -327,11 +374,7 @@ export class DelightSectionAnimator {
 
       let cursorController: CursorController | null = null;
       if (config.cursorSelector) {
-        cursorController = new CursorController(
-          section,
-          this.stickyWrapper!,
-          config.cursorSelector
-        );
+        cursorController = new CursorController(this.stickyWrapper!, config.cursorSelector);
       }
       this.sectionControllers.push({ inTimeline, outTimeline, cursorController });
     });
@@ -492,15 +535,8 @@ export class DelightSectionAnimator {
           ) as HTMLElement | null;
           if (cursorEl) {
             gsap.set(cursorEl, {
-              scale: 0,
-              rotationZ: -50,
               transformOrigin: 'center center',
-              opacity: 0,
             });
-            const wrap = cursorEl.querySelector
-              ? (cursorEl.querySelector('.cursor_content-wrap') as HTMLElement | null)
-              : null;
-            if (wrap) gsap.set(wrap, { scale: 0 });
             // Center cursor initially
             const initialX = window.innerWidth / 2;
             const initialY = window.innerHeight / 2;
