@@ -9,6 +9,8 @@ const LOADER_CENTER_BOLT_CLASS = 'home-loader_center-bolt';
 const LOADER_CENTER_BOLT_WRAP_CLASS = 'home-loader_center-bolt-wrap';
 const LOADER_CENTER_BOLT_PATH_CLASS = 'home-loader_center-bolt-path';
 const BOLT_CLONE_GROUP_CLASS = 'bolt-clone-group';
+const RETURNING_VISITOR_START_LABEL = 'returningVisitorStart';
+const CENTER_RED_BOLT_LABEL = 'centerRedBolt';
 
 /**
  * Loader class that handles the animation and display of the loader
@@ -55,19 +57,14 @@ class Loader {
     // Check if loader has already been shown in this session
     const isLoaderShown = sessionStorage.getItem(LOADER_SESSION_STORAGE_KEY);
 
-    // If loader has been shown before in this session, hide it immediately and return
-    if (isLoaderShown === 'true' && this.loaderElement) {
-      return;
-    }
-
     // Setup the loader animation
-    this.setupLoaderAnimation();
+    this.setupLoaderAnimation(isLoaderShown === 'true');
   }
 
   /**
    * Setup the loader animation with optimized sequencing
    */
-  private setupLoaderAnimation(): void {
+  private setupLoaderAnimation(startFromCenterBolt = false): void {
     // Create optimized main timeline
     this.loaderTimeline = gsap.timeline({
       defaults: {
@@ -85,7 +82,12 @@ class Loader {
     this.setupFinalTransition();
 
     // Start the animation
-    this.loaderTimeline.play();
+    if (startFromCenterBolt) {
+      this.loaderTimeline.play(RETURNING_VISITOR_START_LABEL);
+    } else {
+      this.loaderTimeline.play();
+    }
+
     sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
 
     window.IS_DEBUG_MODE && console.debug('Loader animation initialized and started');
@@ -283,6 +285,8 @@ class Loader {
       '<' // Start at the same time as the scale up
     );
 
+    boltTimeline.addLabel(CENTER_RED_BOLT_LABEL);
+
     // Reposition clones to stack vertically
     // Use exactly 4 clones for top and 4 for bottom, but keep all clones visible until now
     const clonesForTop = this.duplicates.slice(0, 4); // First 4 clones for top
@@ -360,7 +364,12 @@ class Loader {
     boltTimeline.add(pathAnimationTimeline, '>'); // Small delay after stacking
 
     // Add the bolt timeline to the main timeline
-    this.loaderTimeline.add(boltTimeline, '-=1'); // Start 0.5s earlier than before
+    const boltTimelineStart = Math.max(0, this.loaderTimeline.duration() - 1);
+    this.loaderTimeline.add(boltTimeline, boltTimelineStart); // Start 0.5s earlier than before
+    this.loaderTimeline.addLabel(
+      RETURNING_VISITOR_START_LABEL,
+      boltTimelineStart + boltTimeline.labels[CENTER_RED_BOLT_LABEL]
+    );
   }
 
   /**
