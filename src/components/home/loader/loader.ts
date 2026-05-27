@@ -59,8 +59,38 @@ class Loader {
     // Check if loader has already been shown in this session
     const isLoaderShown = sessionStorage.getItem(LOADER_SESSION_STORAGE_KEY);
 
+    if (this.isInternalCrossPageNavigation()) {
+      this.hideLoaderImmediately();
+      sessionStorage.setItem(LOADER_SESSION_STORAGE_KEY, 'true');
+      return;
+    }
+
     // Setup the loader animation
     this.setupLoaderAnimation(isLoaderShown === 'true');
+  }
+
+  /**
+   * Skip the home loader when Webflow's global page transition is already handling
+   * same-site navigation between different pages.
+   */
+  private isInternalCrossPageNavigation(): boolean {
+    if (!document.referrer) return false;
+
+    try {
+      const referrer = new URL(document.referrer);
+      const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+      const referrerPath = referrer.pathname.replace(/\/$/, '') || '/';
+
+      return referrer.origin === window.location.origin && referrerPath !== currentPath;
+    } catch {
+      return false;
+    }
+  }
+
+  private hideLoaderImmediately(): void {
+    if (this.loaderElement) {
+      this.loaderElement.style.display = 'none';
+    }
   }
 
   /**
