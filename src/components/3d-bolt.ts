@@ -28,6 +28,7 @@ function createBoltInstance(
   const container = document.getElementById(containerId);
   if (!container) return;
   const containerEl = container;
+  containerEl.dataset.boltReady = 'false';
 
   // Scene
   const scene = new THREE.Scene();
@@ -88,6 +89,7 @@ function createBoltInstance(
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
+  renderer.domElement.style.opacity = '0';
   containerEl.appendChild(renderer.domElement);
 
   // Controls
@@ -530,9 +532,19 @@ function createBoltInstance(
     // Try-catch for error handling
     try {
       composer.render();
-      // If we get here, rendering worked
-      if (!window.hasRendered) {
-        window.hasRendered = true;
+      if (containerEl.dataset.boltReady !== 'true') {
+        containerEl.dataset.boltReady = 'true';
+        renderer.domElement.style.opacity = '';
+        containerEl.dispatchEvent(
+          new CustomEvent('boltReady', {
+            bubbles: true,
+            detail: { containerId },
+          })
+        );
+
+        if (containerId === 'menu-bolt') {
+          window.dispatchEvent(new CustomEvent('menuBoltReady'));
+        }
       }
     } catch (error) {
       console.error('Error in render:', error);

@@ -27,6 +27,7 @@ export class Navigation {
   private readonly ANIMATION_EASE: string = 'power2.out'; // Easing function
   private readonly OVERFLOW_HIDDEN_CLASS: string = 'overflow-hidden';
   private readonly TEXT_COLOR_ALTERNATE_CLASS: string = 'text-color-alternate';
+  private readonly MENU_BOLT_READY_TIMEOUT = 2000;
 
   // Singleton instance
   private static instance: Navigation | null = null;
@@ -327,10 +328,35 @@ export class Navigation {
   }
 
   private revealMenuBolt(): void {
-    this.initMenuBolt().then(() => {
+    this.initMenuBolt().then(async () => {
+      await this.waitForMenuBoltReady();
       if (!this.isNavOpen()) return;
 
-      gsap.fromTo(this.bolt, { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1 });
+      gsap.fromTo(
+        this.bolt,
+        { autoAlpha: 0, scale: 0, transformOrigin: 'center center' },
+        { autoAlpha: 1, scale: 1, overwrite: 'auto' }
+      );
+    });
+  }
+
+  private waitForMenuBoltReady(): Promise<void> {
+    const menuBolt = this.bolt[0] as HTMLElement | undefined;
+    if (!menuBolt || window.innerWidth < 768) return Promise.resolve();
+    if (menuBolt.dataset.boltReady === 'true') return Promise.resolve();
+
+    return new Promise((resolve) => {
+      const timeout = window.setTimeout(done, this.MENU_BOLT_READY_TIMEOUT);
+
+      function done() {
+        window.clearTimeout(timeout);
+        menuBolt.removeEventListener('boltReady', done);
+        window.removeEventListener('menuBoltReady', done);
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }
+
+      menuBolt.addEventListener('boltReady', done, { once: true });
+      window.addEventListener('menuBoltReady', done, { once: true });
     });
   }
 }
