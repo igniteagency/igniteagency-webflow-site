@@ -71,8 +71,6 @@ class CursorController {
   private setupVisibilityState(): void {
     if (!this.cursorEl) return;
 
-    this.cursorEl.dataset.delightCursor = 'true';
-
     window.addEventListener('pointermove', this.handleMove, {
       signal: this.abort.signal,
       passive: true,
@@ -452,9 +450,6 @@ export class DelightSectionAnimator {
             config.cursorSelector
           ) as HTMLElement | null;
           if (cursorEl) {
-            gsap.set(cursorEl, {
-              transformOrigin: 'center center',
-            });
             // Center cursor initially
             const initialX = window.innerWidth / 2;
             const initialY = window.innerHeight / 2;
