@@ -25,6 +25,7 @@ export class RainEmojis {
   public isInitialized = false;
   private observer: IntersectionObserver | null = null;
   private rainTimeout: number | null = null;
+  private readonly textureWidths = new Map<string, number>();
 
   private readonly config: RainEmojisConfig = {
     objectSizeHeightBased: window.innerHeight * 0.1,
@@ -51,7 +52,25 @@ export class RainEmojis {
     }
 
     this.updateWallMargin();
+    this.preloadTextures();
     this.setupIntersectionObserver();
+  }
+
+  private preloadTextures(): void {
+    this.textures.forEach((texture) => {
+      const image = new Image();
+      image.onload = () => {
+        this.textureWidths.set(texture, image.naturalWidth);
+      };
+      image.src = texture;
+    });
+  }
+
+  private getSpriteScale(texture: string): number | null {
+    const textureWidth = this.textureWidths.get(texture);
+    if (!textureWidth) return null;
+
+    return (this.config.objectSizeWidthBased * this.config.colliderScale) / textureWidth;
   }
 
   private updateWallMargin(): void {
@@ -265,6 +284,8 @@ export class RainEmojis {
       this.config.wallMargin + Math.random() * (window.innerWidth - 2 * this.config.wallMargin);
 
     const randomTexture = this.textures[Math.floor(Math.random() * this.textures.length)];
+    const spriteScale = this.getSpriteScale(randomTexture);
+    if (!spriteScale) return;
 
     const box = Matter.Bodies.circle(
       xPos,
@@ -276,8 +297,8 @@ export class RainEmojis {
         render: {
           sprite: {
             texture: randomTexture,
-            xScale: this.config.objectSizeWidthBased / 100,
-            yScale: this.config.objectSizeWidthBased / 100,
+            xScale: spriteScale,
+            yScale: spriteScale,
           },
         },
       }
