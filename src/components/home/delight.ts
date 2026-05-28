@@ -18,7 +18,6 @@ const OUT_OFFSET = 0;
 const TEXT_OUT_OFFSET = 0.1;
 const IN_OFFSET = 0.3;
 const TEXT_IN_OFFSET = 0.4;
-const CURSOR_STYLE_ID = 'delight-cursor-state-styles';
 
 export const delightSectionsConfig: DelightSectionConfig[] = [
   {
@@ -41,21 +40,12 @@ export const delightSectionsConfig: DelightSectionConfig[] = [
 // Modular cursor controller
 class CursorController {
   private cursorEl: HTMLElement | null;
-  private cursorContentEl: HTMLElement | null;
   private abort: AbortController;
   private cursorXTo: gsap.QuickToFunc;
   private cursorYTo: gsap.QuickToFunc;
-  private active = false;
-  private pointerVisible = false;
-  private lastPointer: { x: number; y: number } | null = null;
   constructor(stickyWrapper: HTMLElement, cursorSelector?: string | null) {
     this.cursorEl = cursorSelector
       ? (stickyWrapper.querySelector(cursorSelector) as HTMLElement | null)
-      : null;
-    this.cursorContentEl = cursorSelector
-      ? (stickyWrapper.querySelector(
-          cursorSelector + ' .cursor_content-wrap'
-        ) as HTMLElement | null)
       : null;
     this.abort = new AbortController();
 
@@ -70,59 +60,33 @@ class CursorController {
 
     this.setupVisibilityState();
   }
-  private handleMove = (event: PointerEvent) => {
+  private handleMove = (event: MouseEvent | PointerEvent) => {
     if (!this.cursorEl) return;
     const x = event.clientX;
     const y = event.clientY;
 
-    this.lastPointer = { x, y };
     this.cursorXTo(x);
     this.cursorYTo(y);
-    this.syncVisibility();
   };
-  private getCursorTargets(): HTMLElement[] {
-    return [this.cursorEl, this.cursorContentEl].filter((target): target is HTMLElement =>
-      Boolean(target)
-    );
-  }
   private setupVisibilityState(): void {
     if (!this.cursorEl) return;
 
     this.cursorEl.dataset.delightCursor = 'true';
-    this.cursorContentEl?.setAttribute('data-delight-cursor-content', 'true');
 
     window.addEventListener('pointermove', this.handleMove, {
       signal: this.abort.signal,
       passive: true,
     });
-    document.addEventListener('pointerleave', this.handlePointerExit, {
+    window.addEventListener('mousemove', this.handleMove, {
       signal: this.abort.signal,
-    });
-    window.addEventListener('blur', this.handlePointerExit, {
-      signal: this.abort.signal,
-    });
-  }
-  private handlePointerExit = () => {
-    this.lastPointer = null;
-    this.syncVisibility(true);
-  };
-  private syncVisibility(immediate = false): void {
-    const shouldShow = this.active && Boolean(this.lastPointer);
-    if (shouldShow === this.pointerVisible && !immediate) return;
-
-    this.pointerVisible = shouldShow;
-    this.getCursorTargets().forEach((target) => {
-      target.toggleAttribute('data-delight-cursor-visible', shouldShow);
+      passive: true,
     });
   }
   public hide = (immediate = false) => {
     void immediate;
-    this.active = false;
-    this.syncVisibility(true);
   };
   public show = () => {
-    this.active = true;
-    this.syncVisibility();
+    return;
   };
   public destroy() {
     this.abort.abort();
@@ -192,39 +156,6 @@ export class DelightSectionAnimator {
 
   private hideAllCursors(immediate = false): void {
     this.sectionControllers.forEach((ctrl) => ctrl.cursorController?.hide(immediate));
-  }
-
-  private injectCursorStyles(): void {
-    if (document.getElementById(CURSOR_STYLE_ID)) return;
-
-    const style = document.createElement('style');
-    style.id = CURSOR_STYLE_ID;
-    style.textContent = `
-      [data-delight-cursor] {
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
-        transition: opacity 0.2s ease, visibility 0s linear 0.2s;
-      }
-
-      [data-delight-cursor][data-delight-cursor-visible] {
-        opacity: 1;
-        visibility: visible;
-        transition-delay: 0s;
-      }
-
-      [data-delight-cursor-content] {
-        transform: scale(0) rotate(-50deg);
-        transform-origin: center center;
-        transition: transform 0.2s ease;
-      }
-
-      [data-delight-cursor-content][data-delight-cursor-visible] {
-        transform: scale(1) rotate(0deg);
-      }
-    `;
-
-    document.head.appendChild(style);
   }
 
   private initializeEffects(): void {
@@ -345,7 +276,6 @@ export class DelightSectionAnimator {
 
     // Initialize effects only when needed
     this.initializeEffects();
-    this.injectCursorStyles();
 
     // --- Setup per section using cached elements ---
     this.sections.forEach((section, i) => {
