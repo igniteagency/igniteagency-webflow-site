@@ -41,33 +41,61 @@ export const delightSectionsConfig: DelightSectionConfig[] = [
 class CursorController {
   private cursorEl: HTMLElement | null;
   private abort: AbortController;
-  private cursorXTo: gsap.QuickToFunc;
-  private cursorYTo: gsap.QuickToFunc;
+  private cursorX = 0;
+  private cursorY = 0;
+  private targetX = 0;
+  private targetY = 0;
+  private frameId: number | null = null;
+
   constructor(stickyWrapper: HTMLElement, cursorSelector?: string | null) {
     this.cursorEl = cursorSelector
       ? (stickyWrapper.querySelector(cursorSelector) as HTMLElement | null)
       : null;
     this.abort = new AbortController();
 
-    this.cursorXTo = gsap.quickTo(this.cursorEl, 'x', {
-      duration: 0.1,
-      ease: 'power1.out',
-    });
-    this.cursorYTo = gsap.quickTo(this.cursorEl, 'y', {
-      duration: 0.1,
-      ease: 'power1.out',
-    });
-
     this.setupVisibilityState();
   }
+
   private handleMove = (event: MouseEvent | PointerEvent) => {
     if (!this.cursorEl) return;
-    const x = event.clientX;
-    const y = event.clientY;
 
-    this.cursorXTo(x);
-    this.cursorYTo(y);
+    this.targetX = event.clientX;
+    this.targetY = event.clientY;
+    this.startMovementLoop();
   };
+
+  private startMovementLoop(): void {
+    if (this.frameId !== null) return;
+    this.frameId = window.requestAnimationFrame(this.updatePosition);
+  }
+
+  private updatePosition = () => {
+    if (!this.cursorEl) {
+      this.frameId = null;
+      return;
+    }
+
+    this.cursorX += (this.targetX - this.cursorX) * 0.35;
+    this.cursorY += (this.targetY - this.cursorY) * 0.35;
+
+    this.cursorEl.style.setProperty('--cursor-x', `${this.cursorX}px`);
+    this.cursorEl.style.setProperty('--cursor-y', `${this.cursorY}px`);
+
+    if (
+      Math.abs(this.targetX - this.cursorX) < 0.1 &&
+      Math.abs(this.targetY - this.cursorY) < 0.1
+    ) {
+      this.cursorX = this.targetX;
+      this.cursorY = this.targetY;
+      this.cursorEl.style.setProperty('--cursor-x', `${this.cursorX}px`);
+      this.cursorEl.style.setProperty('--cursor-y', `${this.cursorY}px`);
+      this.frameId = null;
+      return;
+    }
+
+    this.frameId = window.requestAnimationFrame(this.updatePosition);
+  };
+
   private setupVisibilityState(): void {
     if (!this.cursorEl) return;
 
@@ -87,6 +115,10 @@ class CursorController {
     return;
   };
   public destroy() {
+    if (this.frameId !== null) {
+      window.cancelAnimationFrame(this.frameId);
+      this.frameId = null;
+    }
     this.abort.abort();
   }
 }
@@ -453,7 +485,8 @@ export class DelightSectionAnimator {
             // Center cursor initially
             const initialX = window.innerWidth / 2;
             const initialY = window.innerHeight / 2;
-            gsap.set(cursorEl, { x: initialX, y: initialY });
+            cursorEl.style.setProperty('--cursor-x', `${initialX}px`);
+            cursorEl.style.setProperty('--cursor-y', `${initialY}px`);
           }
         }
       });
