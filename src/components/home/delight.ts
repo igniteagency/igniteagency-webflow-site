@@ -42,16 +42,13 @@ export const delightSectionsConfig: DelightSectionConfig[] = [
 class CursorController {
   private cursorEl: HTMLElement | null;
   private cursorContentEl: HTMLElement | null;
-  private stickyWrapper: HTMLElement;
   private abort: AbortController;
   private cursorXTo: gsap.QuickToFunc;
   private cursorYTo: gsap.QuickToFunc;
   private active = false;
-  private pointerInsideSticky = false;
   private pointerVisible = false;
   private lastPointer: { x: number; y: number } | null = null;
   constructor(stickyWrapper: HTMLElement, cursorSelector?: string | null) {
-    this.stickyWrapper = stickyWrapper;
     this.cursorEl = cursorSelector
       ? (stickyWrapper.querySelector(cursorSelector) as HTMLElement | null)
       : null;
@@ -81,7 +78,6 @@ class CursorController {
     this.lastPointer = { x, y };
     this.cursorXTo(x);
     this.cursorYTo(y);
-    this.updatePointerInsideSticky(x, y);
     this.syncVisibility();
   };
   private getCursorTargets(): HTMLElement[] {
@@ -106,17 +102,12 @@ class CursorController {
       signal: this.abort.signal,
     });
   }
-  private updatePointerInsideSticky(x: number, y: number): void {
-    const rect = this.stickyWrapper.getBoundingClientRect();
-    this.pointerInsideSticky =
-      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-  }
   private handlePointerExit = () => {
-    this.pointerInsideSticky = false;
+    this.lastPointer = null;
     this.syncVisibility(true);
   };
   private syncVisibility(immediate = false): void {
-    const shouldShow = this.active && this.pointerInsideSticky && Boolean(this.lastPointer);
+    const shouldShow = this.active && Boolean(this.lastPointer);
     if (shouldShow === this.pointerVisible && !immediate) return;
 
     this.pointerVisible = shouldShow;
@@ -131,9 +122,6 @@ class CursorController {
   };
   public show = () => {
     this.active = true;
-    if (this.lastPointer) {
-      this.updatePointerInsideSticky(this.lastPointer.x, this.lastPointer.y);
-    }
     this.syncVisibility();
   };
   public destroy() {
