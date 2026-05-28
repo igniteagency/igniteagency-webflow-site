@@ -38,9 +38,9 @@ export class RainEmojis {
   };
 
   private readonly textures = [
-    'https://uploads-ssl.webflow.com/66260e4321c76d6302aa74e5/66cc22ca6be309b888b1c855_cash.png',
-    'https://uploads-ssl.webflow.com/66260e4321c76d6302aa74e5/66cc2e70406bb29f57b2e82d_sales.png',
-    'https://uploads-ssl.webflow.com/66260e4321c76d6302aa74e5/66cc2e5b406bb29f57b2daea_moneybag.png',
+    'https://cdn.prod.website-files.com/66260e4321c76d6302aa74e5/66cc22ca6be309b888b1c855_ed1682f167bf61cebcc647993bcab434_cash.webp',
+    'https://cdn.prod.website-files.com/66260e4321c76d6302aa74e5/66cc2e70406bb29f57b2e82d_78c8d32ffba2d79f1fcdebe7ef54f44a_sales.webp',
+    'https://cdn.prod.website-files.com/66260e4321c76d6302aa74e5/66cc2e5b406bb29f57b2daea_6e77034641bd5351b368a66524cc1f28_moneybag.webp',
   ];
 
   constructor(private autoStart: boolean = true) {
