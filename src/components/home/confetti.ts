@@ -6,6 +6,7 @@ interface ConfettiController {
   destroy: () => void;
   exitEffect: () => void;
   reenterEffect: () => void;
+  trigger: () => void;
 }
 
 /**
@@ -30,7 +31,7 @@ export function createConfettiController(
   let isListenerActive = false;
 
   // Define the handler function once
-  const showConfetti = () => {
+  const trigger = () => {
     if (!jsConfetti) {
       // Initialize on first click if not already done by activate
       try {
@@ -64,7 +65,7 @@ export function createConfettiController(
 
     if (!isListenerActive) {
       window.IS_DEBUG_MODE && console.debug('Activating confetti click listener.');
-      canvasEl.addEventListener('click', showConfetti);
+      canvasEl.addEventListener('click', trigger);
       isListenerActive = true;
     } else {
       window.IS_DEBUG_MODE && console.debug('Confetti listener already active.');
@@ -74,7 +75,7 @@ export function createConfettiController(
   const deactivate = () => {
     if (isListenerActive) {
       window.IS_DEBUG_MODE && console.debug('Deactivating confetti click listener.');
-      canvasEl.removeEventListener('click', showConfetti);
+      canvasEl.removeEventListener('click', trigger);
       isListenerActive = false;
     } else {
       console.log('Confetti listener already inactive.');
@@ -97,5 +98,5 @@ export function createConfettiController(
   };
 
   // Return the controller object
-  return { activate, deactivate, destroy, exitEffect, reenterEffect };
+  return { activate, deactivate, destroy, exitEffect, reenterEffect, trigger };
 }
